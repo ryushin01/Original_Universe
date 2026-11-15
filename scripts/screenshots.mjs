@@ -22,6 +22,10 @@ async function sceneReady(page) {
     null,
     { timeout: 120_000 },
   )
+  // WebGL을 쓸 수 없다는 안내가 나오면 3D 장면 없이 찍지 않도록 멈춥니다.
+  if (await page.getByText('WebGL을 쓸 수 없어').count()) {
+    throw new Error('WebGL을 쓸 수 없어 3D 장면을 찍지 못했습니다.')
+  }
   await page.waitForTimeout(3000)
 }
 
@@ -95,7 +99,34 @@ async function run(page, ms) {
   const { page, context } = await open()
   await page.getByRole('tab', { name: '태양 폭풍' }).click()
   await page.getByRole('button', { name: '코로나 질량 방출 일으키기' }).click()
-  await run(page, 6000)
+  // 시뮬레이션 시간으로 10시간쯤 흘러 폭풍 껍질이 금성을 지나 지구 쪽으로 다가갈 때 멈춥니다(캐링턴급은 약 17시간에 지구 도착).
+  const simTime = () =>
+    page.evaluate(() => {
+      const m = document.body.innerText.match(
+        /시뮬레이션 날짜 \(UTC\)\s*(\d{4})\.(\d\d)\.(\d\d) (\d\d):(\d\d)/,
+      )
+      return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) : 0
+    })
+  // 시간 속도를 가장 느리게 해 멈출 때를 놓치지 않게 합니다.
+  const pace = page.getByRole('slider', { name: /시간 속도/ })
+  await pace.focus()
+  await pace.press('Home')
+  const start = await simTime()
+  await page.getByRole('button', { name: '시간 흐름 재생' }).click()
+  await page.waitForFunction(
+    (from) => {
+      const m = document.body.innerText.match(
+        /시뮬레이션 날짜 \(UTC\)\s*(\d{4})\.(\d\d)\.(\d\d) (\d\d):(\d\d)/,
+      )
+      return (
+        m &&
+        Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - from >= 10 * 3_600_000
+      )
+    },
+    start,
+    { timeout: 120_000, polling: 50 },
+  )
+  await page.getByRole('button', { name: '시간 흐름 멈춤' }).click()
   await shot(page, 'storm')
   await context.close()
 }
