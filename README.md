@@ -54,7 +54,7 @@
 | UI         | SolidJS 1.9 (Signals), 빌드 때 첫 화면을 HTML로 그리는 SSR 사전 렌더링, TypeScript 6                                              |
 | 3D         | three.js 0.187 (직접 제어)를 Web Worker(OffscreenCanvas)에서 렌더링, 직접 작성한 GLSL 셰이더                                      |
 | 시뮬레이션 | 케플러 궤도·N체 적분(요시다 4차 심플렉틱)·ΛCDM 성장 인자·젤도비치 근사를 직접 구현                                                |
-| 스타일     | CSS Modules + Lightning CSS(중첩, 컨테이너 쿼리), 웹 폰트(Raleway, 프리젠테이션)                                                  |
+| 스타일     | CSS Modules + Lightning CSS(중첩, 컨테이너 쿼리), 웹 폰트(Raleway, 프리젠테이션, 학교안심 별빛하늘)                               |
 | 품질       | ESLint(typescript-eslint, eslint-plugin-solid), Prettier, Steiger(FSD), Vitest + Testing Library, Playwright + axe, Lighthouse CI |
 | 문서       | Storybook 10 (`storybook-solidjs-vite`, a11y 애드온)                                                                              |
 | 배포·CI    | GitHub Pages, GitHub Actions, Service Worker(PWA)                                                                                 |
@@ -108,12 +108,13 @@ src/
 
 ## 웹 폰트
 
-| 글꼴         | 쓰는 곳               | 굵기                | 저작자                                              | 라이선스    | 원본                                                                                                                  |
-| ------------ | --------------------- | ------------------- | --------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------- |
-| Raleway      | 영문·숫자 (제목·본문) | 100~900 가변        | Matt McInerney, Pablo Impallari, Rodrigo Fuenzalida | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Raleway) · [impallari/Raleway](https://github.com/impallari/Raleway) |
-| 프리젠테이션 | 한글 (제목·본문)      | 200·300·400·600·700 | 이주임, 피티앤                                      | SIL OFL 1.1 | [배포처](https://freesentation.blog) · [눈누](https://noonnu.cc/font_page/1369)                                       |
+| 글꼴              | 쓰는 곳                                           | 굵기                | 저작자                                               | 라이선스    | 원본                                                                                                                  |
+| ----------------- | ------------------------------------------------- | ------------------- | ---------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| Raleway           | 영문·숫자 (제목·본문)                             | 100~900 가변        | Matt McInerney, Pablo Impallari, Rodrigo Fuenzalida  | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Raleway) · [impallari/Raleway](https://github.com/impallari/Raleway) |
+| 프리젠테이션      | 한글 (본문·작은 제목)                             | 200·300·400·600·700 | 이주임, 피티앤                                       | SIL OFL 1.1 | [배포처](https://freesentation.blog) · [눈누](https://noonnu.cc/font_page/1369)                                       |
+| 학교안심 별빛하늘 | 한글 큰 제목 (패널 제목, 천체 이름, 결과 창 제목) | Bold                | 한국교육학술정보원(KERIS), 디자인 헤움디자인(허원준) | SIL OFL 1.1 | [학교 안심폰트](https://copyright.keris.or.kr/wft/fntDwnld)                                                           |
 
-두 글꼴 모두 저장소에 넣어 같은 사이트에서 제공합니다(외부 글꼴 CDN 없음). 프리젠테이션은 화면에 쓰는 글자만 담은 작은 파일을 먼저 받고, 나머지 글자는 글자 묶음별 조각으로 나눠 그 글자를 쓸 때만 받습니다([개발 가이드](docs/development.md#글꼴)). 라이선스 전문은 `scripts/fonts/freesentation/OFL.txt`에 있습니다.
+모든 글꼴을 저장소에 넣어 같은 사이트에서 제공합니다(외부 글꼴 CDN 없음). 프리젠테이션은 화면에 쓰는 글자만 담은 작은 파일을 먼저 받고, 나머지 글자는 글자 묶음별 조각으로 나눠 그 글자를 쓸 때만 받습니다. 학교안심 별빛하늘은 한글 큰 제목에 쓰는 한글(패널 제목·천체 이름 등 237자)만 담은 파일 하나(약 15KB)를 씁니다([개발 가이드](docs/development.md#글꼴)). 라이선스 전문은 `scripts/fonts/freesentation/OFL.txt`, `scripts/fonts/byeolbichhaneul/OFL.txt`에 있습니다.
 
 ## 출처
 
