@@ -1,13 +1,13 @@
 # UNIVERSE SIMULATOR - 우주 환경·재해 대응 시뮬레이터
 
 [![CI](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.2.2-7c9cff)
+![version](https://img.shields.io/badge/version-0.3.0-7c9cff)
 
 태양계에서 우주 거대 구조까지 오가며 소행성 충돌, 태양 폭풍, 초신성·감마선 폭발, 블랙홀 근접 통과, 유성우, 태양의 노화를 일으키고 다이슨 스웜·링월드·궤도 이동 같은 우주 구조물로 대응해 보는 3D 우주 시뮬레이터입니다. [EARTH_PLAN](https://github.com/ryushin01/EARTH_PLAN)의 우주판입니다.
 
 **[데모 바로 보기](https://ryushin01.github.io/Universe_Simulator/)** · [Storybook](https://ryushin01.github.io/Universe_Simulator/storybook/)
 
-> **프로젝트 상태:** 0.2.1까지 만든 **개인 프로젝트**입니다. 행성 위치는 NASA JPL 궤도 요소로 계산하지만, 태양 진화·기후·피해 규모·우주 구조물은 단순화한 모델이라 교육·탐색용으로만 쓰세요. 디자인은 [Space Advisor](https://www.cssdesignawards.com/sites/space-advisor/28977/)(Akufen)를 참고했습니다.
+> **프로젝트 상태:** 0.3.0까지 만든 **개인 프로젝트**입니다. 행성 위치는 NASA JPL 궤도 요소로 계산하지만, 태양 진화·기후·피해 규모·우주 구조물은 단순화한 모델이라 교육·탐색용으로만 쓰세요. 디자인은 [Space Advisor](https://www.cssdesignawards.com/sites/space-advisor/28977/)(Akufen)를 참고했습니다.
 
 ## 화면
 
@@ -54,7 +54,7 @@
 | UI         | SolidJS 1.9 (Signals), 빌드 때 첫 화면을 HTML로 그리는 SSR 사전 렌더링, TypeScript 6                                              |
 | 3D         | three.js 0.187 (직접 제어)를 Web Worker(OffscreenCanvas)에서 렌더링, 직접 작성한 GLSL 셰이더                                      |
 | 시뮬레이션 | 케플러 궤도·N체 적분(요시다 4차 심플렉틱)·ΛCDM 성장 인자·젤도비치 근사를 직접 구현                                                |
-| 스타일     | CSS Modules + Lightning CSS(중첩, 컨테이너 쿼리), Jost                                                                            |
+| 스타일     | CSS Modules + Lightning CSS(중첩, 컨테이너 쿼리), 웹 폰트(Raleway, 프리젠테이션)                                                  |
 | 품질       | ESLint(typescript-eslint, eslint-plugin-solid), Prettier, Steiger(FSD), Vitest + Testing Library, Playwright + axe, Lighthouse CI |
 | 문서       | Storybook 10 (`storybook-solidjs-vite`, a11y 애드온)                                                                              |
 | 배포·CI    | GitHub Pages, GitHub Actions, Service Worker(PWA)                                                                                 |
@@ -78,13 +78,14 @@ pnpm dev    # http://localhost:3100
 | `pnpm test:e2e`                        | 프로덕션 빌드 E2E·접근성 검사 (먼저 `build` 필요)                             |
 | `pnpm lighthouse`                      | Lighthouse CI 점수 검사 (먼저 `build` 필요)                                   |
 | `pnpm storybook`                       | Storybook 개발 서버 (`http://localhost:6106`)                                 |
+| `pnpm fonts`                           | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                                |
 
 ## 프로젝트 구조
 
 ```
 e2e/                     E2E 테스트 (화면 폭, axe, 키보드, 재해·건설·미션·공유 흐름)
 public/textures/         행성 텍스처(WebP)
-scripts/                 첫 화면 사전 렌더링, PWA 아이콘 생성
+scripts/                 첫 화면 사전 렌더링, PWA 아이콘 생성, 한글 웹 폰트 만들기
 src/
 ├─ app/                  진입점(hydrate·SSR), 전역 스타일과 디자인 토큰
 ├─ pages/universe/       시뮬레이터 페이지 (FSD pages-first)
@@ -104,16 +105,24 @@ src/
 | [배포](docs/deployment.md)          | GitHub Pages 배포와 하위 경로 설정            |
 | [버전 기록](CHANGELOG.md)           | 버전별 변경 내용                              |
 
+## 웹 폰트
+
+| 글꼴         | 쓰는 곳               | 굵기                | 저작자                                              | 라이선스    | 원본                                                                                                                  |
+| ------------ | --------------------- | ------------------- | --------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| Raleway      | 영문·숫자 (제목·본문) | 100~900 가변        | Matt McInerney, Pablo Impallari, Rodrigo Fuenzalida | SIL OFL 1.1 | [Google Fonts](https://fonts.google.com/specimen/Raleway) · [impallari/Raleway](https://github.com/impallari/Raleway) |
+| 프리젠테이션 | 한글 (제목·본문)      | 200·300·400·600·700 | 이주임, 피티앤                                      | SIL OFL 1.1 | [배포처](https://freesentation.blog) · [눈누](https://noonnu.cc/font_page/1369)                                       |
+
+두 글꼴 모두 저장소에 넣어 같은 사이트에서 제공합니다(외부 글꼴 CDN 없음). 프리젠테이션은 화면에 쓰는 글자만 담은 작은 파일을 먼저 받고, 나머지 글자는 글자 묶음별 조각으로 나눠 그 글자를 쓸 때만 받습니다([개발 가이드](docs/development.md#글꼴)). 라이선스 전문은 `scripts/fonts/freesentation/OFL.txt`에 있습니다.
+
 ## 출처
 
-| 자료                                                           | 저작자                           | 사용 허락                                                 | 원본                                                                                                  |
-| -------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 행성 텍스처 (수성·금성·달·화성·목성·토성과 고리·천왕성·해왕성) | Solar System Scope               | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | [Solar System Scope Textures](https://www.solarsystemscope.com/textures/)                             |
-| 지구 텍스처 (색·밤 불빛·구름)                                  | three.js authors                 | MIT                                                       | [three.js 예제 텍스처 (r160)](https://github.com/mrdoob/three.js/tree/r160/examples/textures/planets) |
-| 행성 근사 궤도 요소                                            | E. M. Standish, NASA JPL         | 공개 과학 자료                                            | [Approximate Positions of the Planets](https://ssd.jpl.nasa.gov/planets/approx_pos.html)              |
-| 소천체 궤도 요소 (세레스·아포피스·핼리 혜성·유성우 모천체)     | NASA JPL Solar System Dynamics   | 공개 과학 자료                                            | [Small-Body Database API](https://ssd-api.jpl.nasa.gov/doc/sbdb.html)                                 |
-| Jost 글꼴 (영문 제목)                                          | Owen Earl (indestructible type*) | SIL OFL 1.1                                               | [Jost](https://github.com/indestructible-type/Jost) · [Fontsource](https://fontsource.org/fonts/jost) |
-| three.js (3D)                                                  | three.js authors                 | MIT                                                       | [three.js](https://github.com/mrdoob/three.js)                                                        |
-| SolidJS (화면)                                                 | Ryan Carniato                    | MIT                                                       | [solid](https://github.com/solidjs/solid)                                                             |
+| 자료                                                           | 저작자                         | 사용 허락                                                 | 원본                                                                                                  |
+| -------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 행성 텍스처 (수성·금성·달·화성·목성·토성과 고리·천왕성·해왕성) | Solar System Scope             | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | [Solar System Scope Textures](https://www.solarsystemscope.com/textures/)                             |
+| 지구 텍스처 (색·밤 불빛·구름)                                  | three.js authors               | MIT                                                       | [three.js 예제 텍스처 (r160)](https://github.com/mrdoob/three.js/tree/r160/examples/textures/planets) |
+| 행성 근사 궤도 요소                                            | E. M. Standish, NASA JPL       | 공개 과학 자료                                            | [Approximate Positions of the Planets](https://ssd.jpl.nasa.gov/planets/approx_pos.html)              |
+| 소천체 궤도 요소 (세레스·아포피스·핼리 혜성·유성우 모천체)     | NASA JPL Solar System Dynamics | 공개 과학 자료                                            | [Small-Body Database API](https://ssd-api.jpl.nasa.gov/doc/sbdb.html)                                 |
+| three.js (3D)                                                  | three.js authors               | MIT                                                       | [three.js](https://github.com/mrdoob/three.js)                                                        |
+| SolidJS (화면)                                                 | Ryan Carniato                  | MIT                                                       | [solid](https://github.com/solidjs/solid)                                                             |
 
 자전축·천체 목록·모델 근거 같은 자세한 자료 출처는 [데이터 출처](docs/data-sources.md)에 있습니다. 아이콘, 셰이더로 그린 태양·블랙홀·은하·우주 거미줄, 화면 사진은 이 프로젝트에서 직접 만들었습니다.

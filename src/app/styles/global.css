@@ -25,12 +25,13 @@
   --danger: #ff9a9a;
   --safe: #5fe0a8;
 
+  /* 영문·숫자는 Raleway, 한글은 프리젠테이션. 제목(display)과 본문(sans)이 같은 짝을 씀 */
   --font-display:
-    'Jost Variable', system-ui, -apple-system, 'Apple SD Gothic Neo',
-    'Malgun Gothic', sans-serif;
+    'Raleway Variable', 'Freesentation', system-ui, -apple-system,
+    'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   --font-sans:
-    system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic',
-    'Noto Sans KR', sans-serif;
+    'Raleway Variable', 'Freesentation', system-ui, -apple-system,
+    'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 
   --radius: 2px;
   /* 영문 대문자는 넓게, 한글은 덜 벌림 */
@@ -57,6 +58,8 @@ html {
   background-color: var(--space);
   color: var(--ice);
   font-family: var(--font-sans);
+  /* Raleway는 높낮이가 다른 옛 숫자가 기본이라 일반 숫자로 맞춤 */
+  font-variant-numeric: lining-nums;
   -webkit-font-smoothing: antialiased;
   text-size-adjust: 100%;
 }
@@ -162,7 +165,7 @@ a {
 
 .num {
   font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .sb-frame {

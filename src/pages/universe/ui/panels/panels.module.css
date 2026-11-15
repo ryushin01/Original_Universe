@@ -32,7 +32,7 @@
   & dd {
     text-align: right;
     font-family: var(--font-display);
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 }
 
@@ -186,7 +186,7 @@
 
   & td:nth-child(3) {
     font-family: var(--font-display);
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 }
 

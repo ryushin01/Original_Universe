@@ -23,6 +23,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist/client',
+    // 한글 글꼴 조각(대부분 4KB 미만)을 CSS에 base64로 넣지 않고 파일로 둠.
+    // 넣으면 쓰지 않는 글자까지 CSS에 실림
+    assetsInlineLimit: (filePath) =>
+      filePath.endsWith('.woff2') ? false : undefined,
     target: 'es2022',
     cssMinify: 'lightningcss',
   },
