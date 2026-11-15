@@ -2,6 +2,8 @@ import { hydrate, render } from 'solid-js/web'
 import '@fontsource-variable/raleway/wght.css'
 // 한글: 프리젠테이션 중 화면에 쓰는 글자만 담은 파일(pnpm fonts로 만듦)
 import './styles/fonts/freesentation.css'
+// 한글 큰 제목: 학교안심 별빛하늘 중 제목에 쓰는 글자만 담은 파일(제목이 화면에 나올 때 받음)
+import './styles/fonts/byeolbichhaneul.css'
 import './styles/global.css'
 import restFontsCss from './styles/fonts/freesentation-rest.css?url'
 import { App } from './App'

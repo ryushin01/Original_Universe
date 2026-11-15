@@ -14,6 +14,31 @@
         "600": "scripts/fonts/freesentation/Freesentation-6SemiBold.woff2",
         "700": "scripts/fonts/freesentation/Freesentation-7Bold.woff2"
       }
+    },
+    {
+      "family": "Hakgyoansim Byeolbichhaneul",
+      "slug": "byeolbichhaneul",
+      "weights": {
+        "700": "scripts/fonts/byeolbichhaneul/HakgyoansimByeolbichhaneul-B.woff"
+      },
+      "text": {
+        "messages": {
+          "file": "src/pages/universe/ui/messages.ts",
+          "keys": [
+            "page.controls",
+            "page.status",
+            "mission.wonTitle",
+            "mission.lostTitle"
+          ]
+        },
+        "props": {
+          "scan": ["src/pages/universe/model"],
+          "names": ["name"]
+        },
+        "extra": "태양"
+      },
+      "hangulOnly": true,
+      "rest": false
     }
   ]
 }

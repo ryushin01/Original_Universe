@@ -11,6 +11,13 @@
  *
  * 화면 글자가 바뀌면 다시 실행합니다. `--check`는 1에 빠진 글자가 있으면 실패합니다(단위 테스트에서 씀).
  * 조각 파일은 글자가 바뀌어도 그대로라 없는 것만 만듭니다. 원본 글꼴을 바꿨으면 `--all`로 모두 다시 만듭니다.
+ *
+ * 제목에만 쓰는 글꼴처럼 일부 자리에만 쓰는 글꼴은 글꼴마다 `text`로 담을 글자를 좁힙니다.
+ * - `messages`: 그 파일에서 고른 키(예: 'page.status')의 문자열
+ * - `props`: `scan`의 소스에서 고른 속성(예: name)에 적힌 문자열(자료에서 오는 천체 이름 등)
+ * - `extra`: 따로 더할 글자
+ * 이런 글꼴은 `rest: false`로 조각 파일을 만들지 않습니다. 제목 글자가 모두 1에 들어 있고,
+ * `--check`가 빠진 글자를 잡기 때문입니다. `hangulOnly: true`면 한글만 담아, 기호·영문은 다음 글꼴이 그립니다.
  */
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
@@ -118,6 +125,18 @@ async function screenText() {
       }
     }
   }
+  return toCodePoints(parts)
+}
+
+/** 한글 자모·음절(호환 자모, 확장 자모 포함) */
+const isHangul = (cp) =>
+  (cp >= 0x1100 && cp <= 0x11ff) ||
+  (cp >= 0x3130 && cp <= 0x318f) ||
+  (cp >= 0xa960 && cp <= 0xa97f) ||
+  (cp >= 0xac00 && cp <= 0xd7a3) ||
+  (cp >= 0xd7b0 && cp <= 0xd7ff)
+
+function toCodePoints(parts) {
   const set = new Set()
   for (const ch of parts.join('')) {
     const cp = ch.codePointAt(0)
@@ -125,6 +144,75 @@ async function screenText() {
     if (cp > 0x7e) set.add(cp)
   }
   return set
+}
+
+async function parseSource(file) {
+  const kind = /x$/.test(file) ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+  return ts.createSourceFile(
+    file,
+    await readFile(file, 'utf8'),
+    ts.ScriptTarget.Latest,
+    false,
+    kind,
+  )
+}
+
+/** 노드 아래의 문자열 리터럴을 모두 모음 */
+function stringsIn(node, parts) {
+  if (
+    ts.isStringLiteralLike(node) ||
+    ts.isTemplateHead(node) ||
+    ts.isTemplateMiddle(node) ||
+    ts.isTemplateTail(node)
+  )
+    parts.push(node.text)
+  ts.forEachChild(node, (child) => stringsIn(child, parts))
+}
+
+const propertyName = (node) =>
+  node.name && (ts.isIdentifier(node.name) || ts.isStringLiteralLike(node.name))
+    ? node.name.text
+    : undefined
+
+/** 글꼴마다 `text`로 고른 자리의 글자(제목 글꼴 등) */
+async function pickedText(spec) {
+  const parts = [spec.extra ?? '']
+  if (spec.messages) {
+    const keys = new Set(spec.messages.keys)
+    const found = new Set()
+    const visit = (node) => {
+      const name = ts.isPropertyAssignment(node)
+        ? propertyName(node)
+        : undefined
+      if (name && keys.has(name)) {
+        found.add(name)
+        stringsIn(node.initializer, parts)
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(await parseSource(path.join(ROOT, spec.messages.file)))
+    const lack = [...keys].filter((key) => !found.has(key))
+    if (lack.length)
+      throw new Error(`${spec.messages.file}에 없는 키: ${lack.join(', ')}`)
+  }
+  if (spec.props) {
+    const names = new Set(spec.props.names)
+    for (const dir of spec.props.scan) {
+      for await (const file of walk(path.join(ROOT, dir))) {
+        if (/\.(test|spec|stories)\.[jt]sx?$/.test(file)) continue
+        if (!/\.[cm]?[jt]sx?$/.test(file)) continue
+        const visit = (node) => {
+          const name = ts.isPropertyAssignment(node)
+            ? propertyName(node)
+            : undefined
+          if (name && names.has(name)) stringsIn(node.initializer, parts)
+          ts.forEachChild(node, visit)
+        }
+        visit(await parseSource(file))
+      }
+    }
+  }
+  return toCodePoints(parts)
 }
 
 function cmapOf(sfnt) {
@@ -143,6 +231,11 @@ let checked = 0
 
 for (const font of config.fonts) {
   const { family, slug } = font
+  const picked = font.text ? await pickedText(font.text) : screen
+  const wanted = font.hangulOnly
+    ? new Set([...picked].filter(isHangul))
+    : picked
+  const withRest = font.rest !== false
   const dir = path.join(OUT, slug)
   await mkdir(dir, { recursive: true })
   const uiRules = []
@@ -155,7 +248,7 @@ for (const font of config.fonts) {
   for (const [weight, src] of Object.entries(font.weights)) {
     const original = await readFile(path.join(ROOT, src))
     const cmap = cmapOf(await fontverter.convert(original, 'sfnt'))
-    const ui = new Set([...screen].filter((cp) => cmap.has(cp)))
+    const ui = new Set([...wanted].filter((cp) => cmap.has(cp)))
 
     if (CHECK) {
       // CSS의 unicode-range와 실제 화면 글자 파일의 글자 목록을 모두 확인
@@ -189,7 +282,7 @@ for (const font of config.fonts) {
     await writeFile(path.join(dir, uiName), uiFont)
     uiRules.push(fontFace(family, weight, `./${slug}/${uiName}`, toRange(ui)))
 
-    for (const [index, range] of SLICES.entries()) {
+    for (const [index, range] of withRest ? SLICES.entries() : []) {
       const inFont = [...parseRange(range)].filter((cp) => cmap.has(cp))
       if (!inFont.length) continue
       const name = `${slug}-${weight}-${String(index).padStart(3, '0')}.woff2`
@@ -224,10 +317,11 @@ for (const font of config.fonts) {
   restRules.sort(
     (a, b) => a.index - b.index || Number(a.weight) - Number(b.weight),
   )
-  await writeFile(
-    path.join(OUT, `${slug}-rest.css`),
-    HEADER + restRules.map((r) => r.rule).join('\n') + '\n',
-  )
+  if (withRest)
+    await writeFile(
+      path.join(OUT, `${slug}-rest.css`),
+      HEADER + restRules.map((r) => r.rule).join('\n') + '\n',
+    )
 }
 
 if (CHECK) {
