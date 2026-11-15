@@ -70,13 +70,6 @@ const destination = (page, name) =>
     .first()
     .click()
 
-/** 시간을 잠시 흐르게 한 뒤 멈춥니다. */
-async function run(page, ms) {
-  await page.getByRole('button', { name: '시간 흐름 재생' }).click()
-  await page.waitForTimeout(ms)
-  await page.getByRole('button', { name: '시간 흐름 멈춤' }).click()
-}
-
 // 소개 화면
 {
   const { page, context } = await open({ start: false })
