@@ -32,6 +32,11 @@
   --font-sans:
     'Raleway Variable', 'Freesentation', system-ui, -apple-system,
     'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  /* 한글 큰 제목(패널 제목, 천체 이름, 결과 창 제목)만 학교안심 별빛하늘. 영문·숫자는 Raleway,
+     기호와 별빛하늘 파일에 없는 글자는 프리젠테이션이 그림 */
+  --font-title:
+    'Raleway Variable', 'Hakgyoansim Byeolbichhaneul', 'Freesentation',
+    system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 
   --radius: 2px;
   /* 영문 대문자는 넓게, 한글은 덜 벌림 */
