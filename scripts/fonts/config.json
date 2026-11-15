@@ -1,0 +1,19 @@
+{
+  "outDir": "src/app/styles/fonts",
+  "scan": ["src"],
+  "dataExtensions": ["json"],
+  "extra": "년월일시분초오전후요화수목금토만억조",
+  "fonts": [
+    {
+      "family": "Freesentation",
+      "slug": "freesentation",
+      "weights": {
+        "200": "scripts/fonts/freesentation/Freesentation-2ExtraLight.woff2",
+        "300": "scripts/fonts/freesentation/Freesentation-3Light.woff2",
+        "400": "scripts/fonts/freesentation/Freesentation-4Regular.woff2",
+        "600": "scripts/fonts/freesentation/Freesentation-6SemiBold.woff2",
+        "700": "scripts/fonts/freesentation/Freesentation-7Bold.woff2"
+      }
+    }
+  ]
+}
