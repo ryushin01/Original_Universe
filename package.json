@@ -24,7 +24,8 @@
     "storybook": "storybook dev -p 6106",
     "build-storybook": "storybook build -o dist/client/storybook",
     "icons": "node scripts/build-icons.mjs",
-    "fonts": "node scripts/build-fonts.mjs"
+    "fonts": "node scripts/build-fonts.mjs",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@fontsource-variable/raleway": "5.3.0",
