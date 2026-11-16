@@ -8,8 +8,9 @@ import { BlackHolePanel } from './BlackHolePanel'
 import { MeteorPanel } from './MeteorPanel'
 import { SunPanel } from './SunPanel'
 import { BuildPanel } from './BuildPanel'
+import { MythicPanel } from './MythicPanel'
 
-/** 우주 관리: 재해를 일으키고 구조물로 대응 */
+/** 우주 관리: 재해를 일으키고 구조물로 대응 (4열 두 줄) */
 export function ControlPanel() {
   const [tab, setTab] = createSignal('impact')
   return (
@@ -26,6 +27,7 @@ export function ControlPanel() {
         { id: 'meteor', label: t('tabs.meteor'), content: <MeteorPanel /> },
         { id: 'sun', label: t('tabs.sun'), content: <SunPanel /> },
         { id: 'build', label: t('tabs.build'), content: <BuildPanel /> },
+        { id: 'mythic', label: t('tabs.mythic'), content: <MythicPanel /> },
       ]}
     />
   )

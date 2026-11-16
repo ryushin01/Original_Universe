@@ -120,6 +120,7 @@ import {
   toVector,
 } from '../common'
 import type { FrameContext, ScaleScene, SceneEnv, Target } from '../types'
+import { createBeingLayer } from './beings/BeingLayer'
 
 /** 지구 텍스처: 화면이 좁거나 메모리가 적은 기기는 1024px 벌 */
 const earthTextures = (env: SceneEnv) =>
@@ -600,6 +601,10 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
   intruderPick.userData.id = 'intruder'
   intruder.add(intruderPick)
   scene.add(intruder, intruderPath)
+
+  /* 우주적 존재 */
+  const beings = createBeingLayer()
+  scene.add(beings.group)
 
   /* 유성 */
   const METEORS = 48
@@ -1190,10 +1195,12 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
         ? Math.max(max, Math.exp(-realAge / 0.8))
         : max
     }, 0)
+    // 별 폭발과 우주적 존재의 여파가 하늘을 잠깐 밝힘
+    const glare = Math.max(flash, ctx.reducedMotion ? 0 : beings.flash())
     ;(sky.sky.material as ShaderMaterial).uniforms.uTint.value.setRGB(
-      0.25 * flash,
-      0.27 * flash,
-      0.35 * flash,
+      0.25 * glare,
+      0.27 * glare,
+      0.35 * glare,
     )
 
     // 지나가는 천체
@@ -1442,6 +1449,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
         return intruder.visible
           ? { position: intruder.position.clone(), radius: 1.6 }
           : null
+      if (id.startsWith('being:')) return beings.target(id)
       const pos = positions.get(id as BodyId)
       const visual = visuals.get(id as BodyId)
       if (!pos || !visual) return null
@@ -1465,7 +1473,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
     },
     pick(raycaster: Raycaster) {
       const hits = raycaster.intersectObjects(
-        [...pickables, intruderPick],
+        [...pickables, intruderPick, ...beings.pickables],
         false,
       )
       for (const hit of hits) {
@@ -1584,7 +1592,8 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
 
       // 선택
       const target = ctx.selected ? sceneApi.target(ctx.selected) : null
-      shell.visible = Boolean(target)
+      // 우주적 존재는 스스로 선과 빛으로 그려지므로 측지선 표시를 겹치지 않음
+      shell.visible = Boolean(target) && !ctx.selected?.startsWith('being:')
       if (target) {
         shell.position.copy(target.position)
         shell.scale.setScalar(
@@ -1596,6 +1605,12 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
       updateHazards(world, ctx)
       updateMeteors(world, ctx)
       updateStructures(world, ctx)
+      beings.update(ctx, {
+        positions,
+        sunRadius,
+        mode,
+        sunShining: !sun.blackHole,
+      })
       // 핼리 혜성 꼬리 (태양 가까이에서만)
       const halley = visuals.get('halley')
       const halleyAu = bodyPositionAu(world, 'halley')
@@ -1620,6 +1635,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
       tmp.set(0, 0, 0)
     },
     dispose() {
+      beings.dispose()
       disposeObject(scene)
       for (const cap of stormCaps.values()) cap.dispose()
     },

@@ -104,6 +104,21 @@ export function step(nb: NBody, dt: number) {
 
 export const indexOf = (nb: NBody, id: string) => nb.ids.indexOf(id)
 
+/** 사라진 천체를 뺀 N체 버퍼 (없으면 그대로) */
+export function withoutBodies(nb: NBody, gone: Set<string>): NBody {
+  if (!nb.ids.some((id) => gone.has(id))) return nb
+  const keep = nb.ids
+    .map((id, i) => ({ id, i }))
+    .filter(({ id }) => !gone.has(id))
+    .map(({ id, i }) => ({
+      id,
+      mu: nb.mu[i],
+      r: [nb.pos[3 * i], nb.pos[3 * i + 1], nb.pos[3 * i + 2]] as Vec3,
+      v: [nb.vel[3 * i], nb.vel[3 * i + 1], nb.vel[3 * i + 2]] as Vec3,
+    }))
+  return createNBody(keep, nb.jd)
+}
+
 export const positionOf = (nb: NBody, index: number): Vec3 => [
   nb.pos[3 * index],
   nb.pos[3 * index + 1],

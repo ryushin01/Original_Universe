@@ -18,8 +18,9 @@ import {
   selection,
   viewActions,
 } from '../../model/view'
-import { objectsOf } from '../../model/objects'
-import { currentWorld } from '../../model/world/store'
+import { beingObject, objectsOf } from '../../model/objects'
+import { currentWorld, world } from '../../model/world/store'
+import { visibleBeings } from '../../model/world/mythic'
 import { setCollisionInfo } from '../../model/local/collisionInfo'
 import { forwardable } from '../scene/protocol'
 import type { Viewport as ViewportSize } from '../scene/protocol'
@@ -345,6 +346,11 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
   }
 
   const autoRotate = () => options().autoRotate ?? !reduced()
+  /** 이름표를 붙일 대상: 규모의 천체 + 태양계에 나타난 우주적 존재 */
+  const labelObjects = () =>
+    scale() === 'solar'
+      ? [...objectsOf('solar'), ...visibleBeings(world()).map(beingObject)]
+      : objectsOf(scale())
 
   return (
     <div class={styles.viewport}>
@@ -360,7 +366,7 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
       />
       <div class={styles.labels} aria-hidden="true">
         <Show when={options().labels}>
-          <For each={objectsOf(scale())}>
+          <For each={labelObjects()}>
             {(item) => {
               onCleanup(() => labels.delete(item.id))
               return (

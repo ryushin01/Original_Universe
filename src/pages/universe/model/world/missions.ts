@@ -8,9 +8,13 @@ import {
   bodyTemperatureC,
 } from './selectors'
 import { makeImpact, makeStorm } from './factory'
+import { makeBattle } from './mythic'
+import { BEING_BY_ID } from '../mythic/catalog'
+import { josa } from './text'
 import type { StormClass } from '../hazards/storm'
 import type { BodyId } from '../solar/bodies'
 import type { MissionId, Tone, WorldState } from './types'
+import { MAX_EVENTS } from './log'
 
 export interface MissionSpec {
   id: MissionId
@@ -202,6 +206,54 @@ export const MISSIONS: MissionSpec[] = [
             : `Failure: Earth passed 40°C after ${Math.round((s.year - (s.mission?.startYear ?? s.year)) / 1e6).toLocaleString('en-US')} million years.`,
       ),
   },
+  {
+    id: 'stop-apep',
+    name: both('아펩을 막아라', 'Stop Apep'),
+    brief: both(
+      '혼돈의 뱀 아펩이 태양 곁에 강림했습니다. 120일 뒤 해를 물어 태양계를 어둠에 빠뜨립니다. 맞설 존재를 보내 물리치세요.',
+      'Apep, the serpent of chaos, has descended beside the Sun. In 120 days it will bite the Sun and plunge the system into darkness. Send something to stand against it.',
+    ),
+    goal: both(
+      '우주 관리의 ‘우주적 존재’ 탭에서 아펩을 고르고 맞설 존재를 보내세요. 상성을 보세요: 빛은 혼돈을 봉인하고, 전승의 맞수도 있습니다.',
+      'In the Cosmic beings tab, pick Apep and send a challenger. Mind the affinities: light seals the void, and myth has its own rivals.',
+    ),
+    years: 1,
+    budget: 100,
+    speedIndex: 2,
+    setup: (s) => {
+      const battle = makeBattle(s, {
+        a: 'apep',
+        b: null,
+        site: 'sun',
+        days: 120,
+        tag: 'mission',
+      })
+      return { ...s, battles: [...s.battles, battle], nextId: s.nextId + 1 }
+    },
+    check: (s) => {
+      const battle = s.battles.find((b) => b.tag === 'mission')
+      if (!battle || battle.status !== 'over') return null
+      return battle.winner === 'apep' ? 'lost' : 'won'
+    },
+    final: () => 'lost',
+    result: (s, outcome) => {
+      const battle = s.battles.find((b) => b.tag === 'mission')
+      const rival = battle?.b ? BEING_BY_ID[battle.b] : null
+      return compose((l) => {
+        if (outcome === 'won' && rival)
+          return l === 'ko'
+            ? `성공: ${josa(rival.name.ko, '이가')} 아펩을 물리쳤습니다. 태양은 무사합니다.`
+            : `Success: ${rival.name.en} has driven off Apep. The Sun is safe.`
+        if (!rival)
+          return l === 'ko'
+            ? '실패: 아무도 맞서지 않아 아펩이 해를 물었습니다.'
+            : 'Failure: nothing stood against Apep, and it bit the Sun.'
+        return l === 'ko'
+          ? `실패: 아펩이 ${josa(rival.name.ko, '을를')} 이기고 해를 물었습니다.`
+          : `Failure: Apep overcame ${rival.name.en} and bit the Sun.`
+      })
+    },
+  },
 ]
 
 export const MISSION_BY_ID = Object.fromEntries(
@@ -224,7 +276,7 @@ export function evaluateMission(state: WorldState): WorldState {
     ...state,
     running: false,
     mission: { ...mission, status: outcome, result },
-    events: [event, ...state.events].slice(0, 80),
+    events: [event, ...state.events].slice(0, MAX_EVENTS),
     nextId: state.nextId + 1,
   }
 }

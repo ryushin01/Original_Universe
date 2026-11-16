@@ -3,6 +3,7 @@
   "scan": ["src"],
   "dataExtensions": ["json"],
   "extra": "년월일시분초오전후요화수목금토만억조",
+  "restOnly": ["src/pages/universe/model/mythic/lore.ts"],
   "fonts": [
     {
       "family": "Freesentation",

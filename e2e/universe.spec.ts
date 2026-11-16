@@ -88,6 +88,7 @@ test.describe('첫 화면', () => {
       '유성우',
       '태양의 미래',
       '건설',
+      '우주적 존재',
     ]) {
       await page.getByRole('tab', { name, exact: true }).click()
       await axe(page, name)
@@ -320,6 +321,62 @@ test.describe('시뮬레이션 흐름', () => {
       .getByRole('listitem')
       .filter({ hasText: '우주 기상 경보 위성' })
     await expect(satellite.getByText('완공', { exact: true })).toBeVisible()
+  })
+
+  test('우주적 존재가 격돌하면 여파와 승패를 기록하고 3D에서 따라간다', async ({
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await start(page)
+    await page.getByRole('tab', { name: '우주적 존재' }).click()
+    await page
+      .getByRole('combobox', { name: '불러낼 존재' })
+      .selectOption('azure-dragon')
+    await page
+      .getByRole('combobox', { name: '맞설 존재' })
+      .selectOption('white-tiger')
+    await expect(page.getByText('오행 상극: 백호 유리')).toBeVisible()
+    await page.getByRole('button', { name: '격돌시키기' }).click()
+    await expect(logText(page)).toContainText('청룡과 백호가 맞붙었습니다')
+    // 진행 중에는 저장·공유를 막음
+    await page.getByText('공유·저장').click()
+    await expect(
+      page.getByRole('button', { name: '공유 링크 복사' }),
+    ).toBeDisabled()
+    await page.getByRole('button', { name: '청룡 따라가기' }).click()
+    await expect(
+      page.getByRole('region', { name: '현황' }).getByText('격돌 중'),
+    ).toBeVisible()
+    // 1개월/초로 흘려 격돌을 끝냄
+    await page
+      .getByRole('slider', { name: '시간 속도 (화면 1초마다)' })
+      .fill('3')
+    await page.getByRole('button', { name: '시간 흐름 재생' }).click()
+    await expect(logText(page)).toContainText('격돌이 끝났습니다', {
+      timeout: 40_000,
+    })
+    expect(errors).toEqual([])
+  })
+
+  test('강림한 아펩에게 맞설 존재를 보내는 미션', async ({ page }) => {
+    await start(page)
+    const missions = page.getByRole('region', { name: '미션' })
+    await missions
+      .getByRole('listitem')
+      .filter({ hasText: '아펩을 막아라' })
+      .getByRole('button', { name: '시작' })
+      .click()
+    await expect(logText(page)).toContainText('아펩')
+    await page.getByRole('tab', { name: '우주적 존재' }).click()
+    await page.getByRole('button', { name: '아펩에게 맞서기' }).click()
+    await expect(
+      page.getByRole('combobox', { name: '맞설 존재' }),
+    ).toBeFocused()
+    await page.getByRole('combobox', { name: '맞설 존재' }).selectOption('ra')
+    await expect(page.getByText('전승 속 맞수')).toBeVisible()
+    await page.getByRole('button', { name: '맞서게 하기' }).click()
+    await expect(logText(page)).toContainText('강림한 아펩에게 라가 맞섰습니다')
   })
 
   test('영어로 바꾸면 문서 언어와 문구가 바뀐다', async ({ page }) => {
