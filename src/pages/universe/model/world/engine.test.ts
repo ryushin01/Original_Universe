@@ -222,3 +222,46 @@ describe('블랙홀', () => {
     expect(currentShower(atPeak)!.zhr).toBeGreaterThan(perseids.zhr * 100)
   })
 })
+
+describe('끝난 사건 정리', () => {
+  it('끝난 폭풍·충돌·별 폭발은 지우고, 그리는 수와 판정에 쓰는 것은 남긴다', () => {
+    // 잔해가 오는 데 수천 년 걸리는 50광년 초신성은 끝날 때까지 남아야 함
+    let s = triggerBlast(fresh(), 'near-50').state
+    // 실제 천체는 먼저 터뜨려, 최근 4개가 아니어도 남는지 봄
+    s = triggerBlast(s, 'betelgeuse').state
+    for (let i = 0; i < 30; i++) {
+      s = launchStorm(s, 'strong', 'random').state
+      s = launchImpact(s, {
+        target: 'moon',
+        kind: 'stony',
+        diameterM: 100,
+        warningYears: 0.01,
+      }).state
+      s = triggerBlast(s, 'grb-6500').state
+    }
+    expect(s.storms).toHaveLength(30)
+    expect(s.impacts).toHaveLength(30)
+    s = run(s, 2)
+    // 폭풍은 모든 천체에 닿고 45 AU를 지나면 사라짐
+    expect(s.storms).toHaveLength(0)
+    // 달에 맞은 충돌은 크레이터로 그리는 최근 6개만
+    expect(s.impacts).toHaveLength(6)
+    expect(s.impacts.every((im) => im.status === 'hit')).toBe(true)
+    // 그리는 최근 4개 + 잔해가 아직 오지 않은 50광년 초신성 + 실제 천체 베텔게우스
+    expect(s.blasts).toHaveLength(6)
+    expect(s.blasts.some((b) => b.sourceId === 'near-50')).toBe(true)
+    expect(s.blasts.some((b) => b.sourceId === 'betelgeuse')).toBe(true)
+    // 실제 천체는 다시 폭발하지 않음
+    expect(triggerBlast(s, 'betelgeuse').result.ok).toBe(false)
+  })
+
+  it('지울 것이 없으면 목록을 새로 만들지 않는다', () => {
+    const s = launchStorm(fresh(), 'carrington', 'earth').state
+    const next = run(s, 0.001)
+    expect(next.storms).toHaveLength(1)
+    const again = run(next, 0.0001)
+    expect(again.storms).toBe(next.storms)
+    expect(again.blasts).toBe(next.blasts)
+    expect(again.impacts).toBe(next.impacts)
+  })
+})

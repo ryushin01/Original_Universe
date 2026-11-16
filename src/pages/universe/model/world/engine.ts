@@ -56,6 +56,7 @@ import {
   marsAtmosphere,
   bodyTemperatureC,
   shadeFraction,
+  stormFrontAu,
   sunRadiusAu,
   sunState,
 } from './selectors'
@@ -190,6 +191,64 @@ export function advanceTo(state: WorldState, target: number): WorldState {
     }
   }
   if (!isOrbitFrozen(s.speedIndex) || s.nbody) s = { ...s, orbitYear: s.year }
+  return pruneFinished(s)
+}
+
+/** 3D 장면이 그리는 별 폭발 수 (SolarScene의 blastSprites) */
+const SHOWN_BLASTS = 4
+/** 천체마다 크레이터·대기 흔적을 그리는 충돌 수 (SolarScene의 hits.slice(-6)) */
+const SHOWN_HITS_PER_BODY = 6
+/** 태양 폭풍 껍질을 그리는 거리 (AU) */
+const STORM_DRAW_AU = 45
+
+/**
+ * 끝나서 화면과 판정에 더는 쓰이지 않는 사건을 지웁니다.
+ * 상태는 시간이 흐르는 동안 매 프레임 렌더링 워커로 복사되므로, 남겨 두면 오래 쓸수록 느려집니다.
+ * (실제 천체의 별 폭발은 다시 폭발하지 않게 막는 데 쓰므로 남김)
+ */
+export function pruneFinished(state: WorldState): WorldState {
+  const year = state.year
+  const stormDone = (st: WorldState['storms'][number]) =>
+    st.announced &&
+    st.hits.every((h) => h.done) &&
+    stormFrontAu(st, year, STORM_CLASSES[st.cls].speedKms) > STORM_DRAW_AU
+  // 천체마다 최근에 맞은 충돌만 (impactYear 순서)
+  const keptHits = new Set<number>()
+  const hitsByBody = new Map<BodyId, Array<{ id: number; year: number }>>()
+  for (const im of state.impacts) {
+    if (im.status !== 'hit') continue
+    const list = hitsByBody.get(im.target) ?? []
+    list.push({ id: im.id, year: im.impactYear })
+    hitsByBody.set(im.target, list)
+  }
+  for (const list of hitsByBody.values())
+    list
+      .sort((a, b) => a.year - b.year)
+      .slice(-SHOWN_HITS_PER_BODY)
+      .forEach((h) => keptHits.add(h.id))
+  const impactDone = (im: WorldState['impacts'][number]) =>
+    im.status === 'hit'
+      ? !keptHits.has(im.id)
+      : im.status === 'missed' && year - im.impactYear > 1
+  const recentBlasts = new Set(
+    state.blasts.slice(-SHOWN_BLASTS).map((b) => b.id),
+  )
+  const blastDone = (b: WorldState['blasts'][number]) =>
+    !recentBlasts.has(b.id) &&
+    !(BLAST_SOURCES.find((x) => x.id === b.sourceId)?.real ?? false) &&
+    (b.debrisYear === null || b.debrisDone)
+  const auroraDone = (a: WorldState['auroras'][number]) => a.untilYear <= year
+
+  // 지울 것이 있을 때만 새 배열을 만들어 바뀌지 않은 목록은 그대로 둠
+  let s = state
+  if (s.storms.some(stormDone))
+    s = { ...s, storms: s.storms.filter((x) => !stormDone(x)) }
+  if (s.impacts.some(impactDone))
+    s = { ...s, impacts: s.impacts.filter((x) => !impactDone(x)) }
+  if (s.blasts.some(blastDone))
+    s = { ...s, blasts: s.blasts.filter((x) => !blastDone(x)) }
+  if (s.auroras.some(auroraDone))
+    s = { ...s, auroras: s.auroras.filter((x) => !auroraDone(x)) }
   return s
 }
 

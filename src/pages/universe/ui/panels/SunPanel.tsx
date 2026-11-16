@@ -10,7 +10,7 @@ import {
 } from '../../model/solar/sun'
 import { world, worldActions } from '../../model/world/store'
 import { sunState } from '../../model/world/selectors'
-import { createMessage, pick, t } from '../i18n'
+import { createActionMessage, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -61,7 +61,7 @@ const REFERENCE = [
 
 /** 태양의 진화: 지금 상태, 이정표로 이동, H-R도 */
 export function SunPanel() {
-  const [message, setMessage] = createMessage()
+  const feedback = createActionMessage()
   const l = () => locale()
   const sun = () => sunState(world())
   const age = () => sunAgeGyr(world().year)
@@ -71,8 +71,7 @@ export function SunPanel() {
       : t(`stage.${sun().stage}` as MessageKey)
 
   const go = (ageGyr: number) => {
-    const result = worldActions.jumpTo(yearAtSunAge(ageGyr))
-    setMessage(() => pick(result.message))
+    feedback.report(worldActions.jumpTo(yearAtSunAge(ageGyr)))
   }
 
   return (
@@ -200,7 +199,7 @@ export function SunPanel() {
           </tbody>
         </table>
       </div>
-      <StatusMessage message={message()} />
+      <StatusMessage message={feedback.message()} tone={feedback.tone()} />
     </div>
   )
 }

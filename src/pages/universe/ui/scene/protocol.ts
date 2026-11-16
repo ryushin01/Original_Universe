@@ -53,10 +53,14 @@ export type ToWorker =
   | { type: 'rotate'; dTheta: number; dPhi: number }
   | { type: 'zoom'; factor: number }
   | { type: 'pick'; x: number; y: number; seq: number }
+  /** 탭이 숨으면 렌더 루프를 멈춤 */
+  | { type: 'visibility'; visible: boolean }
   | { type: 'dispose' }
 
 /** 렌더링 워커 → 메인 스레드 */
 export type FromWorker =
+  /** WebGL을 열었음 (느려도 진행 중이므로 메인 스레드로 바꾸지 않고 더 기다림) */
+  | { type: 'context' }
   | { type: 'ready' }
   | { type: 'error'; message: string }
   | { type: 'labels'; labels: LabelPosition[] }
