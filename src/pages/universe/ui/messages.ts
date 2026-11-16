@@ -19,8 +19,8 @@ export const MESSAGES = {
   'page.mobileNav': ['화면 이동', 'Jump to'],
   'page.destinations': ['목적지', 'Destinations'],
   'page.error': [
-    '이 영역을 그리는 중 문제가 생겼습니다. 다시 시도해 보세요.',
-    'Something went wrong while drawing this section. Please try again.',
+    '{section} 영역을 그리는 중 문제가 생겼습니다. 다시 시도해 보세요.',
+    'Something went wrong while drawing the {section} section. Please try again.',
   ],
   'page.retry': ['다시 시도', 'Try again'],
   'page.credits': [

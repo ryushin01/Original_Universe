@@ -200,15 +200,17 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
     }
     let canvas = createCanvas()
 
-    // 워커가 정해진 시간 안에 첫 장면을 못 그리면 메인 스레드로 (WebGL을 열었으면 더 기다림)
+    // 워커가 정해진 시간 안에 첫 장면을 못 그리면 메인 스레드로 (WebGL을 열었으면 더 기다림).
+    // 숨은 탭에서는 그리기를 멈추므로 감시도 멈추고, 다시 보이면 그 단계의 시간을 처음부터 줌
     let watchdog: ReturnType<typeof setTimeout> | undefined
-    const watch = (ms: number) => {
+    let allowance = WORKER_READY_TIMEOUT_MS
+    const watch = (ms = allowance) => {
+      allowance = ms
       clearTimeout(watchdog)
+      if (document.hidden) return
       watchdog = setTimeout(() => {
-        if (client?.mode !== 'worker' || status() !== 'loading') return
-        // 숨은 탭에서는 그리기를 멈추므로 첫 장면이 없는 게 당연함: 보일 때까지 다시 기다림
-        if (document.hidden) watch(ms)
-        else void startMain()
+        if (client?.mode === 'worker' && status() === 'loading')
+          void startMain()
       }, ms)
     }
     onCleanup(() => clearTimeout(watchdog))
@@ -263,7 +265,11 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
     } else void startMain()
 
     // 탭이 숨으면 3D 그리기를 멈춤 (메인 스레드의 화면 갱신은 브라우저가 알아서 멈춤)
-    const onVisibility = () => client?.setVisible(!document.hidden)
+    const onVisibility = () => {
+      client?.setVisible(!document.hidden)
+      if (document.hidden) clearTimeout(watchdog)
+      else if (client?.mode === 'worker' && status() === 'loading') watch()
+    }
     document.addEventListener('visibilitychange', onVisibility)
     onCleanup(() =>
       document.removeEventListener('visibilitychange', onVisibility),

@@ -15,15 +15,17 @@ describe('SectionBoundary', () => {
     render(() => (
       <>
         <p>바깥 내용</p>
-        <SectionBoundary onCrash={crash}>
+        <SectionBoundary name="우주 관리" onCrash={crash}>
           <Fragile />
         </SectionBoundary>
       </>
     ))
     expect(screen.getByText('바깥 내용')).toBeInTheDocument()
-    expect(screen.getByText(/문제가 생겼습니다/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/우주 관리 영역을 그리는 중 문제가 생겼습니다/),
+    ).toBeInTheDocument()
     expect(crash).toHaveBeenLastCalledWith(
-      expect.stringMatching(/문제가 생겼습니다/),
+      expect.stringMatching(/우주 관리 영역을 그리는 중 문제가 생겼습니다/),
     )
     expect(error).toHaveBeenCalled()
 

@@ -118,7 +118,7 @@ export function UniversePage() {
           <h2 id="stage-title" class="sr-only">
             {t('page.viewport')}
           </h2>
-          <SectionBoundary onCrash={setCrash}>
+          <SectionBoundary name={t('page.viewport')} onCrash={setCrash}>
             <Viewport hintId="viewport-hint" controls={!intro()} />
           </SectionBoundary>
           <p id="viewport-hint" class={styles.hint}>
@@ -141,7 +141,7 @@ export function UniversePage() {
             <h2 id="controls-title" class={styles.panelTitle}>
               {t('page.controls')}
             </h2>
-            <SectionBoundary onCrash={setCrash}>
+            <SectionBoundary name={t('page.controls')} onCrash={setCrash}>
               <ControlPanel />
             </SectionBoundary>
           </section>
@@ -154,7 +154,7 @@ export function UniversePage() {
             <h2 id="status-title" class={styles.panelTitle}>
               {t('page.status')}
             </h2>
-            <SectionBoundary onCrash={setCrash}>
+            <SectionBoundary name={t('page.status')} onCrash={setCrash}>
               <TimeControls />
               <Dossier />
               <MissionPanel />

@@ -8,7 +8,7 @@ function Broken(): never {
 const meta = {
   title: 'universe/SectionBoundary',
   component: SectionBoundary,
-  args: { onCrash: () => {}, children: undefined },
+  args: { name: '우주 관리', onCrash: () => {}, children: undefined },
 } satisfies Meta<typeof SectionBoundary>
 
 export default meta
@@ -17,7 +17,7 @@ type Story = StoryObj<typeof meta>
 /** 안쪽 패널이 정상일 때는 그대로 보여 줌 */
 export const Default: Story = {
   render: (args) => (
-    <SectionBoundary onCrash={args.onCrash}>
+    <SectionBoundary name={args.name} onCrash={args.onCrash}>
       <p>패널 내용</p>
     </SectionBoundary>
   ),
@@ -26,7 +26,7 @@ export const Default: Story = {
 /** 안쪽에서 예외가 나면 안내와 다시 시도 버튼 */
 export const Crashed: Story = {
   render: (args) => (
-    <SectionBoundary onCrash={args.onCrash}>
+    <SectionBoundary name={args.name} onCrash={args.onCrash}>
       <Broken />
     </SectionBoundary>
   ),

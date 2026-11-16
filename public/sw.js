@@ -53,13 +53,16 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-/** 캐시 먼저: 없으면 받아서 넣음 */
+/**
+ * 캐시 먼저: 없으면 받아서 넣음. 받을 때는 브라우저 HTTP 캐시를 서버와 다시 확인합니다
+ * (텍스처는 이름에 해시가 없어, 바뀐 뒤에도 HTTP 캐시의 옛 파일을 새 캐시에 담을 수 있음)
+ */
 function cacheFirst(event, cacheName) {
   const { request } = event
   return caches.open(cacheName).then(async (cache) => {
     const cached = await cache.match(request)
     if (cached) return cached
-    const response = await fetch(request)
+    const response = await fetch(new Request(request, { cache: 'no-cache' }))
     if (response.ok)
       event.waitUntil(cache.put(request, response.clone()).catch(() => {}))
     return response
