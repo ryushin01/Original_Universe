@@ -668,18 +668,20 @@ function emp(
   site: BattleSite,
   intensity: number,
 ): WorldState {
-  // 지구 피해는 지구가 있을 때만, 기지의 기계는 지구가 사라져도 멈춤
+  // 생명은 해치지 않음: 지구의 전력망·위성 피해와, 지은 기지의 기계를 고치는 비용만 (지구가 사라져도 기지는 멈춤)
   const earthOk = !isRemoved(state, 'earth')
   const shield = hasProject(state, 'grid-shield') ? 0.5 : 0
-  const loss = earthOk
+  const earthLoss = earthOk
     ? (300 + 4000 * intensity ** 2) * reach(site, 0.1) * (1 - shield)
     : 0
-  const fraction = clamp(0.2 * intensity * reach(site, 0.3), 0, 0.5)
+  const colonies = COLONY_KINDS.filter((kind) => hasProject(state, kind))
+  const colonyLoss = colonies.length * 120 * intensity * reach(site, 0.3)
+  const loss = earthLoss + colonyLoss
   return log(
-    hurtColonies({ ...state, losses: state.losses + loss }, fraction),
+    { ...state, losses: state.losses + loss },
     compose((l) => {
       const guard =
-        shield > 0
+        shield > 0 && earthOk
           ? l === 'ko'
             ? ' (전력망 보호 장치로 절반을 막음)'
             : ' (grid hardening absorbed half)'

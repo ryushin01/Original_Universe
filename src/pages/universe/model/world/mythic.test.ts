@@ -397,7 +397,7 @@ describe('리뷰에서 잡은 경우', () => {
     expect(s.battles[1].b).toBeNull()
   })
 
-  it('한 번도 다치지 않은 기지도, 지구가 사라진 뒤의 기지도 광기·전자기 침묵을 받는다', () => {
+  it('한 번도 다치지 않은 기지도, 지구가 사라진 뒤의 기지도 광기·시듦을 받고, 전자기 침묵은 기계만 멈춘다', () => {
     let s = build(fresh(), 'mars-city', true).state
     expect(s.colonyHealth['mars-city']).toBeUndefined()
     s = apply(s, 'azathoth', 'madness')
@@ -406,9 +406,10 @@ describe('리뷰에서 잡은 경우', () => {
       ...build(fresh(), 'mars-city', true).state,
       removed: { earth: { year: START, reason: 'devoured' as const } },
     }
+    // 전자기 침묵은 생명을 해치지 않음: 기지 사람은 그대로, 기계를 고치는 비용만
     const after = apply(noEarth, 'silent-colossus', 'emp', 'mars')
-    expect(after.colonyHealth['mars-city']).toBeLessThan(1)
-    expect(after.losses).toBe(0)
+    expect(after.colonyHealth['mars-city']).toBeUndefined()
+    expect(after.losses).toBeGreaterThan(0)
     expect(
       apply(noEarth, 'colour-out-of-space', 'blight', 'mars').colonyHealth[
         'mars-city'
