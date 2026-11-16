@@ -179,6 +179,60 @@ if (want('black-hole')) {
   await context.close()
 }
 
+/** 우주적 존재를 불러내고 그 존재를 카메라로 따라감 */
+async function summon(page, { being, rival, site, follow }) {
+  await page.getByRole('tab', { name: '우주적 존재' }).click()
+  await page.getByRole('combobox', { name: '불러낼 존재' }).selectOption(being)
+  await page.getByRole('combobox', { name: '맞설 존재' }).selectOption(rival)
+  await page.getByRole('radio', { name: site }).check({ force: true })
+  await page
+    .getByRole('button', { name: rival ? '격돌시키기' : '강림시키기' })
+    .click()
+  await page
+    .getByRole('combobox', { name: '목적지 바로 가기' })
+    .selectOption(`being:${follow}`)
+}
+
+// 우주적 존재: 태양 곁에서 맞붙은 주작과 현무
+if (want('mythic')) {
+  const { page, context } = await open()
+  await summon(page, {
+    being: 'vermilion-bird',
+    rival: 'black-tortoise',
+    site: '태양 곁',
+    follow: 'vermilion-bird',
+  })
+  // 소프트웨어 렌더러에서는 카메라가 다가가는 데 오래 걸림
+  await shot(page, 'mythic', 20_000)
+  await context.close()
+}
+
+// 홀로 강림한 아펩이 해를 무는 모습 (전조로 태양 잠식)
+if (want('descent')) {
+  const { page, context } = await open()
+  await summon(page, {
+    being: 'apep',
+    rival: '',
+    site: '태양 곁',
+    follow: 'apep',
+  })
+  // 첫 전조(태양 잠식)가 터질 때까지 1주/초로 흘림
+  const pace = page.getByRole('slider', { name: /시간 속도/ })
+  await pace.fill('2')
+  await page.getByRole('button', { name: '시간 흐름 재생' }).click()
+  await page
+    .getByRole('region', { name: '사건 기록' })
+    .getByText(/해를 물었습니다/)
+    .waitFor({ timeout: 120_000 })
+  await page.getByRole('button', { name: '시간 흐름 멈춤' }).click()
+  // 이지러진 해와 곁의 아펩이 함께 보이게 태양으로 다가감
+  await page
+    .getByRole('combobox', { name: '목적지 바로 가기' })
+    .selectOption('sun')
+  await shot(page, 'descent', 20_000)
+  await context.close()
+}
+
 // 우리 은하, 우주 거대 구조
 if (want('galaxy', 'cosmic')) {
   const { page, context } = await open()

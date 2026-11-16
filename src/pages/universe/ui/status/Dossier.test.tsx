@@ -65,4 +65,19 @@ describe('Dossier', () => {
       screen.getByRole('button', { name: '이 별을 폭발시키기' }),
     ).toBeInTheDocument()
   })
+
+  it('싸움터의 우주적 존재를 고르고 진영·권능·상대를 본다', async () => {
+    worldActions.summon({ being: 'ra', rival: 'apep', site: 'sun' })
+    render(() => <Dossier />)
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: '목적지 바로 가기' }),
+      'being:apep',
+    )
+    expect(screen.getByText('아펩', { selector: 'p' })).toBeInTheDocument()
+    expect(screen.getByText(/신수 · 이집트 신화/)).toBeInTheDocument()
+    expect(screen.getByText('격돌 중')).toBeInTheDocument()
+    // 상대 칸 (목적지 목록에도 같은 이름이 있음)
+    expect(screen.getAllByText('라').length).toBeGreaterThan(1)
+    expect(screen.getByText(/소행성 아포피스/)).toBeInTheDocument()
+  })
 })

@@ -8,6 +8,7 @@ import { initialWorld, tick } from './engine'
 import * as act from './actions'
 import type { ActionResult } from './actions'
 import type { FlybyInput, ImpactInput } from './factory'
+import type { SummonInput } from './actions'
 import type { MissionId, WorldState } from './types'
 
 /** 사전 렌더링 때 쓰는 고정 시각 (브라우저에서는 지금 시각으로 바꿈) */
@@ -95,6 +96,7 @@ export const worldActions = {
   setSunBlackHole: (on: boolean) => apply((w) => act.setSunBlackHole(w, on)),
   startMeteorStorm: (showerId: string) =>
     apply((w) => act.startMeteorStorm(w, showerId)),
+  summon: (input: SummonInput) => apply((w) => act.summon(w, input)),
   build: (kind: ProjectKind, instant = false) =>
     apply((w) => act.build(w, kind, instant)),
   startMission: (id: MissionId) =>

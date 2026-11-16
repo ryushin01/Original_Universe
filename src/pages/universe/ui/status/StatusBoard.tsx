@@ -78,6 +78,14 @@ export function StatusBoard() {
               ? '—'
               : `${formatBig(Math.round(sun().temperature), l())} K`}
           </dd>
+          <Show when={world().solarDim >= 0.005}>
+            <dt>{t('status.dim')}</dt>
+            <dd class={styles.warn}>
+              {t('status.dimValue', {
+                percent: formatPercent(world().solarDim, l()),
+              })}
+            </dd>
+          </Show>
         </dl>
       </div>
       <div class={styles.group}>

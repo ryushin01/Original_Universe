@@ -7,6 +7,7 @@ import { GALAXY_OBJECTS } from './galaxy/catalog'
 import { LOCAL_GALAXIES } from './local/catalog'
 import { COSMIC_STRUCTURES } from './cosmic/catalog'
 import type { ScaleId } from './view'
+import { BEING_BY_ID } from './mythic/catalog'
 
 export interface SceneObject {
   id: string
@@ -96,3 +97,24 @@ export function destinationsOf(scale: ScaleId): SceneObject[] {
 
 export const objectName = (scale: ScaleId, id: string): Text | undefined =>
   ALL[scale].find((o) => o.id === id)?.name
+
+/** 3D에서 고르는 우주적 존재의 id (`being:<존재 id>`) */
+export const BEING_PREFIX = 'being:'
+export const beingSceneId = (beingId: string) => `${BEING_PREFIX}${beingId}`
+export const beingIdOf = (sceneId: string): string | null =>
+  sceneId.startsWith(BEING_PREFIX) ? sceneId.slice(BEING_PREFIX.length) : null
+
+const beingObjects = new Map<string, SceneObject>()
+
+/** 우주적 존재의 이름표 대상 (같은 존재는 같은 객체라 이름표 DOM을 다시 만들지 않음) */
+export function beingObject(beingId: string): SceneObject {
+  let object = beingObjects.get(beingId)
+  if (!object) {
+    object = {
+      id: beingSceneId(beingId),
+      name: BEING_BY_ID[beingId].name,
+    }
+    beingObjects.set(beingId, object)
+  }
+  return object
+}

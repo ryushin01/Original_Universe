@@ -70,12 +70,18 @@ import {
 import { AUTO_INTERCEPTORS, makeMission } from './factory'
 import { evaluateMission } from './missions'
 import { formatKm, formatPeople, josa, nameOf } from './text'
-import type { Flyby, Tone, WorldState } from './types'
+import { log, markMilestone } from './log'
+import {
+  BATTLE_AFTERGLOW_YEARS,
+  SOLAR_DIM_TAU,
+  nextBattleYear,
+  resolveBattles,
+} from './mythic'
+import type { Flyby, WorldState } from './types'
 
 export const START_BUDGET = 500
 /** 한 번에 적분하는 최대 구간 (년) */
 const MAX_CHUNK_YEARS = 5e7
-const MAX_EVENTS = 80
 
 export function initialWorld(year: number): WorldState {
   return {
@@ -106,6 +112,8 @@ export function initialWorld(year: number): WorldState {
       shiftAu: 0,
     },
     colonyHealth: {},
+    battles: [],
+    solarDim: 0,
     meteorStorm: null,
     milestones: [],
     events: [],
@@ -114,24 +122,7 @@ export function initialWorld(year: number): WorldState {
   }
 }
 
-/** 사건 기록에 한 줄 더함 */
-export function log(
-  state: WorldState,
-  text: Text,
-  tone: Tone = 'info',
-): WorldState {
-  const event = { id: state.nextId, year: state.year, text, tone }
-  return {
-    ...state,
-    events: [event, ...state.events].slice(0, MAX_EVENTS),
-    nextId: state.nextId + 1,
-  }
-}
-
-const markMilestone = (state: WorldState, id: string): WorldState => ({
-  ...state,
-  milestones: [...state.milestones, id],
-})
+export { log }
 
 /* ── 프레임 진행 ──────────────────────────────────────── */
 
@@ -238,6 +229,9 @@ export function pruneFinished(state: WorldState): WorldState {
     !(BLAST_SOURCES.find((x) => x.id === b.sourceId)?.real ?? false) &&
     (b.debrisYear === null || b.debrisDone)
   const auroraDone = (a: WorldState['auroras'][number]) => a.untilYear <= year
+  // 끝난 격돌은 3D에서 이긴 존재가 사라지는 동안만 남김 (미션 판정은 끝날 때 이미 함)
+  const battleDone = (b: WorldState['battles'][number]) =>
+    b.status === 'over' && year - b.endYear > BATTLE_AFTERGLOW_YEARS
 
   // 지울 것이 있을 때만 새 배열을 만들어 바뀌지 않은 목록은 그대로 둠
   let s = state
@@ -249,6 +243,8 @@ export function pruneFinished(state: WorldState): WorldState {
     s = { ...s, blasts: s.blasts.filter((x) => !blastDone(x)) }
   if (s.auroras.some(auroraDone))
     s = { ...s, auroras: s.auroras.filter((x) => !auroraDone(x)) }
+  if (s.battles.some(battleDone))
+    s = { ...s, battles: s.battles.filter((x) => !battleDone(x)) }
   return s
 }
 
@@ -294,6 +290,7 @@ function nextEventYear(s: WorldState, limit: number): number {
     for (const [id, age] of STAGE_EVENTS)
       if (!s.milestones.includes(id)) consider(yearAtSunAge(age))
   if (s.mission?.status === 'running') consider(s.mission.endYear)
+  consider(nextBattleYear(s))
   return t
 }
 
@@ -309,9 +306,13 @@ function integrate(state: WorldState, years: number): WorldState {
   const colonyHealth = { ...s.colonyHealth }
   let budget = s.budget
   let year = state.year
+  let solarDim = s.solarDim
   for (let k = 0; k < steps; k++) {
     year += dt
-    const probe: WorldState = { ...s, year, earth, colonyHealth }
+    // 우주적 존재가 문 해는 몇 달에 걸쳐 다시 밝아짐
+    if (solarDim > 0)
+      solarDim = solarDim < 1e-4 ? 0 : solarDim * Math.exp(-dt / SOLAR_DIM_TAU)
+    const probe: WorldState = { ...s, year, earth, colonyHealth, solarDim }
     if (!isRemoved(probe, 'earth')) {
       const target = earthTemperature(bodyInsolation(probe, 'earth'))
       earth.tempC = target + (earth.tempC - target) * Math.exp(-dt / 2.4)
@@ -343,7 +344,7 @@ function integrate(state: WorldState, years: number): WorldState {
         1 - (1 - (colonyHealth[kind] ?? 1)) * Math.exp(-dt / 20)
     budget += incomeB(probe) * dt
   }
-  return { ...s, year, earth, colonyHealth, budget }
+  return { ...s, year, earth, colonyHealth, budget, solarDim }
 }
 
 /* ── N체 근접 통과 ────────────────────────────────────── */
@@ -581,6 +582,9 @@ function processDue(state: WorldState): WorldState {
   s = resolveBlasts(s)
   s = resolveFlybys(s)
   s = resolveStages(s)
+  s = resolveBattles(s)
+  // 격돌의 파편이 지구로 오면 행성 방위 요격망이 대응
+  if (s.impacts !== state.impacts) s = autoIntercept(s)
   return s
 }
 

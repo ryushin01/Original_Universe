@@ -29,6 +29,15 @@ import {
 } from './factory'
 import type { FlybyInput, ImpactInput } from './factory'
 import { MISSION_BY_ID } from './missions'
+import { BEING_BY_ID, SITE_BY_ID, isBeingId, isSiteId } from '../mythic/catalog'
+import type { SiteId } from '../mythic/catalog'
+import {
+  MAX_BATTLES,
+  battleOf,
+  makeBattle,
+  opposeBattle,
+  ragingBattles,
+} from './mythic'
 import {
   earthPopulation,
   hasProject,
@@ -428,6 +437,131 @@ export function startMeteorStorm(state: WorldState, showerId: string): Outcome {
       l === 'ko'
         ? `${formatSimDate(peak, l)} 극대에 유성 폭풍이 옵니다.`
         : `A meteor storm will arrive at the ${formatSimDate(peak, l)} peak.`,
+    ),
+  )
+}
+
+/* ── 우주적 존재 ───────────────────────────────────── */
+
+export interface SummonInput {
+  being: string
+  site: SiteId
+  /** 맞설 존재 (없으면 홀로 강림) */
+  rival: string | null
+}
+
+/** 불러낼 수 있는지 (미리보기와 실행이 같은 판정을 씀) */
+export function canSummon(state: WorldState, input: SummonInput): ActionResult {
+  const no = (ko: string, en: string): ActionResult => ({
+    ok: false,
+    message: both(ko, en),
+  })
+  if (!isBeingId(input.being) || (input.rival && !isBeingId(input.rival)))
+    return no('알 수 없는 존재입니다.', 'Unknown being.')
+  if (!isSiteId(input.site))
+    return no('알 수 없는 싸움터입니다.', 'Unknown battlefield.')
+  if (input.rival === input.being)
+    return no(
+      '같은 존재끼리는 싸울 수 없습니다.',
+      'A being cannot fight itself.',
+    )
+  const own = battleOf(state, input.being)
+  // 홀로 강림한 존재에게 맞설 존재를 보내는 것만 허용
+  const opposing = own && own.b === null && input.rival !== null
+  if (own && !opposing)
+    return {
+      ok: false,
+      message: compose((l) =>
+        l === 'ko'
+          ? `${josa(BEING_BY_ID[input.being].name.ko, '은는')} 이미 싸움터에 나와 있습니다.`
+          : `${BEING_BY_ID[input.being].name.en} is already on a battlefield.`,
+      ),
+    }
+  if (input.rival && battleOf(state, input.rival))
+    return {
+      ok: false,
+      message: compose((l) =>
+        l === 'ko'
+          ? `${josa(BEING_BY_ID[input.rival!].name.ko, '은는')} 이미 다른 곳에서 싸우고 있습니다.`
+          : `${BEING_BY_ID[input.rival!].name.en} is already fighting elsewhere.`,
+      ),
+    }
+  if (!opposing && ragingBattles(state).length >= MAX_BATTLES)
+    return no(
+      `격돌·강림은 한 번에 ${MAX_BATTLES}곳까지만 벌어집니다. 하나가 끝난 뒤에 다시 시도하세요.`,
+      `At most ${MAX_BATTLES} clashes or descents can rage at once. Try again when one ends.`,
+    )
+  const site = SITE_BY_ID[opposing ? own!.site : input.site]
+  if (site.anchor && isRemoved(state, site.anchor))
+    return no('싸움터가 사라졌습니다.', 'That battlefield no longer exists.')
+  return { ok: true, message: both('', '') }
+}
+
+/** 우주적 존재를 불러냄: 맞설 존재가 있으면 격돌, 없으면 홀로 강림 (강림한 존재에게 보내면 맞서기) */
+export function summon(state: WorldState, input: SummonInput): Outcome {
+  const check = canSummon(state, input)
+  if (!check.ok) return { state, result: check }
+  const a = BEING_BY_ID[input.being]
+  const own = battleOf(state, input.being)
+  if (own && input.rival) {
+    const rival = BEING_BY_ID[input.rival]
+    const battle = opposeBattle(state, own, rival.id)
+    const site = SITE_BY_ID[battle.site]
+    const s = log(
+      {
+        ...state,
+        battles: state.battles.map((b) => (b.id === own.id ? battle : b)),
+      },
+      compose((l) =>
+        l === 'ko'
+          ? `${site.name.ko}에 강림한 ${a.name.ko}에게 ${josa(rival.name.ko, '이가')} 맞섰습니다. 격돌은 ${formatSimDate(battle.endYear, l)}까지 이어집니다.`
+          : `${rival.name.en} rises against ${a.name.en} ${site.name.en.toLowerCase()}; the clash lasts until ${formatSimDate(battle.endYear, l)}.`,
+      ),
+      'warn',
+    )
+    return done(
+      s,
+      compose((l) =>
+        l === 'ko'
+          ? `${josa(rival.name.ko, '이가')} ${a.name.ko}에게 맞섭니다.`
+          : `${rival.name.en} now stands against ${a.name.en}.`,
+      ),
+    )
+  }
+  const battle = makeBattle(state, {
+    a: a.id,
+    b: input.rival,
+    site: input.site,
+  })
+  const site = SITE_BY_ID[input.site]
+  const rival = input.rival ? BEING_BY_ID[input.rival] : null
+  const s = log(
+    {
+      ...state,
+      battles: [...state.battles, battle],
+      nextId: state.nextId + 1,
+    },
+    compose((l) => {
+      if (!rival)
+        return l === 'ko'
+          ? `${josa(a.name.ko, '이가')} ${site.name.ko}에 강림했습니다. ${formatSimDate(battle.endYear, l)}에 재앙을 내립니다. 그 전에 맞설 존재를 보낼 수 있습니다.`
+          : `${a.name.en} has descended (${site.name.en}). It will unleash its calamity on ${formatSimDate(battle.endYear, l)} unless something stands against it.`
+      return l === 'ko'
+        ? `${site.name.ko}에서 ${josa(a.name.ko, '과와')} ${josa(rival.name.ko, '이가')} 맞붙었습니다. 격돌은 ${formatSimDate(battle.endYear, l)}까지 이어집니다.`
+        : `${a.name.en} and ${rival.name.en} clash (${site.name.en}) until ${formatSimDate(battle.endYear, l)}.`
+    }),
+    rival ? 'warn' : 'danger',
+  )
+  return done(
+    s,
+    compose((l) =>
+      rival
+        ? l === 'ko'
+          ? `${josa(a.name.ko, '과와')} ${josa(rival.name.ko, '이가')} 격돌을 시작했습니다.`
+          : `${a.name.en} and ${rival.name.en} have begun to clash.`
+        : l === 'ko'
+          ? `${josa(a.name.ko, '이가')} 강림했습니다.`
+          : `${a.name.en} has descended.`,
     ),
   )
 }

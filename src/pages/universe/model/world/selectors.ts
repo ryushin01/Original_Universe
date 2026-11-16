@@ -191,6 +191,9 @@ function baselineInsolation(id: BodyId): number {
   return insolation(1, el.a, el.e)
 }
 
+/** 우주적 존재가 해를 물어 태양계에 닿는 햇빛 비율 (1이면 그대로) */
+export const sunlightFactor = (state: WorldState) => 1 - state.solarDim
+
 /** 지금 받는 햇빛 (오늘 지구 = 1). 궤도 평균, 다이슨 구 바깥은 어두움 */
 export function bodyInsolation(state: WorldState, id: BodyId): number {
   if (id === 'sun') return 0
@@ -199,7 +202,7 @@ export function bodyInsolation(state: WorldState, id: BodyId): number {
   if (!el) return 0
   const sun = sunState(state)
   let s = insolation(
-    sun.luminosity,
+    sun.luminosity * sunlightFactor(state),
     el.a,
     el.e,
     id === 'earth' ? shadeFraction(state) : 0,
@@ -323,6 +326,7 @@ export function civilizationPower(state: WorldState): number {
   const { swarm, sphere } = dysonCapture(state)
   const dyson =
     sunState(state).luminosity *
+    sunlightFactor(state) *
     SUN_LUMINOSITY_W *
     Math.min(1, swarm + sphere) *
     0.25
@@ -346,6 +350,7 @@ export const MISSION_INCOME: Record<string, boolean> = {
   'solar-max': false,
   'mars-spring': true,
   'move-earth': true,
+  'stop-apep': false,
 }
 
 /* ── 재해 ─────────────────────────────────────────────── */
@@ -356,11 +361,13 @@ export const stormFrontAu = (storm: Storm, year: number, speedKms: number) =>
 
 /**
  * 저장·공유 링크에 담지 못하는 진행 중인 사건이 있는지:
- * 다가오는 소행성, 아직 닿지 않은 태양 폭풍, 근접 통과, 아직 오지 않은 별 폭발 잔해, 진행 중인 미션
+ * 다가오는 소행성, 아직 닿지 않은 태양 폭풍, 근접 통과, 아직 오지 않은 별 폭발 잔해,
+ * 우주적 존재의 격돌·강림, 진행 중인 미션
  */
 export function hasPendingEvents(state: WorldState): boolean {
   return (
     state.mission?.status === 'running' ||
+    state.battles.some((b) => b.status === 'raging') ||
     state.impacts.some((im) => im.status === 'incoming') ||
     state.storms.some((st) => !st.announced || st.hits.some((h) => !h.done)) ||
     state.flybys.some((f) => f.phase !== 'done') ||

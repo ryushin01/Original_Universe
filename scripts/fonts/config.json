@@ -3,6 +3,10 @@
   "scan": ["src"],
   "dataExtensions": ["json"],
   "extra": "년월일시분초오전후요화수목금토만억조",
+  "restOnly": {
+    "files": ["src/pages/universe/model/mythic/catalog.ts"],
+    "props": ["lore"]
+  },
   "fonts": [
     {
       "family": "Freesentation",
