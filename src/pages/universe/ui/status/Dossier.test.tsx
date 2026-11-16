@@ -78,6 +78,7 @@ describe('Dossier', () => {
     expect(screen.getByText('격돌 중')).toBeInTheDocument()
     // 상대 칸 (목적지 목록에도 같은 이름이 있음)
     expect(screen.getAllByText('라').length).toBeGreaterThan(1)
-    expect(screen.getByText(/소행성 아포피스/)).toBeInTheDocument()
+    // 전승 설명은 따로 받아 조금 뒤에 나옴
+    expect(await screen.findByText(/소행성 아포피스/)).toBeInTheDocument()
   })
 })

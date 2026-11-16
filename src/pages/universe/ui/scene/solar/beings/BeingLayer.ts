@@ -8,6 +8,7 @@ import {
   BufferGeometry,
   CircleGeometry,
   Color,
+  GreaterDepth,
   Group,
   Line,
   LineBasicMaterial,
@@ -380,13 +381,16 @@ export function createBeingLayer(): BeingLayer {
   const flashes: Flash[] = []
   let skyFlash = 0
 
-  // 해를 무는 원판 (태양 잠식)
+  // 해를 무는 원판 (태양 잠식): 해의 가운데 면에 놓고, 해 표면이 앞에 있는 자리에만 그려
+  // (깊이 비교 GreaterDepth) 해 바깥 하늘은 가리지 않고 해만 초승달처럼 이지러지게 함
   const bite = new Mesh(
     new CircleGeometry(1, 48),
     new MeshBasicMaterial({
-      color: '#000000',
+      color: '#05060a',
       transparent: true,
-      opacity: 0.94,
+      opacity: 0.96,
+      depthWrite: false,
+      depthFunc: GreaterDepth,
     }),
   )
   bite.renderOrder = 4
@@ -697,18 +701,16 @@ export function createBeingLayer(): BeingLayer {
       }
       skyFlash *= Math.exp(-ctx.dt / 0.6)
 
-      // 태양 잠식: 해 앞에 검은 원판을 비껴 놓아 이지러진 모습으로
+      // 태양 잠식: 해 가운데 면에 검은 원판을 비껴 놓아 이지러진 모습으로
       const dim = world.solarDim
       bite.visible = anchors.sunShining && dim > 0.01
       if (bite.visible) {
-        const toCamera = ctx.camera.position.clone().normalize()
         right.setFromMatrixColumn(ctx.camera.matrixWorld, 0)
         const r = anchors.sunRadius
         bite.position
-          .copy(toCamera)
-          .multiplyScalar(r * 1.15)
-          .addScaledVector(right, r * 2.1 * (1 - Math.sqrt(dim)))
-        bite.scale.setScalar(r * 1.03)
+          .set(0, 0, 0)
+          .addScaledVector(right, r * 2 * (1 - Math.sqrt(dim)))
+        bite.scale.setScalar(r * 1.02)
         faceCamera(bite, ctx.camera)
       }
     },

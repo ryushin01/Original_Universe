@@ -275,7 +275,8 @@ export function earthPopulation(state: WorldState): number {
   )
 }
 
-const COLONY_KINDS: ProjectKind[] = [
+/** 사람이 사는 기지 */
+export const COLONY_KINDS: ProjectKind[] = [
   'moon-base',
   'mars-city',
   'titan-base',

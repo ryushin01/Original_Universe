@@ -96,6 +96,22 @@ export function planPulses(
 }
 
 /**
+ * 격돌에서 일어날 수 있는 재해 (어느 쪽이 먼저 공격하든): 미리보기용.
+ * 각자 대표 재해는 늘 쓰고, 여파가 세 번 이상이면 둘째 재해도 쓸 수 있음
+ */
+export function possibleCalamities(a: Being, b: Being | null): Calamity[] {
+  const out: Calamity[] = []
+  // planPulses는 첫 난수로 먼저 공격할 쪽을 정하므로 두 경우를 모두 봄
+  for (const first of [0.25, 0.75]) {
+    let calls = 0
+    const random = () => (calls++ === 0 ? first : 0.5)
+    for (const plan of planPulses(a, b, random))
+      if (!out.includes(plan.calamity)) out.push(plan.calamity)
+  }
+  return out
+}
+
+/**
  * 삼킬 수 있는 천체의 크기: 소행성·혜성은 권능 3, 왜소 행성 5, 위성 6, 행성 9 이상.
  * 지구와 목성은 권능 10이 격돌을 이겼을 때만.
  */
@@ -127,6 +143,10 @@ export function devourVictim(
   finale: boolean,
   gone: (id: BodyId) => boolean,
 ): BodyId | null {
-  const order = finale ? [...site.victims].reverse() : site.victims
+  // 작은 것부터 (반지름 순): 여파는 가장 작은 것, 마무리는 가장 큰 것
+  const bySize = [...site.victims].sort(
+    (a, b) => BODIES[a].radiusKm - BODIES[b].radiusKm,
+  )
+  const order = finale ? bySize.reverse() : bySize
   return order.find((id) => !gone(id) && canDevour(id, power, finale)) ?? null
 }

@@ -26,12 +26,14 @@ import {
 import { makeImpact, makeStorm } from './factory'
 import { log } from './log'
 import {
+  COLONY_KINDS,
   bodyElements,
   earthPopulation,
   hasProject,
   isRemoved,
   sunState,
 } from './selectors'
+import { withoutBodies } from '../hazards/nbody'
 import { formatDuration, formatKm, formatPeople, josa, nameOf } from './text'
 import type { Battle, BattlePulse, Tone, WorldState } from './types'
 
@@ -324,22 +326,35 @@ function heat(
   )
 }
 
-/** 지구와 기지의 사람이 줄어듦 (광기·시듦) */
-function loseLives(state: WorldState, fraction: number, bio: number) {
+/**
+ * 지은 기지 모두의 생존 비율을 줄임. 한 번도 피해를 입지 않은 기지는 기록이 없으므로
+ * 기지 목록에서 찾아 1에서 시작함
+ */
+function hurtColonies(state: WorldState, fraction: number): WorldState {
+  if (fraction <= 0) return state
   const colonyHealth = { ...state.colonyHealth }
-  for (const kind of Object.keys(colonyHealth) as Array<
-    keyof typeof colonyHealth
-  >)
+  let changed = false
+  for (const kind of COLONY_KINDS) {
+    if (!hasProject(state, kind)) continue
     colonyHealth[kind] = (colonyHealth[kind] ?? 1) * (1 - fraction)
+    changed = true
+  }
+  return changed ? { ...state, colonyHealth } : state
+}
+
+/** 지구와 기지의 사람이 줄어듦 (광기·시듦). 지구가 사라졌으면 기지만 */
+function loseLives(state: WorldState, fraction: number, bio: number) {
+  const s = hurtColonies(state, fraction)
+  // 지구가 사라졌어도 기지는 남을 수 있음
+  if (isRemoved(state, 'earth')) return { deaths: 0, state: s }
   return {
     deaths: earthPopulation(state) * fraction,
     state: {
-      ...state,
-      colonyHealth,
+      ...s,
       earth: {
-        ...state.earth,
-        popFactor: state.earth.popFactor * (1 - fraction),
-        biosphere: clamp(state.earth.biosphere - bio, 0, 100),
+        ...s.earth,
+        popFactor: s.earth.popFactor * (1 - fraction),
+        biosphere: clamp(s.earth.biosphere - bio, 0, 100),
       },
     },
   }
@@ -351,7 +366,6 @@ function madness(
   site: BattleSite,
   intensity: number,
 ): WorldState {
-  if (isRemoved(state, 'earth')) return state
   // 꿈으로 퍼지므로 먼 싸움터에서도 절반은 닿음
   const spread = Math.max(site.reach, 0.5)
   const fraction = clamp(0.03 * intensity ** 2 * spread, 0, 0.2)
@@ -377,7 +391,6 @@ function blight(
   site: BattleSite,
   intensity: number,
 ): WorldState {
-  if (isRemoved(state, 'earth')) return state
   const spread = Math.max(site.reach, 0.3)
   const bio = 25 * intensity * spread
   const fraction = clamp(0.01 * intensity ** 2 * spread, 0, 0.1)
@@ -513,6 +526,8 @@ function devour(
         ...state.removed,
         [victim]: { year: state.year, reason: 'devoured' as const },
       },
+      // 근접 통과를 N체로 계산하는 중이면 삼킨 천체가 계속 끌어당기지 않게 뺌
+      nbody: state.nbody ? withoutBodies(state.nbody, new Set([victim])) : null,
     },
     compose((l) =>
       l === 'ko'
@@ -653,17 +668,15 @@ function emp(
   site: BattleSite,
   intensity: number,
 ): WorldState {
-  if (isRemoved(state, 'earth')) return state
+  // 지구 피해는 지구가 있을 때만, 기지의 기계는 지구가 사라져도 멈춤
+  const earthOk = !isRemoved(state, 'earth')
   const shield = hasProject(state, 'grid-shield') ? 0.5 : 0
-  const loss = (300 + 4000 * intensity ** 2) * reach(site, 0.1) * (1 - shield)
+  const loss = earthOk
+    ? (300 + 4000 * intensity ** 2) * reach(site, 0.1) * (1 - shield)
+    : 0
   const fraction = clamp(0.2 * intensity * reach(site, 0.3), 0, 0.5)
-  const colonyHealth = { ...state.colonyHealth }
-  for (const kind of Object.keys(colonyHealth) as Array<
-    keyof typeof colonyHealth
-  >)
-    colonyHealth[kind] = (colonyHealth[kind] ?? 1) * (1 - fraction)
   return log(
-    { ...state, losses: state.losses + loss, colonyHealth },
+    hurtColonies({ ...state, losses: state.losses + loss }, fraction),
     compose((l) => {
       const guard =
         shield > 0
@@ -671,9 +684,15 @@ function emp(
             ? ' (전력망 보호 장치로 절반을 막음)'
             : ' (grid hardening absorbed half)'
           : ''
+      const damage =
+        loss > 0
+          ? l === 'ko'
+            ? ` 피해 ${formatMoney(loss, l)}${guard}.`
+            : ` Damage ${formatMoney(loss, l)}${guard}.`
+          : ''
       return l === 'ko'
-        ? `${said(being, l)}의 전자기 침묵: 생명은 그대로지만 전력망과 위성, 기지의 기계가 멈췄습니다. 피해 ${formatMoney(loss, l)}${guard}.`
-        : `${said(being, l)}’s electromagnetic silence spares life but stops grids, satellites and colony machinery. Damage ${formatMoney(loss, l)}${guard}.`
+        ? `${said(being, l)}의 전자기 침묵: 생명은 그대로지만 전력망과 위성, 기지의 기계가 멈췄습니다.${damage}`
+        : `${said(being, l)}’s electromagnetic silence spares life but stops grids, satellites and colony machinery.${damage}`
     }),
     'danger',
   )

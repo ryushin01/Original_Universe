@@ -40,6 +40,7 @@ import {
   positionOf,
   relativeState,
   step,
+  withoutBodies,
 } from '../hazards/nbody'
 import { METEOR_SHOWERS, solarLongitude } from '../hazards/meteors'
 import { PROJECT_BY_KIND } from '../projects/catalog'
@@ -465,20 +466,7 @@ function stepNBody(state: WorldState, years: number): WorldState {
       )
     }
     // 사라진 천체를 빼고 다시 구성
-    const keep = nb.ids
-      .map((id, i) => ({ id, i }))
-      .filter(({ id }) => !doomed.has(id))
-      .map(({ id, i }) => ({
-        id,
-        mu: nb!.mu[i],
-        r: positionOf(nb!, i),
-        v: [nb!.vel[3 * i], nb!.vel[3 * i + 1], nb!.vel[3 * i + 2]] as [
-          number,
-          number,
-          number,
-        ],
-      }))
-    nb = createNBody(keep, nb.jd)
+    nb = withoutBodies(nb, new Set(doomed.keys()))
     s = { ...s, removed, nbody: nb }
   }
   const ii = indexOf(nb, 'intruder')

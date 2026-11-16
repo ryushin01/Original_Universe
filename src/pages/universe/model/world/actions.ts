@@ -450,13 +450,23 @@ export interface SummonInput {
   rival: string | null
 }
 
+/** 맞설 존재가 빈 문자열이면 없음(홀로 강림)으로 */
+const normalize = (input: SummonInput): SummonInput => ({
+  ...input,
+  rival: input.rival || null,
+})
+
 /** 불러낼 수 있는지 (미리보기와 실행이 같은 판정을 씀) */
-export function canSummon(state: WorldState, input: SummonInput): ActionResult {
+export function canSummon(state: WorldState, raw: SummonInput): ActionResult {
+  const input = normalize(raw)
   const no = (ko: string, en: string): ActionResult => ({
     ok: false,
     message: both(ko, en),
   })
-  if (!isBeingId(input.being) || (input.rival && !isBeingId(input.rival)))
+  if (
+    !isBeingId(input.being) ||
+    (input.rival !== null && !isBeingId(input.rival))
+  )
     return no('알 수 없는 존재입니다.', 'Unknown being.')
   if (!isSiteId(input.site))
     return no('알 수 없는 싸움터입니다.', 'Unknown battlefield.')
@@ -498,7 +508,8 @@ export function canSummon(state: WorldState, input: SummonInput): ActionResult {
 }
 
 /** 우주적 존재를 불러냄: 맞설 존재가 있으면 격돌, 없으면 홀로 강림 (강림한 존재에게 보내면 맞서기) */
-export function summon(state: WorldState, input: SummonInput): Outcome {
+export function summon(state: WorldState, raw: SummonInput): Outcome {
+  const input = normalize(raw)
   const check = canSummon(state, input)
   if (!check.ok) return { state, result: check }
   const a = BEING_BY_ID[input.being]

@@ -19,7 +19,7 @@
  * 이런 글꼴은 `rest: false`로 조각 파일을 만들지 않습니다. 제목 글자가 모두 1에 들어 있고,
  * `--check`가 빠진 글자를 잡기 때문입니다. `hangulOnly: true`면 한글만 담아, 기호·영문은 다음 글꼴이 그립니다.
  *
- * `restOnly`(설정 맨 위)에 적은 파일의 고른 속성(예: 우주적 존재의 전승 설명 lore)은 1에 담지 않습니다.
+ * `restOnly`(설정 맨 위)에 적은 파일(예: 우주적 존재의 전승 설명)의 글자는 1에 담지 않습니다.
  * 첫 화면에 나오지 않는 긴 설명 때문에 모든 화면 글자 파일이 커지지 않게 하고, 그 글자는 2의 조각으로 그립니다.
  */
 import { existsSync } from 'node:fs'
@@ -80,12 +80,9 @@ async function* walk(dir) {
   }
 }
 
-/** 조각으로만 그릴 속성: 파일(ROOT 기준) → 속성 이름 */
-const REST_ONLY = new Map(
-  (config.restOnly?.files ?? []).map((file) => [
-    path.join(ROOT, file),
-    new Set(config.restOnly.props),
-  ]),
+/** 조각으로만 그릴 파일 (ROOT 기준) */
+const REST_ONLY = new Set(
+  (config.restOnly ?? []).map((file) => path.join(ROOT, file)),
 )
 
 /** 화면에 나올 수 있는 글자: 코드의 문자열·템플릿·JSX 글자와 JSON 등 자료 파일의 글자(주석은 뺌) */
@@ -94,6 +91,7 @@ async function screenText() {
   for (const dir of config.scan) {
     for await (const file of walk(path.join(ROOT, dir))) {
       if (/\.(test|spec|stories)\.[jt]sx?$/.test(file)) continue
+      if (REST_ONLY.has(file)) continue
       if (/\.[cm]?[jt]sx?$/.test(file)) {
         const text = await readFile(file, 'utf8')
         const kind = /x$/.test(file) ? ts.ScriptKind.TSX : ts.ScriptKind.TS
@@ -104,15 +102,7 @@ async function screenText() {
           false,
           kind,
         )
-        const skip = REST_ONLY.get(file)
         const visit = (node) => {
-          if (
-            skip &&
-            ts.isPropertyAssignment(node) &&
-            ts.isIdentifier(node.name) &&
-            skip.has(node.name.text)
-          )
-            return
           if (
             ts.isStringLiteralLike(node) ||
             ts.isTemplateHead(node) ||

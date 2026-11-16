@@ -1,5 +1,13 @@
 import { initialWorld, advanceTo, pruneFinished } from './engine'
-import { build, launchStorm, startMission, summon } from './actions'
+import {
+  build,
+  launchFlyby,
+  launchStorm,
+  startMission,
+  summon,
+} from './actions'
+import { FLYBY_PRESETS } from '../hazards/flyby'
+import { indexOf } from '../hazards/nbody'
 import type { SummonInput } from './actions'
 import {
   BEINGS,
@@ -9,7 +17,14 @@ import {
   SITE_BY_ID,
 } from '../mythic/catalog'
 import type { Calamity } from '../mythic/catalog'
-import { affinity, favoured, winChance } from '../mythic/combat'
+import { LORE } from '../mythic/lore'
+import {
+  affinity,
+  devourVictim,
+  favoured,
+  possibleCalamities,
+  winChance,
+} from '../mythic/combat'
 import {
   BATTLE_AFTERGLOW_YEARS,
   applyCalamity,
@@ -62,7 +77,7 @@ describe('우주적 존재 목록', () => {
     for (const b of BEINGS) {
       expect(ids.has(b.id), b.id).toBe(false)
       ids.add(b.id)
-      for (const text of [b.name, b.origin, b.lore]) {
+      for (const text of [b.name, b.origin, LORE[b.id]]) {
         expect(text.ko, b.id).not.toBe('')
         expect(text.en, b.id).not.toBe('')
       }
@@ -361,5 +376,67 @@ describe('저장과 미션', () => {
     expect(fought.mission?.status).toBe(
       battle.winner === 'apep' ? 'lost' : 'won',
     )
+  })
+})
+
+describe('리뷰에서 잡은 경우', () => {
+  it('삼킬 천체는 반지름 순: 목성 곁 여파는 유로파, 마무리는 가니메데부터', () => {
+    const site = SITE_BY_ID.jupiter
+    const none = () => false
+    expect(devourVictim(site, 6, false, none)).toBe('europa')
+    expect(devourVictim(site, 8, true, none)).toBe('ganymede')
+    expect(devourVictim(site, 10, true, none)).toBe('jupiter')
+  })
+
+  it('맞설 존재가 빈 문자열이면 홀로 강림으로 보고, 같은 존재가 두 번 강림하지 않는다', () => {
+    let s = call(fresh(), { being: 'apep', rival: null, site: 'sun' }).state
+    const again = call(s, { being: 'apep', rival: '', site: 'sun' })
+    expect(again.result.ok).toBe(false)
+    expect(again.state.battles).toHaveLength(1)
+    s = call(s, { being: 'ra', rival: '', site: 'earth' }).state
+    expect(s.battles[1].b).toBeNull()
+  })
+
+  it('한 번도 다치지 않은 기지도, 지구가 사라진 뒤의 기지도 광기·전자기 침묵을 받는다', () => {
+    let s = build(fresh(), 'mars-city', true).state
+    expect(s.colonyHealth['mars-city']).toBeUndefined()
+    s = apply(s, 'azathoth', 'madness')
+    expect(s.colonyHealth['mars-city']).toBeLessThan(1)
+    const noEarth = {
+      ...build(fresh(), 'mars-city', true).state,
+      removed: { earth: { year: START, reason: 'devoured' as const } },
+    }
+    const after = apply(noEarth, 'silent-colossus', 'emp', 'mars')
+    expect(after.colonyHealth['mars-city']).toBeLessThan(1)
+    expect(after.losses).toBe(0)
+    expect(
+      apply(noEarth, 'colour-out-of-space', 'blight', 'mars').colonyHealth[
+        'mars-city'
+      ],
+    ).toBeLessThan(1)
+  })
+
+  it('근접 통과를 계산하는 중에 삼킨 천체는 N체 계산에서도 빠진다', () => {
+    const preset = FLYBY_PRESETS.find((p) => p.id === 'black-hole')!
+    let s = launchFlyby(fresh(), { ...preset, presetId: preset.id }).state
+    // N체 구역에 들어올 때까지
+    for (let i = 0; i < 2000 && !s.nbody; i++) s = advanceTo(s, s.year + 0.5)
+    expect(s.nbody).not.toBeNull()
+    expect(indexOf(s.nbody!, 'apophis')).toBeGreaterThan(-1)
+    const eaten = apply(s, 'hati', 'devour')
+    expect(isRemoved(eaten, 'apophis')).toBe(true)
+    expect(indexOf(eaten.nbody!, 'apophis')).toBe(-1)
+  })
+
+  it('재해 미리보기는 어느 쪽이 먼저 공격하든 일어날 수 있는 것을 모두 보여 준다', () => {
+    // 바스트(가호·작열) 대 다곤(파편 비·혹한): 여파 3번이면 먼저 공격한 쪽만 둘째 재해를 씀
+    const list = possibleCalamities(being('bast'), being('dagon'))
+    expect(list).toEqual(
+      expect.arrayContaining(['blessing', 'heat', 'rain', 'frost']),
+    )
+    expect(possibleCalamities(being('apep'), null)).toEqual([
+      'eclipse',
+      'madness',
+    ])
   })
 })

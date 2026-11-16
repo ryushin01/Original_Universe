@@ -62,6 +62,7 @@ import { orbitalPeriodDays } from '../../model/solar/kepler'
 import { pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import { PassportCard } from './PassportCard'
+import { createLore } from '../mythicLore'
 import styles from './status.module.css'
 
 const KIND_NAME = {
@@ -518,6 +519,7 @@ function IntruderDossier() {
 /** 우주적 존재: 3D에서 고르거나 우주적 존재 탭에서 따라가기 */
 function BeingDossier(props: { id: string }) {
   const l = () => locale()
+  const lore = createLore()
   const being = () => BEING_BY_ID[props.id]
   // 가장 최근의 격돌 (끝났으면 잠시 남아 있음)
   const battle = () =>
@@ -593,7 +595,9 @@ function BeingDossier(props: { id: string }) {
             { label: t('being.phase'), value: phase() },
           ]}
         >
-          <p class={styles.small}>{pick(being().lore)}</p>
+          <Show when={lore()?.[props.id]}>
+            {(story) => <p class={styles.small}>{pick(story())}</p>}
+          </Show>
           <dl class={styles.list}>
             <dt>{t('being.alignment')}</dt>
             <dd>{pick(ALIGNMENT_NAME[being().alignment])}</dd>

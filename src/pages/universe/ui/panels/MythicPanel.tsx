@@ -15,12 +15,12 @@ import {
   SITES,
   SITE_BY_ID,
 } from '../../model/mythic/catalog'
-import type { Being, Calamity, SiteId } from '../../model/mythic/catalog'
+import type { Being, SiteId } from '../../model/mythic/catalog'
 import {
   areRivals,
   battleDays,
   favoured,
-  planPulses,
+  possibleCalamities,
   winChance,
 } from '../../model/mythic/combat'
 import { viewActions } from '../../model/view'
@@ -32,6 +32,7 @@ import {
 } from '../../model/world/mythic'
 import { formatDuration, josa, nameOf } from '../../model/world/text'
 import { createActionMessage, pick, t } from '../i18n'
+import { createLore } from '../mythicLore'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -59,13 +60,11 @@ function aftermathText(being: Being, site: SiteId, l: Locale): string {
   return t('mythic.ifWins', { who: who(being, l), result })
 }
 
-/** 함께 일으킬 재해 이름 (겹치지 않게, 일어날 순서대로) */
-function calamityList(a: Being, b: Being | null): string {
-  const seen: Calamity[] = []
-  for (const plan of planPulses(a, b, () => 0.5))
-    if (!seen.includes(plan.calamity)) seen.push(plan.calamity)
-  return seen.map((c) => pick(CALAMITIES[c].name)).join(', ')
-}
+/** 일어날 수 있는 재해 이름 (어느 쪽이 먼저 공격하든) */
+const calamityList = (a: Being, b: Being | null) =>
+  possibleCalamities(a, b)
+    .map((c) => pick(CALAMITIES[c].name))
+    .join(', ')
 
 /** 진행 중인 격돌·강림 한 개 */
 function ActiveCard(props: {
@@ -155,6 +154,7 @@ export function MythicPanel() {
   const [rivalId, setRivalId] = createSignal('nyarlathotep')
   const [siteId, setSiteId] = createSignal<SiteId>('earth')
   const feedback = createActionMessage()
+  const lore = createLore()
   const l = () => locale()
 
   const being = () => BEING_BY_ID[beingId()]
@@ -204,6 +204,11 @@ export function MythicPanel() {
       element: pick(ELEMENT_NAME[b.element]),
       power: b.power,
     })
+  /** 진영·속성·권능·성향, 전승(받은 뒤), 출전 */
+  const describe = (b: Being) => {
+    const story = lore()?.[b.id]
+    return `${about(b)} · ${pick(ALIGNMENT_NAME[b.alignment])}. ${story ? `${pick(story)} ` : ''}(${pick(b.origin)})`
+  }
 
   const active = () => ragingBattles(world()).map((b) => b.id)
 
@@ -215,7 +220,7 @@ export function MythicPanel() {
         value={beingId()}
         onChange={chooseBeing}
         options={beingOptions()}
-        description={`${about(being())} · ${pick(ALIGNMENT_NAME[being().alignment])}. ${pick(being().lore)} (${pick(being().origin)})`}
+        description={describe(being())}
       />
       <SelectField
         id={RIVAL_SELECT_ID}
@@ -226,11 +231,7 @@ export function MythicPanel() {
           { value: '', label: t('mythic.alone') },
           ...beingOptions(beingId()),
         ]}
-        description={
-          rival()
-            ? `${about(rival()!)} · ${pick(ALIGNMENT_NAME[rival()!.alignment])}. ${pick(rival()!.lore)} (${pick(rival()!.origin)})`
-            : undefined
-        }
+        description={rival() ? describe(rival()!) : undefined}
       />
       <Show
         when={!descent()}

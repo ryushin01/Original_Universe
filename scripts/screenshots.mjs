@@ -7,6 +7,8 @@ import { chromium } from '@playwright/test'
 const BASE = process.env.BASE_URL ?? 'http://localhost:4183'
 const OUT = 'docs/images'
 const ONLY = process.env.ONLY?.split(',').map((name) => name.trim())
+// 기계가 바빠 3D가 느리게 그려지면 카메라가 자리를 잡을 때까지 더 기다림 (밀리초)
+const SETTLE = Number(process.env.SETTLE ?? 0)
 /** 찍을 묶음인지 (ONLY가 없으면 모두) */
 const want = (...names) => !ONLY || names.some((name) => ONLY.includes(name))
 // WebGL 장면이 그려지도록 소프트웨어 렌더러를 켭니다.
@@ -57,7 +59,7 @@ async function open({
 }
 
 async function shot(page, name, wait = 2500) {
-  await page.waitForTimeout(wait)
+  await page.waitForTimeout(wait + SETTLE)
   await page.screenshot({
     path: `${OUT}/${name}.jpg`,
     type: 'jpeg',
@@ -80,7 +82,7 @@ if (want('og')) {
     viewport: { width: 1200, height: 630 },
     start: false,
   })
-  await page.waitForTimeout(2500)
+  await page.waitForTimeout(2500 + SETTLE)
   await page.screenshot({
     path: 'public/og-image.jpg',
     type: 'jpeg',
@@ -225,7 +227,7 @@ if (want('descent')) {
     .getByText(/해를 물었습니다/)
     .waitFor({ timeout: 120_000 })
   await page.getByRole('button', { name: '시간 흐름 멈춤' }).click()
-  // 이지러진 해와 곁의 아펩이 함께 보이게 태양으로 다가감
+  // 초승달처럼 이지러진 해와 곁의 아펩이 함께 보이게 태양으로 다가감
   await page
     .getByRole('combobox', { name: '목적지 바로 가기' })
     .selectOption('sun')
