@@ -263,6 +263,7 @@ export class Engine {
       dt,
       reducedMotion: reduced,
       pixelRatio: this.renderer.getPixelRatio(),
+      height: this.height,
       reportCollision: this.options.onCollision,
     }
     scene.update(ctx)

@@ -15,7 +15,7 @@ export const SAVE_KEY = 'universe-simulator:saves'
 export const MAX_SAVES = 8
 
 /**
- * 주소에 담는 시나리오: 시간·예산·속도·구조물·바뀐 궤도·사라진 천체·지구 상태.
+ * 주소에 담는 시나리오: 시간·예산·속도·구조물·바뀐 궤도·사라진 천체·지구 상태·태양 잠식.
  * 다가오는 소행성처럼 진행 중인 사건은 담지 않으므로, 그런 사건이 있으면 저장·공유를 막습니다
  * (`hasPendingEvents`).
  */
@@ -30,6 +30,8 @@ export interface Snapshot {
   colonies?: Partial<Record<ProjectKind, number>>
   /** 예약한 유성 폭풍 [유성우, 시작, 끝] */
   meteor?: [string, number, number]
+  /** 우주적 존재에게 물려 줄어든 햇빛 비율 (격돌이 끝난 뒤에도 몇 달 남음) */
+  dim?: number
   structures: Array<[ProjectKind, number, number]>
   overrides: Partial<
     Record<
@@ -52,6 +54,7 @@ const REASONS: RemovalReason[] = [
   'captured',
   'disrupted',
   'collided',
+  'devoured',
 ]
 
 export function toSnapshot(state: WorldState): Snapshot {
@@ -93,6 +96,7 @@ export function toSnapshot(state: WorldState): Snapshot {
           ] as [string, number, number],
         }
       : {}),
+    ...(state.solarDim > 0 ? { dim: state.solarDim } : {}),
     structures: state.structures.map((s) => [
       s.kind,
       s.startYear,
@@ -127,6 +131,7 @@ export function validateSnapshot(raw: unknown): Snapshot | null {
     return null
   if (!finite(s.budget, -1e15, 1e18)) return null
   if (s.losses !== undefined && !finite(s.losses, 0, 1e18)) return null
+  if (s.dim !== undefined && !finite(s.dim, 0, 0.95)) return null
   if (s.meteor !== undefined) {
     if (!Array.isArray(s.meteor) || s.meteor.length !== 3) return null
     const [shower, from, until] = s.meteor
@@ -231,6 +236,7 @@ export function fromSnapshot(snapshot: Snapshot): WorldState {
     speedIndex: snapshot.speed,
     budget: snapshot.budget,
     losses: snapshot.losses ?? 0,
+    solarDim: snapshot.dim ?? 0,
     colonyHealth: { ...snapshot.colonies },
     meteorStorm: snapshot.meteor
       ? {

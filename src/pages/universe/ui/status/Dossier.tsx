@@ -26,7 +26,16 @@ import {
   redshift,
   scaleFactor,
 } from '../../model/cosmic/cosmology'
-import { objectsOf } from '../../model/objects'
+import { beingIdOf, beingObject, objectsOf } from '../../model/objects'
+import {
+  ALIGNMENT_NAME,
+  BEING_BY_ID,
+  CALAMITIES,
+  ELEMENT_NAME,
+  FACTION_NAME,
+  SITE_BY_ID,
+} from '../../model/mythic/catalog'
+import { visibleBeings } from '../../model/world/mythic'
 import { BODIES, isBodyId, moonsOf } from '../../model/solar/bodies'
 import type { BodyId } from '../../model/solar/bodies'
 import { blackbodyColor } from '../../model/solar/sun'
@@ -53,6 +62,7 @@ import { orbitalPeriodDays } from '../../model/solar/kepler'
 import { pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import { PassportCard } from './PassportCard'
+import { createLore } from '../mythicLore'
 import styles from './status.module.css'
 
 const KIND_NAME = {
@@ -506,6 +516,106 @@ function IntruderDossier() {
   )
 }
 
+/** 우주적 존재: 3D에서 고르거나 우주적 존재 탭에서 따라가기 */
+function BeingDossier(props: { id: string }) {
+  const l = () => locale()
+  const lore = createLore()
+  const being = () => BEING_BY_ID[props.id]
+  // 가장 최근의 격돌 (끝났으면 잠시 남아 있음)
+  const battle = () =>
+    [...world().battles]
+      .reverse()
+      .find((b) => b.a === props.id || b.b === props.id)
+  const rival = () => {
+    const b = battle()
+    if (!b) return null
+    const other = b.a === props.id ? b.b : b.a
+    return other ? BEING_BY_ID[other] : null
+  }
+  const progress = () => {
+    const b = battle()
+    if (!b || b.status !== 'raging') return null
+    return Math.min(
+      1,
+      Math.max(0, (world().year - b.startYear) / (b.endYear - b.startYear)),
+    )
+  }
+  const phase = () => {
+    const b = battle()
+    if (!b) return '—'
+    if (b.status === 'over')
+      return b.winner === props.id ? t('being.won') : t('being.lost')
+    return b.b ? t('being.raging') : t('being.descending')
+  }
+  return (
+    <Show
+      when={battle()}
+      fallback={<p class={styles.small}>{t('being.gone')}</p>}
+    >
+      {(b) => (
+        <PassportCard
+          title={pick(being().name)}
+          subtitle={`${pick(FACTION_NAME[being().faction])} · ${pick(being().origin)}`}
+          image={
+            being().element === 'void'
+              ? `radial-gradient(circle, #000 0 34%, ${being().color} 46%, #12081f 70%, #04060d 92%)`
+              : `radial-gradient(circle at 40% 40%, #ffffff, ${being().color} 46%, #050810 95%)`
+          }
+          ring={progress()}
+          ringLabel={
+            progress() === null
+              ? undefined
+              : t('being.progress', {
+                  percent: formatPercent(progress()!, l()),
+                })
+          }
+          badge={`P${being().power}`}
+          badgeLabel={t('being.powerBadge', { power: being().power })}
+          fields={[
+            {
+              label: t('being.faction'),
+              value: pick(FACTION_NAME[being().faction]),
+            },
+            {
+              label: t('being.element'),
+              value: pick(ELEMENT_NAME[being().element]),
+            },
+            {
+              label: t('being.power'),
+              value: t('being.powerValue', { power: being().power }),
+            },
+            {
+              label: t('being.site'),
+              value: pick(SITE_BY_ID[b().site].name),
+            },
+            {
+              label: t('being.rival'),
+              value: rival() ? pick(rival()!.name) : t('being.alone'),
+            },
+            { label: t('being.phase'), value: phase() },
+          ]}
+        >
+          <Show when={lore()?.[props.id]}>
+            {(story) => <p class={styles.small}>{pick(story())}</p>}
+          </Show>
+          <dl class={styles.list}>
+            <dt>{t('being.alignment')}</dt>
+            <dd>{pick(ALIGNMENT_NAME[being().alignment])}</dd>
+            <dt>{t('being.calamities')}</dt>
+            <dd>
+              {being()
+                .calamities.map((c) => pick(CALAMITIES[c].name))
+                .join(', ')}
+            </dd>
+            <dt>{t('being.origin')}</dt>
+            <dd>{pick(being().origin)}</dd>
+          </dl>
+        </PassportCard>
+      )}
+    </Show>
+  )
+}
+
 const AGE_STEPS = 60
 
 /** 우주 거대 구조가 자라는 모습: 우주 나이 조절 */
@@ -558,6 +668,17 @@ export function Dossier() {
     const f = scale() === 'solar' ? activeFlyby(world()) : undefined
     return f ? [{ value: 'intruder', label: pick(f.name) }] : []
   }
+  // 싸움터의 우주적 존재도 고를 수 있게 (고른 상태가 빈칸으로 보이지 않도록 고른 존재는 늘 넣음)
+  const beingOptions = () => {
+    if (scale() !== 'solar') return []
+    const ids = visibleBeings(world())
+    const chosen = id() ? beingIdOf(id()!) : null
+    if (chosen && !ids.includes(chosen)) ids.push(chosen)
+    return ids.map((beingId) => ({
+      value: beingObject(beingId).id,
+      label: pick(BEING_BY_ID[beingId].name),
+    }))
+  }
   return (
     <section aria-labelledby="dossier-title" class={styles.block}>
       <h3 id="dossier-title" class={styles.heading}>
@@ -574,6 +695,7 @@ export function Dossier() {
             label: pick(o.name),
           })),
           ...intruderOption(),
+          ...beingOptions(),
         ]}
       />
       <Show when={scale() === 'cosmic'}>
@@ -594,6 +716,9 @@ export function Dossier() {
               </Match>
               <Match when={scale() === 'solar' && current() === 'intruder'}>
                 <IntruderDossier />
+              </Match>
+              <Match when={scale() === 'solar' && beingIdOf(current())}>
+                {(beingId) => <BeingDossier id={beingId()} />}
               </Match>
               <Match when={scale() === 'stars'}>
                 <StarDossier id={current()} />

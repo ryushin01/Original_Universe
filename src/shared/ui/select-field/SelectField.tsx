@@ -14,11 +14,14 @@ interface SelectFieldProps {
   options: SelectOption[]
   onChange: (value: string) => void
   description?: string
+  /** 다른 곳에서 초점을 옮길 수 있게 정하는 id (없으면 자동) */
+  id?: string
 }
 
 /** 네이티브 select (그룹이 있으면 optgroup으로 묶음) */
 export function SelectField(props: SelectFieldProps) {
-  const id = createUniqueId()
+  // eslint-disable-next-line solid/reactivity -- id는 처음 한 번만 정함
+  const id = props.id ?? createUniqueId()
   const groups = () => [...new Set(props.options.map((o) => o.group ?? ''))]
   const optionsOf = (group: string) =>
     props.options.filter((o) => (o.group ?? '') === group)

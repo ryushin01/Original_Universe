@@ -12,10 +12,10 @@ import { NOW_YEAR } from '../solar/sun'
 
 export const nameOf = (id: BodyId, locale: Locale) => BODIES[id].name[locale]
 
-/** 조사 (을/를, 이/가, 은/는, 와/과)를 받침에 맞게 */
+/** 조사 (을/를, 이/가, 은/는, 과/와)를 받침에 맞게. 쌍은 받침 있을 때를 앞에 씁니다 */
 export function josa(
   word: string,
-  pair: '을를' | '이가' | '은는' | '와과',
+  pair: '을를' | '이가' | '은는' | '과와',
 ): string {
   const last = word.charCodeAt(word.length - 1)
   const hangul = last >= 0xac00 && last <= 0xd7a3

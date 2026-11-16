@@ -16,6 +16,8 @@ export interface FrameContext {
   dt: number
   reducedMotion: boolean
   pixelRatio: number
+  /** 캔버스 높이 (CSS 픽셀): 거리에 따라 점 크기를 정할 때 */
+  height: number
   /** 국부 은하군 장면이 계산한 두 은하의 상태를 정보 카드로 알림 */
   reportCollision: (info: CollisionInfo) => void
 }

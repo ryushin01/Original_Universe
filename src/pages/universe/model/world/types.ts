@@ -12,6 +12,7 @@ import type { BlastKind } from '../hazards/stellar'
 import type { IntruderKind } from '../hazards/flyby'
 import type { NBody } from '../hazards/nbody'
 import type { ProjectKind } from '../projects/catalog'
+import type { Calamity, SiteId } from '../mythic/catalog'
 
 export interface Structure {
   id: number
@@ -111,7 +112,13 @@ export interface Aurora {
 }
 
 export type RemovalReason =
-  'engulfed' | 'ejected' | 'captured' | 'disrupted' | 'collided'
+  | 'engulfed'
+  | 'ejected'
+  | 'captured'
+  | 'disrupted'
+  | 'collided'
+  /** 우주적 존재에게 삼켜짐 */
+  | 'devoured'
 
 export interface EarthState {
   /** 기후 평형을 따라가는 평균 기온 (°C, 충돌 겨울 제외) */
@@ -130,6 +137,32 @@ export interface EarthState {
   shiftAu: number
 }
 
+/** 격돌 도중 정해진 시각에 터지는 재해 */
+export interface BattlePulse {
+  year: number
+  actor: 'a' | 'b'
+  calamity: Calamity
+  done: boolean
+}
+
+/** 우주적 존재의 격돌 (b가 없으면 홀로 강림해 정해진 날 재앙을 내림) */
+export interface Battle {
+  id: number
+  a: string
+  b: string | null
+  site: SiteId
+  startYear: number
+  endYear: number
+  pulses: BattlePulse[]
+  status: 'raging' | 'over'
+  /** 이긴 존재 (끝난 뒤) */
+  winner: string | null
+  /** 승패를 정하는 시드 */
+  seed: number
+  /** 미션이 만든 격돌 */
+  tag?: string
+}
+
 export type Tone = 'info' | 'warn' | 'danger' | 'good'
 
 export interface LogEvent {
@@ -139,7 +172,8 @@ export interface LogEvent {
   tone: Tone
 }
 
-export type MissionId = 'deflect' | 'solar-max' | 'mars-spring' | 'move-earth'
+export type MissionId =
+  'deflect' | 'solar-max' | 'mars-spring' | 'move-earth' | 'stop-apep'
 
 export interface MissionState {
   id: MissionId
@@ -177,6 +211,10 @@ export interface WorldState {
   earth: EarthState
   /** 기지별 생존 비율 (0~1) */
   colonyHealth: Partial<Record<ProjectKind, number>>
+  /** 우주적 존재의 격돌과 강림 */
+  battles: Battle[]
+  /** 태양 잠식: 우주적 존재가 해를 물어 줄어든 햇빛 비율 (0~0.95, 몇 달에 걸쳐 회복) */
+  solarDim: number
   /** 유성 폭풍: 극대 앞뒤의 정해진 기간에만 활동도를 키움 */
   meteorStorm: { showerId: string; fromYear: number; untilYear: number } | null
   /** 한 번만 알릴 이정표 */
