@@ -10,7 +10,7 @@ import { world, worldActions } from '../../model/world/store'
 import { makeStorm } from '../../model/world/factory'
 import { hasProject, stormFrontAu } from '../../model/world/selectors'
 import { formatDuration } from '../../model/world/text'
-import { createMessage, pick, t } from '../i18n'
+import { createActionMessage, pick, t } from '../i18n'
 import styles from './panels.module.css'
 
 const TARGETS: Array<BodyId | 'random'> = [
@@ -25,7 +25,7 @@ const TARGETS: Array<BodyId | 'random'> = [
 export function StormPanel() {
   const [cls, setCls] = createSignal<StormClass>('carrington')
   const [target, setTarget] = createSignal<BodyId | 'random'>('earth')
-  const [message, setMessage] = createMessage()
+  const feedback = createActionMessage()
   const l = () => locale()
   const spec = () => STORM_CLASSES[cls()]
   const mitigation = () =>
@@ -42,8 +42,7 @@ export function StormPanel() {
       return r > 0 && r < 45
     })
   const launch = () => {
-    const result = worldActions.launchStorm(cls(), target())
-    setMessage(() => pick(result.message))
+    feedback.report(worldActions.launchStorm(cls(), target()))
   }
 
   return (
@@ -96,7 +95,7 @@ export function StormPanel() {
       <Button variant="danger" onClick={launch}>
         {t('storm.launch')}
       </Button>
-      <StatusMessage message={message()} />
+      <StatusMessage message={feedback.message()} tone={feedback.tone()} />
       <Show when={active().length > 0}>
         <section aria-labelledby="storm-active-title" class={styles.panel}>
           <h3 id="storm-active-title" class={styles.caption}>

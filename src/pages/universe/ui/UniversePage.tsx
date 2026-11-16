@@ -1,4 +1,4 @@
-import { For, Show, createEffect, onMount } from 'solid-js'
+import { For, Show, createEffect, createSignal, onMount } from 'solid-js'
 import { isServer } from 'solid-js/web'
 import { LOCALES, locale, setLocale, syncLocale } from '@/shared/i18n'
 import { Button } from '@/shared/ui'
@@ -19,6 +19,7 @@ import { MissionPanel } from './status/MissionPanel'
 import { StatusBoard } from './status/StatusBoard'
 import { EventLog } from './status/EventLog'
 import { ScenarioShare, openSharedScenario } from './status/ScenarioShare'
+import { SectionBoundary } from './boundary/SectionBoundary'
 import styles from './UniversePage.module.css'
 
 function LanguageSwitch() {
@@ -66,6 +67,8 @@ export function UniversePage() {
   })
 
   const inertDuringIntro = () => (intro() ? true : undefined)
+  /** 패널을 그리다 난 오류 안내 (알림 영역은 처음부터 두고 내용만 바꿈) */
+  const [crash, setCrash] = createSignal('')
 
   const start = () => {
     viewActions.closeIntro()
@@ -115,7 +118,9 @@ export function UniversePage() {
           <h2 id="stage-title" class="sr-only">
             {t('page.viewport')}
           </h2>
-          <Viewport hintId="viewport-hint" controls={!intro()} />
+          <SectionBoundary onCrash={setCrash}>
+            <Viewport hintId="viewport-hint" controls={!intro()} />
+          </SectionBoundary>
           <p id="viewport-hint" class={styles.hint}>
             {t('viewport.hint')}
           </p>
@@ -136,7 +141,9 @@ export function UniversePage() {
             <h2 id="controls-title" class={styles.panelTitle}>
               {t('page.controls')}
             </h2>
-            <ControlPanel />
+            <SectionBoundary onCrash={setCrash}>
+              <ControlPanel />
+            </SectionBoundary>
           </section>
           <section
             id="status"
@@ -147,12 +154,14 @@ export function UniversePage() {
             <h2 id="status-title" class={styles.panelTitle}>
               {t('page.status')}
             </h2>
-            <TimeControls />
-            <Dossier />
-            <MissionPanel />
-            <StatusBoard />
-            <EventLog />
-            <ScenarioShare />
+            <SectionBoundary onCrash={setCrash}>
+              <TimeControls />
+              <Dossier />
+              <MissionPanel />
+              <StatusBoard />
+              <EventLog />
+              <ScenarioShare />
+            </SectionBoundary>
             {/* 외부 자료의 출처는 README에 밝히고, 화면에는 그곳으로 가는 링크만 둠 */}
             <p class={styles.credits}>
               {/* 저장하지 않은 시뮬레이션이 사라지지 않도록 새 탭으로 (글자로 미리 알림) */}
@@ -166,6 +175,9 @@ export function UniversePage() {
             </p>
           </section>
         </div>
+        <p role="alert" class="sr-only">
+          {crash()}
+        </p>
       </main>
       <nav
         aria-label={t('page.mobileNav')}

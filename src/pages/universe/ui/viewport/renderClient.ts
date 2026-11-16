@@ -8,6 +8,8 @@ import type {
 import type { LabelPosition, RenderState } from '../scene/types'
 
 export interface RenderCallbacks {
+  /** 워커가 WebGL을 열었음 (첫 장면까지 더 기다려도 됨) */
+  onContext?: () => void
   onLabels: (labels: LabelPosition[]) => void
   onCollision: (info: CollisionInfo) => void
   onReady: () => void
@@ -19,6 +21,8 @@ export interface RenderClient {
   /** worker: OffscreenCanvas 워커, main: 메인 스레드 (워커를 쓸 수 없을 때) */
   readonly mode: 'worker' | 'main'
   setState(state: RenderState): void
+  /** 탭이 숨으면 그리기를 멈춤 */
+  setVisible(visible: boolean): void
   resize(size: ViewportSize): void
   rotate(dTheta: number, dPhi: number): void
   zoom(factor: number): void
@@ -52,6 +56,9 @@ export function createWorkerClient(
   worker.onmessage = (event: MessageEvent<FromWorker>) => {
     const message = event.data
     switch (message.type) {
+      case 'context':
+        callbacks.onContext?.()
+        break
       case 'ready':
         callbacks.onReady()
         break
@@ -80,6 +87,7 @@ export function createWorkerClient(
   return {
     mode: 'worker',
     setState: (state) => send({ type: 'state', state }),
+    setVisible: (visible) => send({ type: 'visibility', visible }),
     resize: (next) => send({ type: 'resize', ...next }),
     rotate: (dTheta, dPhi) => send({ type: 'rotate', dTheta, dPhi }),
     zoom: (factor) => send({ type: 'zoom', factor }),
@@ -118,6 +126,7 @@ export async function createMainClient(
   return {
     mode: 'main',
     setState: (state) => engine.setState(state),
+    setVisible: (visible) => engine.setVisible(visible),
     resize: (next) => engine.resize(next.width, next.height, next.pixelRatio),
     rotate: (dTheta, dPhi) => engine.rotate(dTheta, dPhi),
     zoom: (factor) => engine.zoom(factor),

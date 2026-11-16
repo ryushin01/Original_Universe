@@ -19,7 +19,7 @@ import {
   intruderPositionAu,
 } from '../../model/world/selectors'
 import { formatDuration } from '../../model/world/text'
-import { createMessage, pick, t } from '../i18n'
+import { createActionMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -36,8 +36,7 @@ export function BlackHolePanel() {
   const [closest, setClosest] = createSignal(preset0.closestAu)
   const [speed, setSpeed] = createSignal(preset0.speedKms)
   const [inclination, setInclination] = createSignal(preset0.inclination)
-  const [message, setMessage] = createMessage()
-  const [error, setError] = createSignal(false)
+  const feedback = createActionMessage()
   const l = () => locale()
   const preset = () => FLYBY_PRESETS.find((p) => p.id === presetId())
 
@@ -81,14 +80,11 @@ export function BlackHolePanel() {
       leadYears: p && !custom() ? p.leadYears : undefined,
       name,
     })
-    setError(!result.ok)
-    setMessage(() => pick(result.message))
+    feedback.report(result)
   }
 
   const thought = () => {
-    const result = worldActions.setSunBlackHole(!world().sunBlackHole)
-    setMessage(() => pick(result.message))
-    setError(false)
+    feedback.report(worldActions.setSunBlackHole(!world().sunBlackHole))
   }
 
   return (
@@ -174,7 +170,7 @@ export function BlackHolePanel() {
       <Button variant="danger" onClick={launch}>
         {t('hole.launch')}
       </Button>
-      <StatusMessage message={message()} tone={error() ? 'error' : 'info'} />
+      <StatusMessage message={feedback.message()} tone={feedback.tone()} />
       <Show when={active()}>
         {(f) => (
           <>

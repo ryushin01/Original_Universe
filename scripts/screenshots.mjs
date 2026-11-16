@@ -1,10 +1,14 @@
-// README 화면(docs/images/*.jpg)을 다시 찍습니다.
+// README 화면(docs/images/*.jpg)과 공유 미리보기 그림(public/og-image.jpg)을 다시 찍습니다.
 // 먼저 프로덕션 빌드를 띄워 두세요: pnpm build && pnpm preview
 // 사용: BASE_URL=http://localhost:4183 pnpm screenshots
+//       일부만: ONLY=og,home BASE_URL=... pnpm screenshots
 import { chromium } from '@playwright/test'
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:4183'
 const OUT = 'docs/images'
+const ONLY = process.env.ONLY?.split(',').map((name) => name.trim())
+/** 찍을 묶음인지 (ONLY가 없으면 모두) */
+const want = (...names) => !ONLY || names.some((name) => ONLY.includes(name))
 // WebGL 장면이 그려지도록 소프트웨어 렌더러를 켭니다.
 const browser = await chromium.launch({
   args: [
@@ -70,15 +74,31 @@ const destination = (page, name) =>
     .first()
     .click()
 
+// 공유 미리보기 그림 (Open Graph 1200×630): 소개 화면
+if (want('og')) {
+  const { page, context } = await open({
+    viewport: { width: 1200, height: 630 },
+    start: false,
+  })
+  await page.waitForTimeout(2500)
+  await page.screenshot({
+    path: 'public/og-image.jpg',
+    type: 'jpeg',
+    quality: 85,
+  })
+  console.log('저장 og-image')
+  await context.close()
+}
+
 // 소개 화면
-{
+if (want('home')) {
   const { page, context } = await open({ start: false })
   await shot(page, 'home')
   await context.close()
 }
 
 // 태양계(지구 정보 카드)와 토성 근접
-{
+if (want('solar', 'saturn')) {
   const { page, context } = await open()
   await destination(page, '지구')
   await shot(page, 'solar', 3500)
@@ -88,7 +108,7 @@ const destination = (page, name) =>
 }
 
 // 캐링턴급 태양 폭풍
-{
+if (want('storm')) {
   const { page, context } = await open()
   await page.getByRole('tab', { name: '태양 폭풍' }).click()
   await page.getByRole('button', { name: '코로나 질량 방출 일으키기' }).click()
@@ -125,7 +145,7 @@ const destination = (page, name) =>
 }
 
 // 지나가는 항성 블랙홀
-{
+if (want('black-hole')) {
   const { page, context } = await open()
   await page.getByRole('tab', { name: '블랙홀' }).click()
   await page.getByRole('radio', { name: /항성 블랙홀/ }).check({ force: true })
@@ -160,7 +180,7 @@ const destination = (page, name) =>
 }
 
 // 우리 은하, 우주 거대 구조
-{
+if (want('galaxy', 'cosmic')) {
   const { page, context } = await open()
   await page.getByRole('radio', { name: /우리 은하/ }).check({ force: true })
   await shot(page, 'galaxy', 5000)
@@ -172,7 +192,7 @@ const destination = (page, name) =>
 }
 
 // 모바일
-{
+if (want('mobile')) {
   const { page, context } = await open({
     viewport: { width: 390, height: 844 },
     scale: 2,

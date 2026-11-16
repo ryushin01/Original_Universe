@@ -38,8 +38,13 @@ const STEP = Math.PI / 12
 const MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 /** 이만큼 덜 움직이고 손을 떼면 끌기가 아니라 고르기 (CSS 픽셀) */
 const CLICK_SLOP = 6
-/** 워커가 이 시간 안에 첫 장면을 그리지 못하면 메인 스레드로 바꿈 (OffscreenCanvas가 불안정한 브라우저) */
+/** 워커가 이 시간 안에 WebGL도 열지 못하면 메인 스레드로 바꿈 (OffscreenCanvas가 불안정한 브라우저) */
 const WORKER_READY_TIMEOUT_MS = 20_000
+/**
+ * 워커가 WebGL을 열었다고 알린 뒤 첫 장면까지 기다리는 시간. 느린 기기·바쁜 기계에서는
+ * 셰이더 컴파일이 오래 걸리는데, 그 사이 메인 스레드로 바꾸면 엔진을 다시 받아 처음부터 만들어 더 느려짐
+ */
+const WORKER_PROGRESS_TIMEOUT_MS = 60_000
 
 type CameraAction = 'left' | 'right' | 'up' | 'down' | 'in' | 'out'
 
@@ -195,7 +200,21 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
     }
     let canvas = createCanvas()
 
+    // 워커가 정해진 시간 안에 첫 장면을 못 그리면 메인 스레드로 (WebGL을 열었으면 더 기다림)
+    let watchdog: ReturnType<typeof setTimeout> | undefined
+    const watch = (ms: number) => {
+      clearTimeout(watchdog)
+      watchdog = setTimeout(() => {
+        if (client?.mode !== 'worker' || status() !== 'loading') return
+        // 숨은 탭에서는 그리기를 멈추므로 첫 장면이 없는 게 당연함: 보일 때까지 다시 기다림
+        if (document.hidden) watch(ms)
+        else void startMain()
+      }, ms)
+    }
+    onCleanup(() => clearTimeout(watchdog))
+
     const callbacks: RenderCallbacks = {
+      onContext: () => watch(WORKER_PROGRESS_TIMEOUT_MS),
       onLabels: (positions) => placeLabels(labels, positions),
       onCollision: setCollisionInfo,
       onReady: () => setStatus('ready'),
@@ -224,7 +243,10 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
         )
         // 엔진 묶음을 받는 사이에 화면을 떠났으면 바로 정리
         if (disposed) created.dispose()
-        else client = created
+        else {
+          client = created
+          if (document.hidden) created.setVisible(false)
+        }
       } catch {
         setStatus('error')
       }
@@ -233,14 +255,19 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
     if (canUseWorker(canvas)) {
       try {
         client = createWorkerClient(canvas, measure(), smallTextures, callbacks)
+        if (document.hidden) client.setVisible(false)
+        watch(WORKER_READY_TIMEOUT_MS)
       } catch {
         void startMain()
       }
     } else void startMain()
-    const watchdog = setTimeout(() => {
-      if (client?.mode === 'worker' && status() === 'loading') void startMain()
-    }, WORKER_READY_TIMEOUT_MS)
-    onCleanup(() => clearTimeout(watchdog))
+
+    // 탭이 숨으면 3D 그리기를 멈춤 (메인 스레드의 화면 갱신은 브라우저가 알아서 멈춤)
+    const onVisibility = () => client?.setVisible(!document.hidden)
+    document.addEventListener('visibilitychange', onVisibility)
+    onCleanup(() =>
+      document.removeEventListener('visibilitychange', onVisibility),
+    )
 
     const observer = new ResizeObserver(() => client?.resize(measure()))
     observer.observe(container)

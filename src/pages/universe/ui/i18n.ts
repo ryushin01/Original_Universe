@@ -30,3 +30,28 @@ export function createMessage() {
   const setMessage = (next: () => string) => setMake(() => next)
   return [message, setMessage] as const
 }
+
+/** 조작 결과: 성공 여부와 두 언어 안내문 (`ActionResult`와 같은 모양) */
+interface Result {
+  ok: boolean
+  message: Text
+}
+
+/**
+ * 패널의 조작 결과 안내. 실패하면 오류 모양(`tone: 'error'`)으로 보여 줍니다.
+ * `report(result)`는 조작 결과를, `say(문구, 성공 여부)`는 화면에서 만든 문구를 띄웁니다.
+ */
+export function createActionMessage() {
+  const [message, setMessage] = createMessage()
+  const [failed, setFailed] = createSignal(false)
+  const say = (make: () => string, ok = true) => {
+    setFailed(!ok)
+    setMessage(make)
+  }
+  const report = (result: Result) => {
+    // 결과 문구는 두 언어를 함께 가지므로 언어를 바꾸면 다시 번역됨
+    say(() => pick(result.message), result.ok)
+  }
+  const tone = (): 'info' | 'error' => (failed() ? 'error' : 'info')
+  return { message, tone, report, say }
+}

@@ -17,7 +17,7 @@ import {
   projectProgress,
 } from '../../model/world/selectors'
 import { formatPeople } from '../../model/world/text'
-import { createMessage, pick, t } from '../i18n'
+import { createActionMessage, pick, t } from '../i18n'
 import styles from './panels.module.css'
 
 const CATEGORIES: ProjectCategory[] = ['defense', 'habitat', 'climate', 'mega']
@@ -105,13 +105,10 @@ function ProjectCard(props: {
 /** 거대 우주 구조물과 시설 */
 export function BuildPanel() {
   const [instant, setInstant] = createSignal(false)
-  const [message, setMessage] = createMessage()
-  const [error, setError] = createSignal(false)
+  const feedback = createActionMessage()
   const inMission = () => world().mission?.status === 'running'
-  const onResult = (text: Text, failed: boolean) => {
-    setMessage(() => pick(text))
-    setError(failed)
-  }
+  const onResult = (text: Text, failed: boolean) =>
+    feedback.report({ ok: !failed, message: text })
   return (
     <div class={styles.panel}>
       <p class={styles.intro}>{t('build.intro')}</p>
@@ -124,7 +121,7 @@ export function BuildPanel() {
         />
         {t('build.instant')}
       </label>
-      <StatusMessage message={message()} tone={error() ? 'error' : 'info'} />
+      <StatusMessage message={feedback.message()} tone={feedback.tone()} />
       <For each={CATEGORIES}>
         {(category) => (
           <section aria-labelledby={`build-${category}`} class={styles.panel}>

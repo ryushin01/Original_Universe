@@ -23,7 +23,7 @@ import {
   Texture,
   Vector3,
 } from 'three'
-import type { Camera, Object3D } from 'three'
+import type { Camera, Line, LineLoop, Object3D } from 'three'
 import {
   equatorialToEcliptic,
   equatorialToGalactic,
@@ -303,6 +303,30 @@ const GAL_TO_EQ = (() => {
 
 export function galacticToEclipticScene(g: Vec3): Vector3 {
   return toVector(eclipticToScene(equatorialToEcliptic(GAL_TO_EQ(g))))
+}
+
+/**
+ * 선의 점을 바꿈. 점 수가 같으면 GPU 버퍼를 지우고 새로 만들지 않고 값만 고쳐 씁니다
+ * (충돌체·지나가는 천체의 경로선은 매 프레임 바뀜)
+ */
+export function setLine(
+  line: Line | LineLoop | LineSegments,
+  points: Vector3[],
+) {
+  const current = line.geometry.getAttribute('position') as
+    BufferAttribute | undefined
+  if (current && current.count === points.length) {
+    points.forEach((p, i) => current.setXYZ(i, p.x, p.y, p.z))
+    current.needsUpdate = true
+    // 화면 밖 판정(frustum culling)이 옛 위치로 하지 않도록
+    line.geometry.computeBoundingSphere()
+    return
+  }
+  const positions = new Float32Array(points.length * 3)
+  points.forEach((p, i) => positions.set([p.x, p.y, p.z], i * 3))
+  line.geometry.dispose()
+  line.geometry = new BufferGeometry()
+  line.geometry.setAttribute('position', new BufferAttribute(positions, 3))
 }
 
 /** 원형 점 텍스처 없이 부드러운 원으로 그리는 점 재질 */

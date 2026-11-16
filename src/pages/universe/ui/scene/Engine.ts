@@ -90,6 +90,8 @@ export class Engine {
   private compileStarted = new Map<ScaleId, number>()
   private ready = false
   private disposed = false
+  /** 탭이 숨어 렌더 루프를 멈췄는지 */
+  private paused = false
 
   constructor(private options: EngineOptions) {
     this.width = options.width
@@ -122,6 +124,21 @@ export class Engine {
   /** 메인 스레드의 화면 상태 (바뀔 때마다 받음) */
   setState(state: RenderState) {
     this.state = state
+  }
+
+  /**
+   * 탭이 숨으면 그리기를 멈추고 다시 보이면 이어 그립니다.
+   * (워커에 requestAnimationFrame이 없어 setTimeout으로 도는 브라우저는 숨은 탭에서도 계속 그리므로)
+   */
+  setVisible(visible: boolean) {
+    if (this.disposed || visible === !this.paused) return
+    this.paused = !visible
+    if (this.paused) cancelFrame(this.frame)
+    else {
+      // 멈춘 동안의 시간을 한 프레임에 몰아 진행하지 않도록
+      this.last = performance.now()
+      this.frame = nextFrame(this.loop)
+    }
   }
 
   resize(width: number, height: number, pixelRatio: number) {
@@ -190,7 +207,7 @@ export class Engine {
   }
 
   private loop = (now: number) => {
-    if (this.disposed) return
+    if (this.disposed || this.paused) return
     this.frame = nextFrame(this.loop)
     const dt = Math.min((now - this.last) / 1000, 0.1)
     this.last = now

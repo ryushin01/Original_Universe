@@ -1,13 +1,13 @@
 # UNIVERSE SIMULATOR - 우주 환경·재해 대응 시뮬레이터
 
 [![CI](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.3.0-7c9cff)
+![version](https://img.shields.io/badge/version-0.5.0-7c9cff)
 
 태양계에서 우주 거대 구조까지 오가며 소행성 충돌, 태양 폭풍, 초신성·감마선 폭발, 블랙홀 근접 통과, 유성우, 태양의 노화를 일으키고 다이슨 스웜·링월드·궤도 이동 같은 우주 구조물로 대응해 보는 3D 우주 시뮬레이터입니다. [EARTH_PLAN](https://github.com/ryushin01/EARTH_PLAN)의 우주판입니다.
 
 **[데모 바로 보기](https://ryushin01.github.io/Universe_Simulator/)** · [Storybook](https://ryushin01.github.io/Universe_Simulator/storybook/)
 
-> **프로젝트 상태:** 0.3.0까지 만든 **개인 프로젝트**입니다. 행성 위치는 NASA JPL 궤도 요소로 계산하지만, 태양 진화·기후·피해 규모·우주 구조물은 단순화한 모델이라 교육·탐색용으로만 쓰세요. 디자인은 [Space Advisor](https://www.cssdesignawards.com/sites/space-advisor/28977/)(Akufen)를 참고했습니다.
+> **프로젝트 상태:** 0.5.0까지 만든 **개인 프로젝트**입니다. 행성 위치는 NASA JPL 궤도 요소로 계산하지만, 태양 진화·기후·피해 규모·우주 구조물은 단순화한 모델이라 교육·탐색용으로만 쓰세요. 디자인은 [Space Advisor](https://www.cssdesignawards.com/sites/space-advisor/28977/)(Akufen)를 참고했습니다.
 
 ## 화면
 
@@ -43,7 +43,7 @@
 | 문명             | 지구·우주 인구, 쓰는 에너지와 카르다쇼프 척도, 에너지에 따라 늘어나는 예산                                                                                 |
 | 은하·우주        | 절차적 막대 나선 은하와 은하 1년, 안드로메다와의 충돌(제한된 N체), 우주 나이에 따라 자라는 우주 거미줄, 실제 거대 구조 17곳                                |
 | 미션             | 충돌 회피 작전(2026 PDC), 태양 극대기 버티기, 붉은 행성의 봄, 지구를 옮겨라 — 결과 대화상자                                                                |
-| 저장·공유·언어   | 주소 공유 링크와 브라우저 저장, 한국어·영어 전환, 홈 화면 설치와 오프라인 캐시                                                                             |
+| 저장·공유·언어   | 주소 공유 링크(공유 미리보기 그림)와 브라우저 저장, 한국어·영어 전환, 홈 화면 설치와 오프라인 캐시                                                         |
 
 ## 기술 스택
 
