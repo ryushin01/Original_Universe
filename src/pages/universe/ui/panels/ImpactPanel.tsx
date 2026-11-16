@@ -28,7 +28,7 @@ import { world, worldActions } from '../../model/world/store'
 import { hasProject, isRemoved } from '../../model/world/selectors'
 import { formatDuration, formatKm, formatMt } from '../../model/world/text'
 import type { Impact } from '../../model/world/types'
-import { createMessage, pick, t } from '../i18n'
+import { createActionMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -86,8 +86,7 @@ const PRESETS: Array<{
 function IncomingCard(props: { id: number }) {
   const [method, setMethod] = createSignal<DeflectMethod>('kinetic')
   const [count, setCount] = createSignal(5)
-  const [message, setMessage] = createMessage()
-  const [error, setError] = createSignal(false)
+  const feedback = createActionMessage()
   const l = () => locale()
   const im = () => world().impacts.find((i) => i.id === props.id) as Impact
   const done = () =>
@@ -98,9 +97,7 @@ function IncomingCard(props: { id: number }) {
   const ratio = () => Math.min(1, planned() / im().requiredKm)
   const spec = () => DEFLECT_METHODS[method()]
   const send = () => {
-    const result = worldActions.launchDeflection(im().id, method(), count())
-    setError(!result.ok)
-    setMessage(() => pick(result.message))
+    feedback.report(worldActions.launchDeflection(im().id, method(), count()))
   }
   return (
     <li class={styles.card}>
@@ -174,7 +171,7 @@ function IncomingCard(props: { id: number }) {
           years: spec().travelYears,
         })}
       </p>
-      <StatusMessage message={message()} tone={error() ? 'error' : 'info'} />
+      <StatusMessage message={feedback.message()} tone={feedback.tone()} />
     </li>
   )
 }
@@ -185,8 +182,7 @@ export function ImpactPanel() {
   const [kind, setKind] = createSignal<ImpactorKind>('stony')
   const [diameterIndex, setDiameterIndex] = createSignal(5)
   const [warning, setWarning] = createSignal<WarningId>('year5')
-  const [message, setMessage] = createMessage()
-  const [error, setError] = createSignal(false)
+  const feedback = createActionMessage()
   const l = () => locale()
   const diameter = () => DIAMETER_STEPS[diameterIndex()]
   const outcome = () => impactOutcome(target(), kind(), diameter())
@@ -208,14 +204,14 @@ export function ImpactPanel() {
 
   const launch = () => {
     const years = WARNING_STEPS.find((w) => w.id === warning())!.years
-    const result = worldActions.launchImpact({
-      target: target(),
-      kind: kind(),
-      diameterM: diameter(),
-      warningYears: years,
-    })
-    setError(!result.ok)
-    setMessage(() => pick(result.message))
+    feedback.report(
+      worldActions.launchImpact({
+        target: target(),
+        kind: kind(),
+        diameterM: diameter(),
+        warningYears: years,
+      }),
+    )
   }
 
   return (
@@ -318,7 +314,7 @@ export function ImpactPanel() {
       <Button variant="danger" onClick={launch}>
         {t('impact.launch')}
       </Button>
-      <StatusMessage message={message()} tone={error() ? 'error' : 'info'} />
+      <StatusMessage message={feedback.message()} tone={feedback.tone()} />
       <Show when={hasProject(world(), 'defense-net')}>
         <p class={`${styles.small} ${styles.good}`}>{t('impact.netOn')}</p>
       </Show>

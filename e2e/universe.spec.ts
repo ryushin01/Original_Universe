@@ -106,6 +106,46 @@ test.describe('첫 화면', () => {
     }
   })
 
+  test('검색·공유 미리보기 메타와 공유 그림이 있다', async ({
+    page,
+    request,
+  }) => {
+    await page.goto('/')
+    const meta = (property: string) =>
+      page.locator(`meta[property="${property}"]`).getAttribute('content')
+    expect(await meta('og:title')).toMatch(/UNIVERSE SIMULATOR/)
+    expect(await meta('og:description')).toBeTruthy()
+    const image = await meta('og:image')
+    expect(image).toMatch(/\/og-image\.jpg$/)
+    expect(
+      await page.locator('meta[name="twitter:card"]').getAttribute('content'),
+    ).toBe('summary_large_image')
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      /^https:\/\//,
+    )
+    // 공유 그림은 이 빌드에도 들어 있음 (운영 주소 대신 같은 파일을 로컬에서 확인)
+    const local = await request.get('/og-image.jpg')
+    expect(local.ok()).toBe(true)
+    expect(local.headers()['content-type']).toMatch(/image\/jpeg/)
+  })
+
+  test('서비스 워커가 지금 묶음의 파일 목록을 갖는다', async ({
+    page,
+    request,
+  }) => {
+    await page.goto('/')
+    const script = await page
+      .locator('script[type="module"][src*="assets/"]')
+      .first()
+      .getAttribute('src')
+    const sw = await (await request.get('/sw.js')).text()
+    // 빌드 때 채운 목록 (자리 표시 그대로면 옛 파일을 지우지 못함)
+    expect(sw).not.toContain("{ assets: [], textures: 'dev' }")
+    expect(sw).toContain(`"${script!.replace(/^\//, '')}"`)
+    expect(sw).toMatch(/"textures":"[0-9a-f]{12}"/)
+  })
+
   test('웹 앱 매니페스트와 아이콘이 있다', async ({ page, request }) => {
     await page.goto('/')
     const href = await page.locator('link[rel="manifest"]').getAttribute('href')

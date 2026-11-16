@@ -15,7 +15,7 @@ import {
 import type { Snapshot } from '../../model/world/snapshot'
 import { hasPendingEvents } from '../../model/world/selectors'
 import { formatSimDate } from '../../model/world/text'
-import { createMessage, t } from '../i18n'
+import { createActionMessage, t } from '../i18n'
 import styles from './status.module.css'
 
 interface Saved {
@@ -52,7 +52,7 @@ export function openSharedScenario(): boolean {
 
 /** 공유 링크 복사와 브라우저 저장 */
 export function ScenarioShare() {
-  const [message, setMessage] = createMessage()
+  const feedback = createActionMessage()
   const [saves, setSaves] = createSignal<Saved[]>([])
   const [name, setName] = createSignal('')
   onMount(() => setSaves(readSaves()))
@@ -68,10 +68,10 @@ export function ScenarioShare() {
     url.searchParams.set(SHARE_PARAM, encodeSnapshot(toSnapshot(world())))
     try {
       await navigator.clipboard.writeText(url.toString())
-      setMessage(() => t('share.copied'))
+      feedback.say(() => t('share.copied'))
     } catch {
       window.history.replaceState(null, '', url)
-      setMessage(() => t('share.inAddress'))
+      feedback.say(() => t('share.inAddress'))
     }
   }
 
@@ -91,15 +91,15 @@ export function ScenarioShare() {
       window.localStorage.setItem(SAVE_KEY, JSON.stringify(next))
       setSaves(next)
       setName('')
-      setMessage(() => t('share.saved', { name: label }))
+      feedback.say(() => t('share.saved', { name: label }))
     } catch {
-      setMessage(() => t('share.saveFailed'))
+      feedback.say(() => t('share.saveFailed'), false)
     }
   }
 
   const load = (saved: Saved) => {
     worldActions.replace(fromSnapshot(saved.snapshot))
-    setMessage(() => t('share.loaded', { name: saved.name }))
+    feedback.say(() => t('share.loaded', { name: saved.name }))
   }
 
   const remove = (saved: Saved) => {
@@ -108,11 +108,11 @@ export function ScenarioShare() {
       window.localStorage.setItem(SAVE_KEY, JSON.stringify(next))
     } catch {
       // 저장소에 쓰지 못하면 목록을 그대로 두고 알림 (다시 열면 되살아나므로)
-      setMessage(() => t('share.removeFailed', { name: saved.name }))
+      feedback.say(() => t('share.removeFailed', { name: saved.name }), false)
       return
     }
     setSaves(next)
-    setMessage(() => t('share.removed', { name: saved.name }))
+    feedback.say(() => t('share.removed', { name: saved.name }))
   }
 
   return (
@@ -182,7 +182,7 @@ export function ScenarioShare() {
           </For>
         </ul>
       </Show>
-      <StatusMessage message={message()} />
+      <StatusMessage message={feedback.message()} tone={feedback.tone()} />
     </details>
   )
 }

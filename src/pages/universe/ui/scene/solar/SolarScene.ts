@@ -116,6 +116,7 @@ import {
   makeSelectionShell,
   makeSky,
   raDecToScene,
+  setLine,
   toVector,
 } from '../common'
 import type { FrameContext, ScaleScene, SceneEnv, Target } from '../types'
@@ -314,14 +315,6 @@ const lineMaterial = (color: string, opacity: number) =>
     opacity,
     depthWrite: false,
   })
-
-function setLine(line: Line | LineLoop | LineSegments, points: Vector3[]) {
-  const positions = new Float32Array(points.length * 3)
-  points.forEach((p, i) => positions.set([p.x, p.y, p.z], i * 3))
-  line.geometry.dispose()
-  line.geometry = new BufferGeometry()
-  line.geometry.setAttribute('position', new BufferAttribute(positions, 3))
-}
 
 export function createSolarScene(env: SceneEnv): ScaleScene {
   const TEXTURES = earthTextures(env)

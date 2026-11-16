@@ -7,12 +7,12 @@ import { world, worldActions } from '../../model/world/store'
 import { currentShower, isRemoved } from '../../model/world/selectors'
 import { formatSimDate } from '../../model/world/text'
 import { viewActions } from '../../model/view'
-import { createMessage, pick, t } from '../i18n'
+import { createActionMessage, pick, t } from '../i18n'
 import styles from './panels.module.css'
 
 /** 연간 유성우와 유성 폭풍 */
 export function MeteorPanel() {
-  const [message, setMessage] = createMessage()
+  const feedback = createActionMessage()
   const l = () => locale()
   // 날짜가 바뀔 때만 다시 계산
   const day = createMemo(() => Math.floor(world().year * 365.25))
@@ -36,7 +36,7 @@ export function MeteorPanel() {
       // 이미 극대 전날이 지났으면 건너뛸 필요 없이 재생하면 됨 (빠른 속도면 극대를 놓치므로 느리게)
       worldActions.setSpeed(0)
       viewActions.selectIn('solar', 'earth')
-      setMessage(() =>
+      feedback.say(() =>
         t('meteor.soon', {
           name: pick(shower.name),
           date: formatSimDate(peak, l()),
@@ -47,12 +47,12 @@ export function MeteorPanel() {
     const result = worldActions.jumpTo(eve)
     // 실패했거나 근접 통과로 도중에 멈췄으면 그 이유를 그대로 알림
     if (!result.ok || result.interrupted) {
-      setMessage(() => pick(result.message))
+      feedback.report(result)
       return
     }
     worldActions.setSpeed(0)
     viewActions.selectIn('solar', 'earth')
-    setMessage(() => t('meteor.jumped', { name: pick(shower.name) }))
+    feedback.say(() => t('meteor.jumped', { name: pick(shower.name) }))
   }
 
   return (
@@ -114,10 +114,9 @@ export function MeteorPanel() {
                           name: pick(entry.shower.name),
                         })}
                         onClick={() => {
-                          const result = worldActions.startMeteorStorm(
-                            entry.shower.id,
+                          feedback.report(
+                            worldActions.startMeteorStorm(entry.shower.id),
                           )
-                          setMessage(() => pick(result.message))
                         }}
                       >
                         {t('meteor.storm')}
@@ -130,7 +129,7 @@ export function MeteorPanel() {
           </tbody>
         </table>
       </div>
-      <StatusMessage message={message()} />
+      <StatusMessage message={feedback.message()} tone={feedback.tone()} />
     </div>
   )
 }

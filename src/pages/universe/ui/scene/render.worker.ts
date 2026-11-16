@@ -33,6 +33,8 @@ scope.onmessage = (event) => {
           onReady: () => post({ type: 'ready' }),
           onError: (error) => post({ type: 'error', message: String(error) }),
         })
+        // 렌더러(WebGL 맥락)를 만들었으면 첫 장면이 늦어도 기다릴 수 있음
+        post({ type: 'context' })
       } catch (error) {
         post({ type: 'error', message: String(error) })
       }
@@ -59,6 +61,9 @@ scope.onmessage = (event) => {
         id: engine?.pick(message.x, message.y) ?? null,
         seq: message.seq,
       })
+      break
+    case 'visibility':
+      engine?.setVisible(message.visible)
       break
     case 'dispose':
       engine?.dispose()
