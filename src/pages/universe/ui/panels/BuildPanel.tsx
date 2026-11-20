@@ -18,6 +18,7 @@ import {
 } from '../../model/world/selectors'
 import { formatPeople } from '../../model/world/text'
 import { createActionMessage, pick, t } from '../i18n'
+import { CivLevelPicker } from './CivLevelPicker'
 import styles from './panels.module.css'
 
 const CATEGORIES: ProjectCategory[] = ['defense', 'habitat', 'climate', 'mega']
@@ -112,6 +113,7 @@ export function BuildPanel() {
   return (
     <div class={styles.panel}>
       <p class={styles.intro}>{t('build.intro')}</p>
+      <CivLevelPicker />
       <label class={styles.check}>
         <input
           type="checkbox"

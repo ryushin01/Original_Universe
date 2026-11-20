@@ -449,6 +449,35 @@ test.describe('시뮬레이션 흐름', () => {
     expect(errors).toEqual([])
   })
 
+  test('문명 단계: Ⅱ단계로 올리면 다이슨 구·함대가 서고, 지금으로 되돌린다', async ({
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await start(page)
+    await page.getByRole('tab', { name: '건설', exact: true }).click()
+    const section = page.getByRole('region', {
+      name: '문명 단계 (카르다쇼프 척도)',
+    })
+    await section
+      .getByRole('radio', { name: /Ⅱ단계 항성 문명/ })
+      .check({ force: true })
+    await section.getByRole('button', { name: '이 단계로 바꾸기' }).click()
+    await expect(logText(page)).toContainText(
+      '문명 단계를 Ⅱ단계 항성 문명 (2.0)로 올렸습니다',
+    )
+    await expect(logText(page)).toContainText('지구 곁에 함대 배치')
+    // 현황판의 카르다쇼프 척도가 2.0 가까이로
+    await expect(
+      page.getByRole('region', { name: '현황' }).getByText(/^2\.0\d$/),
+    ).toBeVisible()
+    await page.waitForTimeout(1500)
+    await section.getByRole('radio', { name: /지금/ }).check({ force: true })
+    await section.getByRole('button', { name: '이 단계로 바꾸기' }).click()
+    await expect(logText(page)).toContainText('로 낮췄습니다')
+    expect(errors).toEqual([])
+  })
+
   test('강림한 아펩에게 맞설 존재를 보내는 미션', async ({ page }) => {
     await start(page)
     const missions = page.getByRole('region', { name: '미션' })

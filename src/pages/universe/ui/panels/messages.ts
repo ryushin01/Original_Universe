@@ -269,6 +269,22 @@ export const PANEL_MESSAGES = {
   ],
   // 공통
   'common.years': ['{n}년', '{n} yr'],
+  // 문명 단계 (카르다쇼프 척도)
+  'civ.title': [
+    '문명 단계 (카르다쇼프 척도)',
+    'Civilisation level (Kardashev scale)',
+  ],
+  'civ.intro': [
+    '지구 문명의 단계를 올리거나 내립니다. 그 단계 문명이 쓰는 에너지와 가진 구조물·함대가 태양계에 나타나거나 사라지고, 밤 불빛·예산·폐열도 바뀝니다. 직접 지은 구조물은 그대로 둡니다.',
+    'Raise or lower Earth’s civilisation. The energy, structures and fleets of that level appear in or vanish from the Solar System, and night lights, budget and waste heat change with it. Structures you built yourself stay.',
+  ],
+  'civ.legend': ['문명 단계', 'Civilisation level'],
+  'civ.heat': [
+    '지구에서 쓰는 에너지가 모두 열이 되어 지구 기온이 몇 해에 걸쳐 약 {degrees}°C 오릅니다.',
+    'All the energy used on Earth ends up as heat: Earth warms by about {degrees}°C over a few years.',
+  ],
+  'civ.apply': ['이 단계로 바꾸기', 'Switch to this level'],
+  'civ.current': ['지금 단계', 'Current level'],
   // 우주 대전 (스페이스 오페라 모드)
   'war.intro': [
     '스페이스 오페라 모드: 두 세력의 함대가 맞붙는 우주 대전을 일으킵니다. 워프와 빔 병기, 우주항공모함과 강화복, 행성 파괴포, 평행우주와 시간여행까지 세력마다 다른 소재가 나오고, 세력마다 신적 존재가 가세하며 함선과 다른 꼴의 대형 병기가 전장에 떠오릅니다. (과학 모델 밖의 상상 모드입니다)',

@@ -20,6 +20,7 @@ import { indexOf, positionOf } from '../hazards/nbody'
 import { intruderPosition, flybyGeometry } from '../hazards/flyby'
 import { activeShower, METEOR_STORM_FACTOR } from '../hazards/meteors'
 import type { Flyby, Storm, Structure, WorldState } from './types'
+import { civLevel } from './civilization'
 
 export const AU_KM = 149_597_870.7
 const SUN_RADIUS_AU = 695_700 / AU_KM
@@ -65,13 +66,17 @@ export const projectProgress = (state: WorldState, s: Structure) =>
   )
 
 /** 완공 뒤 지난 해 (안 지었으면 null) */
+/** 문명 단계가 지은 구조물은 이미 오래전에 완공되어 다 자란 것으로 셈 (다이슨 구가 햇빛을 다 모으는 등) */
+const MATURE_YEARS = 1000
+
 export function yearsSinceComplete(
   state: WorldState,
   kind: ProjectKind,
 ): number | null {
   const s = state.structures.find((x) => x.kind === kind)
   if (!s || state.year < s.completeYear) return null
-  return state.year - s.completeYear
+  const age = state.year - s.completeYear
+  return state.civ.granted.includes(kind) ? age + MATURE_YEARS : age
 }
 
 export function projectCost(state: WorldState, kind: ProjectKind): number {
@@ -322,11 +327,15 @@ export const humanity = (state: WorldState) =>
 export function civilizationPower(state: WorldState): number {
   const people = humanity(state)
   if (people < 1) return 0
-  const grown = Math.min(
-    EARTH_POWER_CAP_W,
-    POWER_NOW_W * Math.exp(POWER_GROWTH * Math.max(0, state.year - 2026)),
-  )
-  const share = clamp(people / 8.2e9, 0, 1.5)
+  // 문명 단계를 정했으면 그 단계가 지구에서 쓰는 에너지, 아니면 자연 성장
+  const civ = civLevel(state)
+  const grown =
+    civ?.earthPower ??
+    Math.min(
+      EARTH_POWER_CAP_W,
+      POWER_NOW_W * Math.exp(POWER_GROWTH * Math.max(0, state.year - 2026)),
+    )
+  const share = civ?.earthPower ? 1 : clamp(people / 8.2e9, 0, 1.5)
   const { swarm, sphere } = dysonCapture(state)
   const dyson =
     sunState(state).luminosity *
@@ -334,7 +343,7 @@ export function civilizationPower(state: WorldState): number {
     SUN_LUMINOSITY_W *
     Math.min(1, swarm + sphere) *
     0.25
-  return grown * share + dyson
+  return grown * share + dyson + (civ?.galacticPower ?? 0)
 }
 
 /** 카르다쇼프 척도 (칼 세이건의 연속식): K = (log₁₀P − 6) / 10 */
