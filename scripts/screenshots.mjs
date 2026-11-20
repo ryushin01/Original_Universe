@@ -117,6 +117,21 @@ if (want('solar', 'saturn')) {
   await context.close()
 }
 
+// 태양 근접(표면 지도·홍염)과 핼리 혜성 핵(땅콩 모양)
+if (want('sun', 'halley')) {
+  const { page, context } = await open()
+  if (want('sun')) {
+    await destination(page, '태양')
+    await shot(page, 'sun', 4500)
+  }
+  if (want('halley')) {
+    // 35 AU 밖까지 날아가므로 오래 기다림
+    await destination(page, '핼리 혜성')
+    await shot(page, 'halley', 9000)
+  }
+  await context.close()
+}
+
 // 캐링턴급 태양 폭풍
 if (want('storm')) {
   const { page, context } = await open()

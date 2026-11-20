@@ -2,12 +2,13 @@
 
 ## 텍스처 (`public/textures/`)
 
-| 파일                                                                                        | 출처                                                                                                  | 라이선스  |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------- |
-| `mercury`, `venus`, `moon`, `mars`, `jupiter`, `saturn`, `saturn-ring`, `uranus`, `neptune` | [Solar System Scope](https://www.solarsystemscope.com/textures/) 2K 텍스처                            | CC BY 4.0 |
-| `earth-albedo`, `earth-lights`, `earth-clouds`                                              | [three.js 예제 텍스처](https://github.com/mrdoob/three.js/tree/r160/examples/textures/planets) (r160) | MIT       |
+| 파일                                                                                                        | 출처                                                                                                  | 라이선스                          |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `mercury`, `venus`, `moon`, `mars`, `jupiter`, `saturn`, `saturn-ring`, `uranus`, `neptune`, `sun`, `ceres` | [Solar System Scope](https://www.solarsystemscope.com/textures/) 2K 텍스처                            | CC BY 4.0                         |
+| `io`, `europa`, `ganymede`, `callisto`, `titan`, `pluto`                                                    | [NASA 3D Resources](https://github.com/nasa/NASA-3D-Resources) (Images and Textures)                  | NASA 미디어 이용 지침 (출처 표기) |
+| `earth-albedo`, `earth-lights`, `earth-clouds`                                                              | [three.js 예제 텍스처](https://github.com/mrdoob/three.js/tree/r160/examples/textures/planets) (r160) | MIT                               |
 
-Solar System Scope 텍스처는 NASA 고도·영상 자료를 바탕으로 만들어졌고(미탐사 지역은 비슷한 지형으로 채움), 1024×512 WebP로 줄였습니다(`cwebp -q 78 -resize 1024 512`). 토성 고리는 알파를 살려 1024×64로 줄였습니다. 지구 색·불빛은 2048×1024와 작은 화면용 1024×512(`-1024`) 두 벌이고, 구름(1024×512)은 알파 채널에 구름 양이 들어 있습니다. 세레스·갈릴레이 위성·타이탄·명왕성·핼리 혜성·아포피스는 텍스처 없이 셰이더 잡음으로 그립니다.
+Solar System Scope 텍스처는 NASA 고도·영상 자료를 바탕으로 만들어졌고(미탐사 지역은 비슷한 지형으로 채움), 1024×512 WebP로 줄였습니다(`cwebp -q 78 -resize 1024 512`). 토성 고리는 알파를 살려 1024×64로 줄였습니다. 지구 색·불빛은 2048×1024와 작은 화면용 1024×512(`-1024`) 두 벌이고, 구름(1024×512)은 알파 채널에 구름 양이 들어 있습니다. 태양(`2k_sun`)은 밝기만 따서 온도에 따른 색에 곱하고(쌀알 무늬·활동 영역), 세레스(`2k_ceres_fictional`)는 돈(Dawn) 탐사선 자료에 없는 곳을 가상 지형으로 채운 지도입니다. NASA 3D Resources의 위성·명왕성 지도는 1024×512로 줄이면서 손봤습니다: 흑백인 유로파·가니메데·칼리스토는 밝기에 따라 실제 빛깔(유로파의 붉은 갈색 줄무늬, 어두운 칼리스토 등)로 칠했고, 지나치게 짙은 주황인 타이탄은 옅은 황갈색 안개로 바꿨으며, 자료가 빈 곳(이오의 검은 극지방, 칼리스토의 흐린 회색 부분)은 가장 가까운 경계에 비춘 주변 지형으로 채웠습니다. 핼리 혜성 핵과 아포피스는 내려받을 수 있는 모양 모델이 없어서, 탐사·레이더로 알려진 크기 비율(핼리 약 15×8×8 km의 땅콩 모양, 아포피스 약 450×370 m의 길쭉한 모양)에 맞춰 언덕과 충돌구를 더한 근사 모양을 만들어 셰이더 잡음으로 칠합니다(`ui/scene/solar/shapes.ts`).
 
 출처 표기(CC BY 4.0 포함)는 README의 [출처](../README.md#출처) 표에 있고, 화면에는 그곳으로 가는 링크만 둡니다.
 
