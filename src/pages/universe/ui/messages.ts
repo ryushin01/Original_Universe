@@ -283,6 +283,7 @@ export const MESSAGES = {
   'status.radius': ['크기', 'Radius'],
   'status.earth': ['지구', 'Earth'],
   'status.earthTemp': ['평균 기온', 'Mean temperature'],
+  'status.wasteHeat': ['폐열', 'Waste heat'],
   'status.sunlight': ['받는 햇빛', 'Sunlight'],
   'status.ocean': ['바다', 'Oceans'],
   'status.ozone': ['오존층', 'Ozone'],

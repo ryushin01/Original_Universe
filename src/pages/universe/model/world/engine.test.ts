@@ -14,6 +14,7 @@ import {
 } from './actions'
 import {
   bodyElements,
+  civHeatNowC,
   currentShower,
   earthTemperatureC,
   humanity,
@@ -172,7 +173,8 @@ describe('태양의 미래', () => {
     let s = build(fresh(), 'orbit-engine', true).state
     s = jumpTo(s, START + 2e9).state
     expect(bodyElements(s, 'earth')!.a).toBeGreaterThan(1.08)
-    expect(earthTemperatureC(s)!).toBeLessThan(25)
+    // 받는 햇빛이 지금과 같아 햇빛만으로는 25°C 아래 (문명의 폐열은 따로 더해짐)
+    expect(earthTemperatureC(s)! - civHeatNowC(s)).toBeLessThan(25)
   })
 })
 

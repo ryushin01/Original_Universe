@@ -1,6 +1,6 @@
 import { render, screen, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
-import { initialWorld } from '../../model/world/engine'
+import { advanceTo, initialWorld } from '../../model/world/engine'
 import { __setWorldForTest, world } from '../../model/world/store'
 import { BuildPanel } from './BuildPanel'
 
@@ -28,6 +28,19 @@ describe('BuildPanel', () => {
       screen.getByRole('button', { name: '행성 방위 요격망 짓기' }),
     )
     expect(world().structures[0].done).toBe(true)
+  })
+
+  it('자연 성장에서도 지금 쓰는 에너지의 폐열을 알려 준다', () => {
+    __setWorldForTest(advanceTo(initialWorld(2026.87), 2500))
+    render(() => <BuildPanel />)
+    const section = screen.getByRole('region', {
+      name: '문명 단계 (카르다쇼프 척도)',
+    })
+    expect(
+      within(section).getByText(
+        /자연 성장에서는 지금 쓰는 에너지의 폐열로 지구가 약 1\d\.\d°C 더워집니다/,
+      ),
+    ).toBeInTheDocument()
   })
 
   it('문명 단계를 Ⅱ단계로 올리면 다이슨 구 등이 바로 서고, 지금으로 되돌릴 수 있다', async () => {

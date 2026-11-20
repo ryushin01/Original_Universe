@@ -20,7 +20,7 @@ import { indexOf, positionOf } from '../hazards/nbody'
 import { intruderPosition, flybyGeometry } from '../hazards/flyby'
 import { activeShower, METEOR_STORM_FACTOR } from '../hazards/meteors'
 import type { Flyby, Storm, Structure, WorldState } from './types'
-import { civLevel } from './civilization'
+import { civLevel, civWasteHeatC, wasteHeatC } from './civilization'
 
 export const AU_KM = 149_597_870.7
 const SUN_RADIUS_AU = 695_700 / AU_KM
@@ -266,6 +266,15 @@ export const EARTH_POWER_CAP_W = 1e17
 /** 문명 에너지가 해마다 느는 비율 (연속 복리) */
 export const POWER_GROWTH = 0.015
 const SUN_LUMINOSITY_W = 3.828e26
+/** 문명 에너지의 1인당 기준이 되는 지금 인구 */
+const POP_NOW = 8.2e9
+
+/** 자연 성장으로 늘어난 문명 에너지 (W, 지금 인구 기준, 지구에서 쓰는 한도까지) */
+export const grownPower = (year: number) =>
+  Math.min(
+    EARTH_POWER_CAP_W,
+    POWER_NOW_W * Math.exp(POWER_GROWTH * Math.max(0, year - 2026)),
+  )
 
 /** 지구 인구 기준선 (2080년대 약 103억 명에서 멈춤) */
 export function baselinePopulation(year: number): number {
@@ -329,13 +338,8 @@ export function civilizationPower(state: WorldState): number {
   if (people < 1) return 0
   // 문명 단계를 정했으면 그 단계가 지구에서 쓰는 에너지, 아니면 자연 성장
   const civ = civLevel(state)
-  const grown =
-    civ?.earthPower ??
-    Math.min(
-      EARTH_POWER_CAP_W,
-      POWER_NOW_W * Math.exp(POWER_GROWTH * Math.max(0, state.year - 2026)),
-    )
-  const share = civ?.earthPower ? 1 : clamp(people / 8.2e9, 0, 1.5)
+  const grown = civ?.earthPower ?? grownPower(state.year)
+  const share = civ?.earthPower ? 1 : clamp(people / POP_NOW, 0, 1.5)
   const { swarm, sphere } = dysonCapture(state)
   const dyson =
     sunState(state).luminosity *
@@ -344,6 +348,45 @@ export function civilizationPower(state: WorldState): number {
     Math.min(1, swarm + sphere) *
     0.25
   return grown * share + dyson + (civ?.galacticPower ?? 0)
+}
+
+/**
+ * 자연 성장에서 지구 기온이 celsius일 때 지구에 사는 사람들이 쓰는 에너지의 폐열 (°C).
+ * 더워서 살 수 있는 사람이 줄면 쓰는 에너지와 폐열도 줄어듭니다. 우주 기지 사람들이 쓰는 에너지는
+ * 지구를 데우지 않습니다
+ */
+export function naturalWasteHeatC(state: WorldState, celsius: number): number {
+  const people =
+    baselinePopulation(state.year) *
+    state.earth.popFactor *
+    livability(celsius, state.earth.ocean)
+  if (people < 1) return 0
+  return wasteHeatC(grownPower(state.year) * clamp(people / POP_NOW, 0, 1.5))
+}
+
+/**
+ * 햇빛이 정하는 기온 sunC에 문명의 폐열을 더한 지구 기온 (°C, 충돌 냉각은 빼고).
+ * 단계를 정했으면 그 단계의 폐열을 더합니다. 자연 성장이면 더워질수록 사람이 줄어 폐열도 줄므로
+ * '기온 = sunC + 폐열(기온)'인 균형점을 지금 기온에서부터 조금씩 다가가며 찾습니다
+ * (한 번에 몇백 년·몇백만 년을 건너뛰어도 기온이 두 값 사이를 오가지 않게)
+ */
+export function heatedEarthTemperatureC(
+  state: WorldState,
+  sunC: number,
+): number {
+  if (civLevel(state)) return sunC + civWasteHeatC(state)
+  const cooling = state.earth.coolingC
+  let t = state.earth.tempC
+  for (let i = 0; i < 48; i++)
+    t += 0.25 * (sunC + naturalWasteHeatC(state, t + cooling) - t)
+  return t
+}
+
+/** 지금 문명이 쓰는 에너지의 폐열로 오른 지구 기온 (°C) */
+export function civHeatNowC(state: WorldState): number {
+  if (civLevel(state)) return civWasteHeatC(state)
+  const t = earthTemperatureC(state)
+  return t === null ? 0 : naturalWasteHeatC(state, t)
 }
 
 /** 카르다쇼프 척도 (칼 세이건의 연속식): K = (log₁₀P − 6) / 10 */

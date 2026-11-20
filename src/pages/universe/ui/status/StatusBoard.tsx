@@ -12,6 +12,7 @@ import {
 import { world } from '../../model/world/store'
 import {
   bodyInsolation,
+  civHeatNowC,
   civilizationPower,
   currentShower,
   earthPopulation,
@@ -46,6 +47,7 @@ export function StatusBoard() {
   const sun = () => sunState(world())
   const earthGone = () => isRemoved(world(), 'earth')
   const temp = () => earthTemperatureC(world())
+  const heat = () => civHeatNowC(world())
   const condition = () => habitability(temp() ?? -270, world().earth.ocean)
   const zone = () => habitableZoneNow(world())
   const power = () => civilizationPower(world())
@@ -102,6 +104,12 @@ export function StatusBoard() {
             </dd>
             <dt>{t('status.earthTemp')}</dt>
             <dd>{formatTemperature(temp() ?? 0, l())}</dd>
+            <Show when={heat() >= 0.05}>
+              <dt>{t('status.wasteHeat')}</dt>
+              <dd class={heat() >= 2 ? styles.warn : undefined}>
+                {`+${formatNumber(heat(), l(), 1)}°C`}
+              </dd>
+            </Show>
             <dt>{t('status.sunlight')}</dt>
             <dd>{`${formatSig(bodyInsolation(world(), 'earth'), l(), 3)}×`}</dd>
             <dt>{t('status.ocean')}</dt>

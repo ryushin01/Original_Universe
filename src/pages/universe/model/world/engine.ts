@@ -56,12 +56,12 @@ import {
   meteorStormActive,
   marsAtmosphere,
   bodyTemperatureC,
+  heatedEarthTemperatureC,
   shadeFraction,
   stormFrontAu,
   sunRadiusAu,
   sunState,
 } from './selectors'
-import { civWasteHeatC } from './civilization'
 import {
   DEFAULT_SPEED_INDEX,
   MAX_FRAME_SECONDS,
@@ -322,9 +322,11 @@ function integrate(state: WorldState, years: number): WorldState {
       solarDim = solarDim < 1e-4 ? 0 : solarDim * Math.exp(-dt / SOLAR_DIM_TAU)
     const probe: WorldState = { ...s, year, earth, colonyHealth, solarDim }
     if (!isRemoved(probe, 'earth')) {
-      // 햇빛이 정하는 기온에 문명 단계의 폐열을 더함
-      const target =
-        earthTemperature(bodyInsolation(probe, 'earth')) + civWasteHeatC(probe)
+      // 햇빛이 정하는 기온에 문명의 폐열을 더함 (자연 성장이면 더워져 줄어든 사람들의 폐열과 균형)
+      const target = heatedEarthTemperatureC(
+        probe,
+        earthTemperature(bodyInsolation(probe, 'earth')),
+      )
       earth.tempC = target + (earth.tempC - target) * Math.exp(-dt / 2.4)
       earth.coolingC *= Math.exp(-dt / 3)
       const t = earth.tempC + earth.coolingC
