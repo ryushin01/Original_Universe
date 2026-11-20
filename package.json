@@ -27,6 +27,7 @@
     "fonts": "node scripts/build-fonts.mjs",
     "screenshots": "node scripts/screenshots.mjs",
     "models": "node scripts/build-models.mjs",
+    "textures": "node scripts/build-textures.mjs",
     "logotype": "node scripts/build-logotype.mjs"
   },
   "dependencies": {

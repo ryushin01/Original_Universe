@@ -97,6 +97,7 @@ pnpm dev    # http://localhost:3100
 | `pnpm fonts`                           | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                               |
 | `pnpm logotype`                        | 소개 화면의 필기체 로고 윤곽 다시 만들기                                     |
 | `pnpm models`                          | 우주적 존재 3D 모델 받아 가공하기 (`scripts/models/sources.json`)            |
+| `pnpm textures`                        | 위성·왜행성·태양 텍스처 받아 가공하기 (libwebp의 `cwebp`·`dwebp` 필요)       |
 | `pnpm screenshots`                     | README 화면 다시 찍기 (`build` 뒤 `preview`를 띄운 다음 `BASE_URL` 지정)     |
 
 ## 프로젝트 구조
