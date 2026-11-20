@@ -10,7 +10,8 @@ import type { ModelId } from './models'
 // 모델은 주소로 받는 대신 public/models의 파일을 바로 해석 (장면과 같은 GLTFLoader·meshopt 해독기)
 vi.mock('./models', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./models')>()
-  const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js')
+  const { GLTFLoader } =
+    await import('three/examples/jsm/loaders/GLTFLoader.js')
   const { MeshoptDecoder } =
     await import('three/examples/jsm/libs/meshopt_decoder.module.js')
   await MeshoptDecoder.ready
@@ -29,9 +30,8 @@ vi.mock('./models', async (importOriginal) => {
     ...actual,
     loadModel: async (id: ModelId) => {
       // 이 환경의 ArrayBuffer로 복사 (GLTFLoader가 instanceof로 이진 파일을 알아봄)
-      const buffer = new Uint8Array(
-        fs.readFileSync(`public/models/${id}.glb`),
-      ).buffer
+      const buffer = new Uint8Array(fs.readFileSync(`public/models/${id}.glb`))
+        .buffer
       return actual.prepareModel(id, await loader.parseAsync(buffer, ''))
     },
   }
