@@ -11,7 +11,7 @@ import {
 import type { BlastKind } from '../../model/hazards/stellar'
 import { world, worldActions } from '../../model/world/store'
 import { formatDuration } from '../../model/world/text'
-import { createActionMessage, pick, t } from '../i18n'
+import { bothNames, createActionMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -38,7 +38,7 @@ export function BlastPanel() {
         onChange={setSourceId}
         options={BLAST_SOURCES.map((s) => ({
           value: s.id,
-          label: pick(s.name),
+          label: bothNames(s.name),
           group: t(`kind.${s.kind}` as MessageKey),
         }))}
         description={pick(source().note)}

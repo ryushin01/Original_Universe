@@ -11,7 +11,7 @@ describe('DestinationStrip', () => {
     expect(
       screen.getByRole('group', { name: '태양계' }),
     ).toHaveAccessibleDescription('목적지를 고르세요')
-    await userEvent.click(screen.getByRole('radio', { name: '화성' }))
+    await userEvent.click(screen.getByRole('radio', { name: '화성 Mars' }))
     expect(selection().solar).toBe('mars')
     expect(focus()).toBe('mars')
   })
@@ -20,7 +20,7 @@ describe('DestinationStrip', () => {
     viewActions.setScale('stars')
     render(() => <DestinationStrip />)
     expect(
-      screen.getByRole('radio', { name: '베텔게우스' }),
+      screen.getByRole('radio', { name: '베텔게우스 Betelgeuse' }),
     ).toBeInTheDocument()
   })
 })

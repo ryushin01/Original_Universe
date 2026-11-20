@@ -28,7 +28,7 @@ import { world, worldActions } from '../../model/world/store'
 import { hasProject, isRemoved } from '../../model/world/selectors'
 import { formatDuration, formatKm, formatMt } from '../../model/world/text'
 import type { Impact } from '../../model/world/types'
-import { createActionMessage, pick, t } from '../i18n'
+import { bothNames, createActionMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -235,7 +235,7 @@ export function ImpactPanel() {
         onChange={(v) => setTarget(v as BodyId)}
         options={IMPACT_TARGETS.map((id) => ({
           value: id,
-          label: pick(BODIES[id].name),
+          label: bothNames(BODIES[id].name),
           disabled: isRemoved(world(), id),
         }))}
       />
