@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { advanceTo, initialWorld } from './engine'
 import { declareWar } from './actions'
 import type { WarDeclaration } from './actions'
-import { BEING_BY_ID, isBeingId } from '../mythic/catalog'
+import { BEINGS, BEING_BY_ID, isBeingId } from '../mythic/catalog'
 import {
   FACTIONS,
   FACTION_BY_ID,
@@ -213,8 +213,8 @@ describe('신적 존재·대형 병기가 낀 우주 대전 진행', () => {
     )
     const end = advanceTo(state, w.endYear + 1 / 365.25)
     const all = texts(end)
-    expect(all).toContain('수르트가 더 얼라이언스 함대를 내리쳤습니다.')
-    expect(all).toContain('오딘이 더 얼라이언스 함대를 내리쳤습니다.')
+    // 한 편의 일격은 한 줄로 묶어 기록
+    expect(all).toContain('수르트·오딘이 더 얼라이언스 함대를 내리쳤습니다.')
     expect(all).toContain('불을 뿜어')
     if (w.rounds.length > DUEL_ROUND) {
       expect(all).toContain('신들의 결투:')
@@ -239,7 +239,7 @@ describe('신적 존재·대형 병기가 낀 우주 대전 진행', () => {
     expect(reject({ aBeings: ['nobody'] })).toBe(false)
     expect(
       reject({
-        aBeings: ['surtr', 'odin', 'ra', 'zeus'].slice(0, MAX_BEINGS + 1),
+        aBeings: BEINGS.slice(0, MAX_BEINGS + 1).map((b) => b.id),
       }),
     ).toBe(false)
     expect(reject({ bWeapon: 'death-ray' })).toBe(false)
@@ -250,5 +250,25 @@ describe('신적 존재·대형 병기가 낀 우주 대전 진행', () => {
     )
     expect(plain.result.ok).toBe(true)
     expect(extrasOf(plain.state.wars[0])).toEqual(NO_EXTRAS)
+  })
+
+  it('한 편에 20명까지: 일격이 겹쳐도 한 차례에 40%까지만 깎고, 기록은 한 줄로 묶는다', () => {
+    const ids = BEINGS.map((b) => b.id)
+    const field = (n: number) =>
+      declareWar(
+        fresh(),
+        declaration({ aBeings: ids.slice(0, n), bBeings: [] }),
+      )
+    const twenty = field(MAX_BEINGS)
+    expect(twenty.result.ok).toBe(true)
+    const war = twenty.state.wars[0]
+    expect(war.aBeings).toHaveLength(20)
+    expect(
+      war.rounds[1].specials.filter((e) => e.id === 'divine-strike'),
+    ).toHaveLength(20)
+    // 12명이든 20명이든 일격의 몫은 상한(40%)에 닿아 같은 만큼 깎임
+    expect(war.rounds[1].b).toBeCloseTo(field(12).state.wars[0].rounds[1].b, 6)
+    const done = advanceTo(twenty.state, war.rounds[1].year + 0.001)
+    expect(texts(done)).toMatch(/ 외 17명이 [^\n]* 함대를 내리쳤습니다/)
   })
 })
