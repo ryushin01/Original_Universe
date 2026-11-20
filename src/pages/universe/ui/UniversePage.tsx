@@ -1,14 +1,17 @@
 import { For, Show, createEffect, createSignal, onMount } from 'solid-js'
 import { isServer } from 'solid-js/web'
-import { LOCALES, locale, setLocale, syncLocale } from '@/shared/i18n'
-import { Button } from '@/shared/ui'
+import { syncLocale } from '@/shared/i18n'
 import { cn } from '@/shared/lib'
 import { REPOSITORY_URL } from '@/shared/config'
 import { intro, viewActions } from '../model/view'
 import { startAtNow } from '../model/world/store'
 import { t } from './i18n'
 import { useClock } from './useClock'
-import { IntroRings } from './intro/IntroRings'
+import { Intro } from './intro/Intro'
+import { IntroBar } from './intro/IntroBar'
+import { stopElementId } from './intro/journey'
+import { phase } from './intro/journeyState'
+import { LanguageSwitch } from './LanguageSwitch'
 import { Viewport } from './viewport/Viewport'
 import { ScaleLadder } from './scale/ScaleLadder'
 import { DestinationStrip } from './destinations/DestinationStrip'
@@ -21,26 +24,6 @@ import { EventLog } from './status/EventLog'
 import { ScenarioShare, openSharedScenario } from './status/ScenarioShare'
 import { SectionBoundary } from './boundary/SectionBoundary'
 import styles from './UniversePage.module.css'
-
-function LanguageSwitch() {
-  return (
-    <div role="group" aria-label={t('page.language')} class={styles.languages}>
-      <For each={LOCALES}>
-        {(value) => (
-          <button
-            type="button"
-            lang={value}
-            aria-pressed={locale() === value ? 'true' : 'false'}
-            onClick={() => setLocale(value)}
-            class={cn(styles.language, locale() === value && styles.languageOn)}
-          >
-            {value === 'ko' ? '한국어' : 'English'}
-          </button>
-        )}
-      </For>
-    </div>
-  )
-}
 
 const MOBILE_LINKS = [
   { href: '#stage', label: 'page.viewport' },
@@ -71,6 +54,9 @@ export function UniversePage() {
   const [crash, setCrash] = createSignal('')
 
   const start = () => {
+    // 둘러보기에서 옮겨 간 카메라를 태양계 전체 모습으로 되돌리고 지구를 고른 채로 시작
+    viewActions.setScale('solar')
+    viewActions.select('earth', false)
     viewActions.closeIntro()
     // 소개가 사라진 뒤 우주 관리 패널로 초점을 옮김
     queueMicrotask(() =>
@@ -85,30 +71,31 @@ export function UniversePage() {
           {t('page.skip')}
         </a>
       </Show>
-      <header class={styles.header}>
-        <div class={styles.brand}>
-          <h1 class={styles.title}>Original Universe</h1>
-          <p class={styles.tagline}>{t('page.tagline')}</p>
-          <Show when={intro()}>
-            <p class={styles.lead}>{t('page.lead')}</p>
-            <Button
-              variant="primary"
-              chevron
-              onClick={start}
-              class={styles.start}
-            >
-              {t('page.start')}
-            </Button>
-          </Show>
-        </div>
-        <LanguageSwitch />
-      </header>
-      <Show when={intro()}>
-        <IntroRings />
+      <Show when={intro() && phase() === 'journey'}>
+        <a href={`#${stopElementId('earth')}`} class={styles.skip}>
+          {t('intro.toContent')}
+        </a>
+      </Show>
+      <Show
+        when={intro()}
+        fallback={
+          <header class={styles.header}>
+            <div class={styles.brand}>
+              <h1 class={styles.title}>Original Universe</h1>
+              <p class={styles.tagline}>{t('page.tagline')}</p>
+            </div>
+            <LanguageSwitch />
+          </header>
+        }
+      >
+        <IntroBar languages={<LanguageSwitch />} />
       </Show>
 
-      {/* 소개 화면 동안 main 랜드마크는 남기고 안의 영역만 inert */}
+      {/* 소개 화면 동안 main 랜드마크는 남기고 시뮬레이터 영역만 inert */}
       <main class={styles.main}>
+        <Show when={intro()}>
+          <Intro onStart={start} />
+        </Show>
         <section
           id="stage"
           aria-labelledby="stage-title"

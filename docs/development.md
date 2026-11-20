@@ -128,6 +128,7 @@
 - 화면 글자를 바꾸면 `pnpm fonts`를 다시 실행합니다. 빠진 글자가 있으면 `src/app/styles/fonts.test.ts`가 실패합니다(빠진 글자도 나머지 조각으로 보이지만 늦게 받습니다). 조각 파일은 글자가 바뀌어도 그대로라 없는 것만 만들고, 원본 글꼴을 바꾸면 `pnpm fonts --all`로 모두 다시 만듭니다.
 - 작은 조각(대부분 4KB 미만)을 Vite가 CSS에 base64로 넣지 않도록 `vite.config.ts`의 `assetsInlineLimit`에서 woff2를 뺍니다. 생성한 CSS는 Prettier 검사에서 뺍니다.
 - Storybook(`.storybook/preview.tsx`)은 글꼴 CSS를 바로 불러옵니다.
+- 소개 화면의 필기체 로고는 글꼴을 내려받지 않고 그림으로 씁니다. `pnpm logotype`이 `scripts/fonts/herr-von-muellerhoff/`의 Herr Von Muellerhoff(SIL OFL 1.1, 예약 글꼴 이름 있음)로 ‘Original Universe’를 HarfBuzz로 짜서 글자 윤곽을 SVG 경로 하나로 만들고 `src/shared/ui/logotype/paths.ts`에 씁니다(`Logotype` 컴포넌트). 고친 글꼴 파일을 내보내지 않으므로 예약 글꼴 이름 조항에 걸리지 않습니다. 소개 화면의 좌표·진행 표시는 시스템 고정폭 글꼴(`--font-mono`)에 한글은 프리젠테이션을 이어 씁니다.
 - 한글 큰 제목(패널 제목 `.panelTitle`, 천체 이름 카드 `PassportCard`의 `.title`, 미션 결과 창 `.dialogTitle`, 머리글 `h1`)은 `--font-title`(`'Raleway Variable', 'Hakgyoansim Byeolbichhaneul', 'Freesentation', …`)로 학교안심 별빛하늘을 씁니다. 원본(Bold)과 라이선스는 `scripts/fonts/byeolbichhaneul/`에 있습니다.
   - 제목에만 쓰므로 `scripts/fonts/config.json`의 `text`로 담을 글자를 좁힙니다. `messages`는 `messages.ts`의 제목 키(`page.controls`·`page.status`·`mission.wonTitle`·`mission.lostTitle`), `props`는 `src/pages/universe/model`의 `name` 속성(천체·구조물·침입 천체 이름), `extra`는 `태양`입니다. 제목 글자를 바꾸거나 제목 자리를 늘리면 이 목록도 고칩니다.
   - `hangulOnly: true`라 한글만 담고(기호·영문은 다음 글꼴), `rest: false`라 나머지 글자 조각을 만들지 않습니다. 제목 글자가 모두 화면 글자 파일에 들어 있고 빠지면 `fonts.test.ts`가 실패하기 때문입니다.

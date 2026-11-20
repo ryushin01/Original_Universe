@@ -24,6 +24,8 @@
   --warn: #ffa25c;
   --danger: #ff9a9a;
   --safe: #5fe0a8;
+  /* 소개 화면의 지금 구간 표시 (Árstraumur 소개 화면 참고) */
+  --intro-accent: #9ad5ae;
 
   /* 영문·숫자는 Raleway, 한글은 프리젠테이션. 제목(display)과 본문(sans)이 같은 짝을 씀 */
   --font-display:
@@ -37,17 +39,24 @@
   --font-title:
     'Raleway Variable', 'Hakgyoansim Byeolbichhaneul', 'Freesentation',
     system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  /* 소개 화면의 좌표·진행 표시: 고정폭 영문, 한글은 프리젠테이션 */
+  --font-mono:
+    ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
+    'Freesentation', monospace;
 
   --radius: 2px;
   /* 영문 대문자는 넓게, 한글은 덜 벌림 */
   --tracking-wide: 0.32em;
   --tracking-label: 0.16em;
+  /* 소개 화면의 고정폭 표지: 영문 대문자는 넓게 */
+  --tracking-mono: 0.24em;
   --header-h: 4.25rem;
 }
 
 :root:lang(ko) {
   --tracking-wide: 0.18em;
   --tracking-label: 0.04em;
+  --tracking-mono: 0.06em;
   /* 한국어는 낱말 중간이 아니라 띄어쓰기에서 줄바꿈 (긴 낱말은 넘치지 않게 끊음) */
   word-break: keep-all;
   overflow-wrap: break-word;

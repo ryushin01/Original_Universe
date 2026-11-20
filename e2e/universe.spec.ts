@@ -12,9 +12,18 @@ const RULES = [
   'best-practice',
 ]
 
+/**
+ * 소개 화면을 지나 시뮬레이터로: 3D를 아직 불러오는 중이면 불러오기 화면의 건너뛰기,
+ * 다 불러와 둘러보기가 열렸으면 첫 구간의 시작 버튼
+ */
 async function start(page: Page, path = '/') {
   await page.goto(path)
-  await page.getByRole('button', { name: '탐사 시작' }).click()
+  const skip = page.getByRole('button', { name: '소개 건너뛰고 탐사 시작' })
+  if (await skip.isVisible())
+    await skip.click({ timeout: 5_000 }).catch(() => {})
+  const hero = page.locator('#intro-earth')
+  if (await hero.count())
+    await hero.getByRole('button', { name: '탐사 시작' }).click()
   await expect(page.getByRole('heading', { name: '우주 관리' })).toBeVisible()
 }
 
@@ -28,24 +37,38 @@ async function axe(page: Page, label: string) {
 const logText = (page: Page) => page.getByRole('region', { name: '사건 기록' })
 
 test.describe('첫 화면', () => {
-  test('소개 화면의 제목·설명·시작 버튼과 3D 장면이 나온다', async ({
+  test('소개 화면: 불러오기 뒤 스크롤 둘러보기를 지나 탐사를 시작한다', async ({
     page,
   }) => {
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
     await page.goto('/')
     await expect(page).toHaveTitle(/ORIGINAL UNIVERSE/)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      /Original Universe/i,
-    )
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
+    // 불러오기 화면: 로고 제목, 진행 막대, 건너뛰기
+    await expect(
+      page
+        .getByRole('heading', { level: 1, name: 'Original Universe' })
+        .first(),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('progressbar', { name: '3D 우주를 불러오는 중' }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: '소개 건너뛰고 탐사 시작' }),
+    ).toBeVisible()
     // 3D는 렌더링 워커가 그림. 소프트웨어 WebGL(SwiftShader)은 컨텍스트를 만드는 데만
     // 몇 초, 기계가 바쁘면 10초 넘게 걸리므로 넉넉히 기다림
     await expect(page.locator('canvas')).toBeVisible({ timeout: 20_000 })
-    await expect(page.getByText('3D 우주를 준비하는 중')).toBeHidden({
-      timeout: 45_000,
+    await expect(page.getByRole('progressbar')).toHaveCount(0, {
+      timeout: 60_000,
     })
-    // 소개 화면이 떠 있는 동안 main 랜드마크는 남기고 안의 영역은 inert
+    // 둘러보기: 지금 구간이 메뉴에 표시되고, 시뮬레이터 영역은 inert
+    const tour = page.getByRole('navigation', { name: '소개 둘러보기' })
+    await expect(tour.getByRole('link', { name: '지구' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
     const panels = page
       .locator('main > div')
       .filter({ has: page.locator('#controls') })
@@ -53,11 +76,40 @@ test.describe('첫 화면', () => {
     await expect(page.locator('#stage')).toHaveAttribute('inert', '')
     await expect(panels).toHaveAttribute('inert', '')
     await axe(page, 'intro')
-    await page.getByRole('button', { name: '탐사 시작' }).click()
+    // 아래 구간 표시로 달, 메뉴로 재진입
+    await page.getByRole('button', { name: '다음 구간' }).click()
+    await expect(tour.getByRole('link', { name: '달' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+    await expect(
+      page.getByRole('heading', { name: '재해를 일으키다' }),
+    ).toBeVisible()
+    await tour.getByRole('link', { name: '재진입' }).click()
+    await expect(tour.getByRole('link', { name: '재진입' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+    await page
+      .locator('#intro-reentry')
+      .getByRole('button', { name: '탐사 시작' })
+      .click()
     await expect(page.locator('#stage')).not.toHaveAttribute('inert', '')
     await expect(panels).not.toHaveAttribute('inert', '')
     await expect(page.locator('#controls')).toBeFocused()
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Original Universe' }),
+    ).toBeVisible()
     expect(errors).toEqual([])
+  })
+
+  test('불러오는 동안 소개를 건너뛰고 바로 시작할 수 있다', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: '소개 건너뛰고 탐사 시작' }).click()
+    await expect(page.getByRole('heading', { name: '우주 관리' })).toBeVisible()
+    await expect(page.locator('#controls')).toBeFocused()
   })
 
   for (const viewport of [

@@ -1,0 +1,25 @@
+.logotype {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* 펜으로 써 내려가듯 왼쪽부터 드러남 */
+.write {
+  clip-path: inset(0 100% 0 0);
+  animation: write 1.8s cubic-bezier(0.6, 0, 0.2, 1) 0.15s forwards;
+}
+
+@keyframes write {
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .write {
+    clip-path: none;
+    animation: none;
+  }
+}

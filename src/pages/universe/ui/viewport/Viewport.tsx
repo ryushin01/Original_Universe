@@ -1,6 +1,7 @@
 import {
   For,
   Show,
+  createEffect,
   createSignal,
   createUniqueId,
   onCleanup,
@@ -33,10 +34,15 @@ import {
 } from './renderClient'
 import type { RenderCallbacks, RenderClient } from './renderClient'
 import { placeLabels } from './labels'
+import { sceneLoadActions } from './sceneLoad'
 import styles from './Viewport.module.css'
 
 const STEP = Math.PI / 12
 const MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+/** 소개 화면의 글이 왼쪽을 차지하는 넓은 화면 */
+const WIDE_QUERY = '(min-width: 960px)'
+/** 넓은 화면의 소개 화면에서 대상을 오른쪽으로 옮겨 보이는 비율 (화면 너비 기준) */
+const INTRO_SHIFT = 0.18
 /** 이만큼 덜 움직이고 손을 떼면 끌기가 아니라 고르기 (CSS 픽셀) */
 const CLICK_SLOP = 6
 /** 워커가 이 시간 안에 WebGL도 열지 못하면 메인 스레드로 바꿈 (OffscreenCanvas가 불안정한 브라우저) */
@@ -101,7 +107,11 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
     'loading',
   )
   const [reduced, setReduced] = createSignal(false)
+  const [wide, setWide] = createSignal(false)
   const [moreOpen, setMoreOpen] = createSignal(false)
+  const frameShift = () => (intro() && wide() ? INTRO_SHIFT : 0)
+  // 소개 화면의 불러오기 표시가 읽도록 알림
+  createEffect(() => sceneLoadActions.update({ status: status() }))
   const optionsId = createUniqueId()
   const labels = new Map<string, HTMLElement>()
 
@@ -111,6 +121,11 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
     const onMotion = () => setReduced(query.matches)
     query.addEventListener('change', onMotion)
     onCleanup(() => query.removeEventListener('change', onMotion))
+    const wideQuery = window.matchMedia(WIDE_QUERY)
+    setWide(wideQuery.matches)
+    const onWide = () => setWide(wideQuery.matches)
+    wideQuery.addEventListener('change', onWide)
+    onCleanup(() => wideQuery.removeEventListener('change', onWide))
 
     let disposed = false
     let frame = 0
@@ -217,7 +232,11 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
     onCleanup(() => clearTimeout(watchdog))
 
     const callbacks: RenderCallbacks = {
-      onContext: () => watch(WORKER_PROGRESS_TIMEOUT_MS),
+      onContext: () => {
+        watch(WORKER_PROGRESS_TIMEOUT_MS)
+        sceneLoadActions.update({ context: true })
+      },
+      onProgress: (loaded, total) => sceneLoadActions.update({ loaded, total }),
       onLabels: (positions) => placeLabels(labels, positions),
       onCollision: setCollisionInfo,
       onReady: () => setStatus('ready'),
@@ -304,6 +323,7 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
         focus(),
         options(),
         intro(),
+        frameShift(),
         cosmicAge(),
         reduced(),
         labelIds.join('|'),
@@ -317,6 +337,7 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
         focus: focus(),
         options: options(),
         intro: intro(),
+        frameShift: frameShift(),
         cosmicAge: cosmicAge(),
         reducedMotion: reduced(),
         labelIds,
