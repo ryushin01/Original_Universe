@@ -1,13 +1,15 @@
 /**
  * 위성·왜행성·태양 텍스처 만들기: `pnpm textures` (일부만: `pnpm textures io europa`)
  *
- * 원본(NASA 3D Resources, Solar System Scope)을 내려받아 1024×512 WebP(`public/textures/<이름>.webp`)로 만듭니다.
+ * 원본(NASA 3D Resources, Solar System Scope, USGS)을 내려받아 1024×512 WebP(`public/textures/<이름>.webp`)로 만듭니다.
+ * TIFF 원본은 macOS의 `sips`로 PNG로 바꿔 씁니다(cwebp가 TIFF를 못 읽게 빌드된 때가 있어서).
  * 필요: libwebp의 `cwebp`·`dwebp` (macOS: `brew install webp`). 받은 원본은 임시 폴더에서만 다룹니다.
  *
  * - `fill`: 자료가 빈 곳을 가장 가까운 경계에 비춘 주변 지형으로 채움
  *   - `dark`: 검게 비운 곳 (이오의 극지방)
  *   - `blank`: 흐린 회색으로 메운 곳 (칼리스토). 밝고 잔무늬가 없는 곳을 고름
  * - `colors`: 흑백(또는 지나치게 짙은) 지도를 밝기에 따라 실제 빛깔로 칠함 [밝기, 색] 목록
+ * - `roll`: 가로로 돌릴 비율. 왼쪽 끝이 경도 0°인 지도는 0.5(반 바퀴)로 경도 0°를 가운데에 둠
  *
  * 출처와 손본 내용은 docs/data-sources.md에 있습니다.
  */
@@ -20,7 +22,7 @@ const NASA =
   'https://raw.githubusercontent.com/nasa/NASA-3D-Resources/master/Images%20and%20Textures/'
 const SSS = 'https://www.solarsystemscope.com/textures/download/'
 
-/** @type {Record<string, { url: string, fill?: 'dark' | 'blank', colors?: Array<[number, string]> }>} */
+/** @type {Record<string, { url: string, fill?: 'dark' | 'blank', colors?: Array<[number, string]>, roll?: number }>} */
 const SOURCES = {
   io: {
     url: `${NASA}Jupiter%20-%20Io%20(A)/Jupiter%20-%20Io%20(A).jpg`,
@@ -72,8 +74,19 @@ const SOURCES = {
     ],
   },
   pluto: { url: `${NASA}Pluto/Pluto.jpg` },
-  // 돈(Dawn) 탐사선 자료에 없는 곳은 가상 지형 (Solar System Scope, CC BY 4.0)
-  ceres: { url: `${SSS}2k_ceres_fictional.jpg` },
+  // 돈(Dawn) 탐사선 프레이밍 카메라의 전 지구 모자이크 (DLR, 400 m/픽셀, 흑백).
+  // 왼쪽 끝이 경도 0°라 반 바퀴 돌리고, 밝기는 그대로 둔 채 옅은 잿빛 갈색을 입힘
+  ceres: {
+    url: 'https://planetarymaps.usgs.gov/mosaic/Ceres_Dawn_FC_DLR_global_20ppd_Oct2015.tif',
+    roll: 0.5,
+    colors: [
+      [0, '000000'],
+      [64, '3f3d3a'],
+      [130, '807b74'],
+      [190, 'bdb8b0'],
+      [255, 'fffcf6'],
+    ],
+  },
   sun: { url: `${SSS}2k_sun.jpg` },
 }
 
@@ -100,6 +113,21 @@ const readPpm = async (file) => {
 
 const writePpm = (file, { w, h, px }) =>
   writeFile(file, Buffer.concat([Buffer.from(`P6\n${w} ${h}\n255\n`), px]))
+
+/** 가로로 fraction만큼 돌림 (왼쪽 끝이 경도 0°인 지도를 경도 0°가 가운데 오게) */
+function roll({ w, h, px }, fraction) {
+  const shift = Math.round(w * fraction) % w
+  const out = new Uint8Array(px.length)
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const from = (y * w + x) * 3
+      const to = (y * w + ((x + shift) % w)) * 3
+      out[to] = px[from]
+      out[to + 1] = px[from + 1]
+      out[to + 2] = px[from + 2]
+    }
+  return { w, h, px: out }
+}
 
 const luma = (px, i) =>
   Math.floor(
@@ -299,8 +327,18 @@ try {
     const response = await fetch(source.url)
     if (!response.ok)
       throw new Error(`${name}: ${response.status} ${source.url}`)
-    const original = path.join(work, `${name}.jpg`)
-    await writeFile(original, Buffer.from(await response.arrayBuffer()))
+    const bytes = Buffer.from(await response.arrayBuffer())
+    // TIFF(II*\0, MM\0*)는 sips로 PNG로 바꿈
+    const tiff = ['49492a00', '4d4d002a'].includes(
+      bytes.subarray(0, 4).toString('hex'),
+    )
+    let original = path.join(work, `${name}.${tiff ? 'tif' : 'jpg'}`)
+    await writeFile(original, bytes)
+    if (tiff) {
+      const png = path.join(work, `${name}.png`)
+      run('sips', ['-s', 'format', 'png', original, '--out', png])
+      original = png
+    }
     // 손실 없이 줄여 픽셀로 풀고, 손본 뒤 한 번만 손실 압축
     run('cwebp', [
       '-quiet',
@@ -320,6 +358,7 @@ try {
       path.join(work, `${name}.ppm`),
     ])
     let image = await readPpm(path.join(work, `${name}.ppm`))
+    if (source.roll) image = roll(image, source.roll)
     if (source.fill) image = fillBlanks(image, source.fill)
     if (source.colors) image = colorize(image, source.colors)
     await writePpm(path.join(work, `${name}-out.ppm`), image)
