@@ -280,3 +280,22 @@ details.block > summary {
   display: flex;
   align-items: center;
 }
+
+/* 우주 대전 카드의 스페이스 오페라 소재 */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  list-style: none;
+
+  & li {
+    padding: 0.15rem 0.5rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    color: var(--ice);
+  }
+}

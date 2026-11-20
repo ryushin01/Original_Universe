@@ -31,6 +31,15 @@ import type { FlybyInput, ImpactInput } from './factory'
 import { MISSION_BY_ID } from './missions'
 import { BEING_BY_ID, SITE_BY_ID, isBeingId, isSiteId } from '../mythic/catalog'
 import type { SiteId } from '../mythic/catalog'
+import { FLEET_SIZES, isFactionId, isFleetSize } from '../war/catalog'
+import type { FactionId, FleetSize } from '../war/catalog'
+import {
+  MAX_WARS,
+  makeWar,
+  ragingWars,
+  superweaponTargets,
+  warTitle,
+} from './war'
 import {
   MAX_BATTLES,
   battleOf,
@@ -747,3 +756,81 @@ export function quitMission(state: WorldState): Outcome {
 }
 
 export const bodyNameText = (id: BodyId): Text => BODIES[id].name
+
+/* ── 우주 대전 ────────────────────────────────────────── */
+
+export interface WarDeclaration {
+  a: string
+  b: string
+  site: string
+  size: string
+  /** 행성 파괴포 표적 (없으면 쏘지 않음) */
+  target: string | null
+}
+
+/** 개전할 수 있는지 (같은 세력끼리·싸움터·표적·동시에 벌어지는 전쟁 수) */
+export function canDeclareWar(
+  state: WorldState,
+  input: WarDeclaration,
+): ActionResult {
+  const no = (ko: string, en: string): ActionResult => ({
+    ok: false,
+    message: both(ko, en),
+  })
+  if (!isFactionId(input.a) || !isFactionId(input.b))
+    return no('세력을 고르세요.', 'Choose two factions.')
+  if (input.a === input.b)
+    return no('서로 다른 두 세력을 고르세요.', 'Choose two different factions.')
+  if (!isSiteId(input.site) || !isFleetSize(input.size))
+    return no(
+      '싸움터와 함대 규모를 고르세요.',
+      'Choose a battlefield and fleet size.',
+    )
+  if (ragingWars(state).length >= MAX_WARS)
+    return no(
+      `우주 대전은 한 번에 ${MAX_WARS}곳까지만 벌어집니다. 하나가 끝난 뒤에 다시 시도하세요.`,
+      `At most ${MAX_WARS} space wars can rage at once. Try again when one ends.`,
+    )
+  const site = SITE_BY_ID[input.site]
+  if (site.anchor && isRemoved(state, site.anchor))
+    return no('싸움터가 사라졌습니다.', 'That battlefield no longer exists.')
+  if (
+    input.target !== null &&
+    !superweaponTargets(state, input.site).includes(input.target as BodyId)
+  )
+    return no(
+      '행성 파괴포로 쏠 수 없는 천체입니다.',
+      'The planet-killer cannot target that body.',
+    )
+  return { ok: true, message: both('', '') }
+}
+
+/** 두 세력의 우주 대전을 일으킴 */
+export function declareWar(state: WorldState, input: WarDeclaration): Outcome {
+  const check = canDeclareWar(state, input)
+  if (!check.ok) return { state, result: check }
+  const war = makeWar(state, {
+    a: input.a as FactionId,
+    b: input.b as FactionId,
+    site: input.site as SiteId,
+    size: input.size as FleetSize,
+    target: input.target as BodyId | null,
+  })
+  const title = warTitle(war)
+  const site = SITE_BY_ID[war.site]
+  const s = log(
+    { ...state, wars: [...state.wars, war], nextId: state.nextId + 1 },
+    compose((l) =>
+      l === 'ko'
+        ? `${site.name.ko}에서 우주 대전이 시작됩니다: ${title.ko} (${FLEET_SIZES[war.size].name.ko}, 전력 ${Math.round(war.aPower)} 대 ${Math.round(war.bPower)}). ${formatSimDate(war.endYear, l)}쯤 끝납니다.`
+        : `A space war breaks out ${site.name.en.toLowerCase()}: ${title.en} (${FLEET_SIZES[war.size].name.en.toLowerCase()}, strength ${Math.round(war.aPower)} vs ${Math.round(war.bPower)}). It should end around ${formatSimDate(war.endYear, l)}.`,
+    ),
+    'danger',
+  )
+  return done(
+    s,
+    compose((l) =>
+      l === 'ko' ? `개전했습니다: ${title.ko}` : `War declared: ${title.en}`,
+    ),
+  )
+}

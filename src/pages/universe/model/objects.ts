@@ -8,6 +8,8 @@ import { LOCAL_GALAXIES } from './local/catalog'
 import { COSMIC_STRUCTURES } from './cosmic/catalog'
 import type { ScaleId } from './view'
 import { BEING_BY_ID } from './mythic/catalog'
+import { FACTION_BY_ID } from './war/catalog'
+import type { FactionId } from './war/catalog'
 
 export interface SceneObject {
   id: string
@@ -115,6 +117,35 @@ export function beingObject(beingId: string): SceneObject {
       name: BEING_BY_ID[beingId].name,
     }
     beingObjects.set(beingId, object)
+  }
+  return object
+}
+
+/** 3D에서 고르는 우주 대전의 id (`war:<전쟁 번호>`) */
+export const WAR_PREFIX = 'war:'
+export const warSceneId = (warId: number) => `${WAR_PREFIX}${warId}`
+export const warIdOf = (sceneId: string): number | null =>
+  sceneId.startsWith(WAR_PREFIX)
+    ? Number(sceneId.slice(WAR_PREFIX.length))
+    : null
+
+const warObjects = new Map<number, SceneObject>()
+
+/** 우주 대전의 이름표 대상: '연방 대 제국' */
+export function warObject(war: {
+  id: number
+  a: FactionId
+  b: FactionId
+}): SceneObject {
+  let object = warObjects.get(war.id)
+  if (!object) {
+    const a = FACTION_BY_ID[war.a].short
+    const b = FACTION_BY_ID[war.b].short
+    object = {
+      id: warSceneId(war.id),
+      name: both(`${a.ko} 대 ${b.ko}`, `${a.en} vs ${b.en}`),
+    }
+    warObjects.set(war.id, object)
   }
   return object
 }

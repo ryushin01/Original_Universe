@@ -256,6 +256,23 @@ if (want('galaxy', 'cosmic')) {
 }
 
 // 모바일
+// 우주 대전(악시스 대 더 얼라이언스)과 은하 사이를 질러가는 레이저
+if (want('war', 'lasers')) {
+  const { page, context } = await open()
+  await page.getByRole('tab', { name: '우주 대전', exact: true }).click()
+  await page.getByRole('button', { name: '개전' }).click()
+  await page.getByRole('button', { name: '전장 따라가기' }).click()
+  if (want('war')) await shot(page, 'war', 7000)
+  if (want('lasers')) {
+    await page
+      .getByRole('radio', { name: /국부 은하군/ })
+      .check({ force: true })
+    await sceneReady(page)
+    await shot(page, 'lasers', 2500)
+  }
+  await context.close()
+}
+
 if (want('mobile')) {
   const { page, context } = await open({
     viewport: { width: 390, height: 844 },

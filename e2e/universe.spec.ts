@@ -141,6 +141,7 @@ test.describe('첫 화면', () => {
       '태양의 미래',
       '건설',
       '우주적 존재',
+      '우주 대전',
     ]) {
       await page.getByRole('tab', { name, exact: true }).click()
       await axe(page, name)
@@ -411,6 +412,33 @@ test.describe('시뮬레이션 흐름', () => {
       .fill('3')
     await page.getByRole('button', { name: '시간 흐름 재생' }).click()
     await expect(logText(page)).toContainText('격돌이 끝났습니다', {
+      timeout: 40_000,
+    })
+    expect(errors).toEqual([])
+  })
+
+  test('우주 대전: 악시스와 얼라이언스 함대가 맞붙고 끝나면 승자와 여파를 기록한다', async ({
+    page,
+  }) => {
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
+    await start(page)
+    await page.getByRole('tab', { name: '우주 대전', exact: true }).click()
+    await expect(
+      page.getByRole('region', { name: /스페이스 오페라 소재 \d+가지/ }),
+    ).toBeVisible()
+    await page.getByRole('button', { name: '개전' }).click()
+    await expect(logText(page)).toContainText('우주 대전이 시작됩니다')
+    await page.getByRole('button', { name: '전장 따라가기' }).click()
+    await expect(
+      page.getByRole('combobox', { name: '목적지 바로 가기' }),
+    ).toHaveValue(/^war:/)
+    // 1개월/초로 흘려 전쟁을 끝냄
+    await page
+      .getByRole('slider', { name: '시간 속도 (화면 1초마다)' })
+      .fill('3')
+    await page.getByRole('button', { name: '시간 흐름 재생' }).click()
+    await expect(logText(page)).toContainText('우주 대전이 끝났습니다', {
       timeout: 40_000,
     })
     expect(errors).toEqual([])

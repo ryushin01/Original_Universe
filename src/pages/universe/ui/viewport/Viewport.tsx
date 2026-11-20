@@ -19,7 +19,7 @@ import {
   selection,
   viewActions,
 } from '../../model/view'
-import { beingObject, objectsOf } from '../../model/objects'
+import { beingObject, objectsOf, warObject } from '../../model/objects'
 import { currentWorld, world } from '../../model/world/store'
 import { visibleBeings } from '../../model/world/mythic'
 import { setCollisionInfo } from '../../model/local/collisionInfo'
@@ -370,7 +370,11 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
   /** 이름표를 붙일 대상: 규모의 천체 + 태양계에 나타난 우주적 존재 */
   const labelObjects = () =>
     scale() === 'solar'
-      ? [...objectsOf('solar'), ...visibleBeings(world()).map(beingObject)]
+      ? [
+          ...objectsOf('solar'),
+          ...visibleBeings(world()).map(beingObject),
+          ...world().wars.map(warObject),
+        ]
       : objectsOf(scale())
 
   return (

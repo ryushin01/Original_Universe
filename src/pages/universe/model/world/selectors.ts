@@ -369,6 +369,7 @@ export function hasPendingEvents(state: WorldState): boolean {
   return (
     state.mission?.status === 'running' ||
     state.battles.some((b) => b.status === 'raging') ||
+    state.wars.some((w) => w.status === 'raging') ||
     state.impacts.some((im) => im.status === 'incoming') ||
     state.storms.some((st) => !st.announced || st.hits.some((h) => !h.done)) ||
     state.flybys.some((f) => f.phase !== 'done') ||
