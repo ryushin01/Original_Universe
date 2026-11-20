@@ -45,7 +45,7 @@ import { BEING_BY_ID } from '../../../../model/mythic/catalog'
 import type { Being } from '../../../../model/mythic/catalog'
 import {
   WAR_AFTERGLOW_YEARS,
-  fallenSide,
+  fallenBeings,
   warStrength,
 } from '../../../../model/world/war'
 import type { War, WorldState } from '../../../../model/world/types'
@@ -190,6 +190,8 @@ interface Mega {
 interface Champion {
   being: Being
   side: 0 | 1
+  /** 그 편에서 내세운 순번 (결투 짝·자리) */
+  index: number
   root: Group
   aura: Mesh
   body: Body3D | null
@@ -238,10 +240,10 @@ interface Visual {
   }
   megas: Mega[]
   champions: Champion[]
-  /** 신들의 결투 전 두 존재 사이의 번개 */
-  arc: Line
-  /** 결투 장면을 그렸는지 */
-  dueled: boolean
+  /** 신들의 결투 전 짝지은 두 존재 사이의 번개 (짝마다 하나) */
+  arcs: Line[]
+  /** 결투 장면을 그린 진 존재들 */
+  dueled: Set<string>
   shots: Shot[]
   disposed: boolean
 }
@@ -262,6 +264,7 @@ const s3 = new Vector3()
 const basis = new Matrix4()
 const up = new Vector3(0, 1, 0)
 const camUp = new Vector3()
+const camRight = new Vector3()
 const toCamera = new Vector3()
 const tmpDir = new Vector3()
 const zero = new Vector3()
@@ -398,18 +401,22 @@ function makeVisual(war: War, group: Group, pickables: Mesh[]): Visual {
   killerBeam.visible = false
   const killerFlash = makeGlow('#fff2c9', 1, 2.2)
   killerFlash.visible = false
-  const arc = new Line(
-    new BufferGeometry(),
-    new LineBasicMaterial({
-      color: '#f2f6ff',
-      transparent: true,
-      opacity: 0,
-      blending: AdditiveBlending,
-      depthWrite: false,
-    }),
-  )
-  arc.frustumCulled = false
-  root.add(lines, pick, killerBeam, killerFlash, arc)
+  const pairs = Math.min(war.aBeings.length, war.bBeings.length)
+  const arcs = Array.from({ length: pairs }, () => {
+    const arc = new Line(
+      new BufferGeometry(),
+      new LineBasicMaterial({
+        color: '#f2f6ff',
+        transparent: true,
+        opacity: 0,
+        blending: AdditiveBlending,
+        depthWrite: false,
+      }),
+    )
+    arc.frustumCulled = false
+    return arc
+  })
+  root.add(lines, pick, killerBeam, killerFlash, ...arcs)
   group.add(root)
   pickables.push(pick)
   const visual: Visual = {
@@ -439,18 +446,18 @@ function makeVisual(war: War, group: Group, pickables: Mesh[]): Visual {
     },
     megas: [],
     champions: [],
-    arc,
-    dueled: false,
+    arcs,
+    dueled: new Set(),
     shots: [],
     disposed: false,
   }
   root.add(visual.lances.mesh)
   // 대형 병기: 꼴은 여러 전쟁이 함께 쓰고, 재질은 그 세력 함대의 홀로그램 재질
   const sides = [
-    { weapon: war.aWeapon, being: war.aBeing },
-    { weapon: war.bWeapon, being: war.bBeing },
+    { weapon: war.aWeapon, beings: war.aBeings },
+    { weapon: war.bWeapon, beings: war.bBeings },
   ]
-  sides.forEach(({ weapon, being }, k) => {
+  sides.forEach(({ weapon, beings }, k) => {
     const side = k as 0 | 1
     const fleet = fleets[side]
     if (weapon && MEGAWEAPONS[weapon]) {
@@ -480,8 +487,9 @@ function makeVisual(war: War, group: Group, pickables: Mesh[]): Visual {
         fired: 0,
       })
     }
-    const info = being ? BEING_BY_ID[being] : undefined
-    if (info) {
+    beings.forEach((being, index) => {
+      const info = BEING_BY_ID[being]
+      if (!info) return
       const championRoot = new Group()
       const aura = makeGlow(info.color, 1, 0)
       championRoot.add(aura)
@@ -490,6 +498,7 @@ function makeVisual(war: War, group: Group, pickables: Mesh[]): Visual {
       const champion: Champion = {
         being: info,
         side,
+        index,
         root: championRoot,
         aura,
         body: null,
@@ -513,7 +522,7 @@ function makeVisual(war: War, group: Group, pickables: Mesh[]): Visual {
           championRoot.add(b.object)
         })
         .catch(() => {})
-    }
+    })
   })
   // 함선 모양은 따로 받아 오면 붙임 (같은 모양은 여러 전쟁이 함께 씀)
   for (const fleet of fleets) {
@@ -703,13 +712,15 @@ export function createWarLayer(): WarLayer {
     updateShots(v, now, ctx, scale)
   }
 
-  /** 끝난 교전 차례에서 한쪽이 일으킨 특수 작전 수 */
-  function doneCount(war: War, side: 0 | 1, id: SpecialId) {
+  /** 끝난 교전 차례에서 한쪽이(being이 있으면 그 존재가) 일으킨 특수 작전 수 */
+  function doneCount(war: War, side: 0 | 1, id: SpecialId, being?: string) {
     const key = side === 0 ? 'a' : 'b'
     let n = 0
     for (const r of war.rounds)
       if (r.done)
-        for (const x of r.specials) if (x.id === id && x.side === key) n++
+        for (const x of r.specials)
+          if (x.id === id && x.side === key && (!being || x.being === being))
+            n++
     return n
   }
 
@@ -781,14 +792,17 @@ export function createWarLayer(): WarLayer {
   ) {
     const reduced = ctx.reducedMotion
     const t = reduced ? 0 : ctx.elapsed
-    const fallen = fallenSide(war, world.year)
+    const fallen = fallenBeings(war, world.year)
     const pixelScale =
       (ctx.height / 2) * ctx.camera.projectionMatrix.elements[5]
     camUp.setFromMatrixColumn(ctx.camera.matrixWorld, 1)
+    camRight.setFromMatrixColumn(ctx.camera.matrixWorld, 0)
+    const counts = [0, 0]
+    for (const c of v.champions) counts[c.side]++
     for (const c of v.champions) {
       const fleet = v.fleets[c.side]
       const enemy = v.fleets[1 - c.side]
-      if (fallen === (c.side === 0 ? 'a' : 'b') && !c.fell) {
+      if (fallen.has(c.being.id) && !c.fell) {
         c.fell = true
         c.body?.fall()
       }
@@ -798,13 +812,15 @@ export function createWarLayer(): WarLayer {
       c.root.visible = c.opacity > 0.01
       if (!c.root.visible) continue
       const radius = CHAMPION_SIZE * scale * clamp(c.being.size ?? 1, 0.7, 1.4)
-      // 화면에서 함대 뒤 위쪽 (카메라의 위 방향으로 벌림)
+      // 화면에서 함대 뒤 위쪽 (카메라의 위 방향으로 벌림), 여럿이면 옆으로 나란히
+      const spread = (c.index - (counts[c.side] - 1) / 2) * 1.25 * scale
       c.root.position
         .copy(fleet.origin)
         .addScaledVector(fleet.forward, -1.2 * scale)
+        .addScaledVector(camRight, spread)
         .addScaledVector(
           camUp,
-          (1.3 + 0.05 * Math.sin(t * 0.6 + c.side * 2)) * scale,
+          (1.3 + 0.05 * Math.sin(t * 0.6 + c.side * 2 + c.index)) * scale,
         )
       // 적을 보되 3/4쯤 이쪽으로 돌아 모습이 잘 보이게
       toCamera.subVectors(ctx.camera.position, c.root.position).normalize()
@@ -837,7 +853,7 @@ export function createWarLayer(): WarLayer {
       glow.uTime.value = ctx.elapsed
       faceCamera(c.aura, ctx.camera)
       // 신의 일격: 적 함대 한가운데로 내리침
-      const struck = doneCount(war, c.side, 'divine-strike')
+      const struck = doneCount(war, c.side, 'divine-strike', c.being.id)
       if (struck > c.struck) {
         c.struck = struck
         if (!reduced && c.opacity > 0.2) {
@@ -854,30 +870,51 @@ export function createWarLayer(): WarLayer {
         }
       }
     }
-    // 결투 전: 두 존재 사이에 번개, 결투 때: 이긴 쪽이 덮치고 진 쪽에 섬광
-    const arcMat = v.arc.material as LineBasicMaterial
-    const [a, b] = v.champions.length === 2 ? v.champions : [null, null]
-    if (a && b && !fallen && war.status === 'raging' && a.root.visible) {
-      const random = seededRandom(Math.floor(ctx.elapsed * 12) + v.id)
+    // 결투 전: 짝지은 두 존재 사이에 번개, 결투 때: 이긴 쪽이 덮치고 진 쪽에 섬광
+    const champion = (side: 0 | 1, index: number) =>
+      v.champions.find((c) => c.side === side && c.index === index)
+    const byId = (id: string | undefined) =>
+      v.champions.find((c) => c.being.id === id)
+    v.arcs.forEach((arc, i) => {
+      const a = champion(0, i)
+      const b = champion(1, i)
+      const mat = arc.material as LineBasicMaterial
+      const live =
+        a &&
+        b &&
+        !fallen.has(a.being.id) &&
+        !fallen.has(b.being.id) &&
+        war.status === 'raging' &&
+        a.root.visible &&
+        b.root.visible
+      if (!live) {
+        mat.opacity = 0
+        return
+      }
+      const random = seededRandom(Math.floor(ctx.elapsed * 12) + v.id * 7 + i)
       const pts: Vector3[] = []
       const span = a.root.position.distanceTo(b.root.position)
-      for (let i = 0; i <= 18; i++) {
-        const p = a.root.position.clone().lerp(b.root.position, i / 18)
-        if (i > 0 && i < 18 && !reduced)
+      for (let k = 0; k <= 18; k++) {
+        const p = a.root.position.clone().lerp(b.root.position, k / 18)
+        if (k > 0 && k < 18 && !reduced)
           p.addScaledVector(camUp, (random() - 0.5) * span * 0.08)
         pts.push(p)
       }
-      setLine(v.arc, pts)
-      arcMat.opacity = reduced
+      setLine(arc, pts)
+      mat.opacity = reduced
         ? 0.2
-        : (0.2 + 0.35 * Math.abs(Math.sin(ctx.elapsed * 6 + v.id))) *
+        : (0.2 + 0.35 * Math.abs(Math.sin(ctx.elapsed * 6 + v.id + i))) *
           Math.min(a.opacity, b.opacity)
-    } else arcMat.opacity = 0
-    if (a && b && fallen && !v.dueled) {
-      v.dueled = true
-      const winner = fallen === 'a' ? b : a
-      const loser = fallen === 'a' ? a : b
-      if (!reduced) {
+    })
+    for (const r of war.rounds) {
+      if (r.year > world.year) break
+      for (const x of r.specials) {
+        if (x.id !== 'divine-duel' || !x.rival || v.dueled.has(x.rival))
+          continue
+        v.dueled.add(x.rival)
+        const winner = byId(x.being)
+        const loser = byId(x.rival)
+        if (!winner || !loser || reduced) continue
         winner.body?.strike()
         startShot(v, {
           kind: 'divine',

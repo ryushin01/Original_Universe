@@ -292,14 +292,31 @@ export const PANEL_MESSAGES = {
   ],
   'war.a': ['공격 세력', 'Attacking faction'],
   'war.b': ['맞설 세력', 'Defending faction'],
-  'war.beingA': [
-    '공격 세력에 가세할 신적 존재',
-    'Divine being for the attackers',
+  'war.beingsA': [
+    '공격 세력에 가세할 신적 존재 (최대 {n})',
+    'Divine beings for the attackers (up to {n})',
   ],
-  'war.beingB': [
-    '맞설 세력에 가세할 신적 존재',
-    'Divine being for the defenders',
+  'war.addBeingA': [
+    '공격 세력에 더할 신적 존재',
+    'Add a divine being to the attackers',
   ],
+  'war.beingsB': [
+    '맞설 세력에 가세할 신적 존재 (최대 {n})',
+    'Divine beings for the defenders (up to {n})',
+  ],
+  'war.addBeingB': [
+    '맞설 세력에 더할 신적 존재',
+    'Add a divine being to the defenders',
+  ],
+  'war.pickBeing': ['고르세요', 'Choose one'],
+  'war.addBeing': ['더하기', 'Add'],
+  'war.remove': ['빼기', 'Remove'],
+  'war.removeBeing': ['{name} 빼기', 'Remove {name}'],
+  'war.beingsFull': [
+    '한 편에는 {n}명까지 내세울 수 있습니다. 결투 짝은 내세운 순서대로 정해집니다.',
+    'Up to {n} per side. Duel pairs follow the order they were fielded.',
+  ],
+  'war.duelPair': ['{a} 대 {b}: {a} {percent}', '{a} vs {b}: {a} {percent}'],
   'war.noBeing': ['없음 (함대만 싸움)', 'None (fleets only)'],
   'war.weaponA': ['공격 세력의 대형 병기', 'Attackers’ megaweapon'],
   'war.weaponB': ['맞설 세력의 대형 병기', 'Defenders’ megaweapon'],
