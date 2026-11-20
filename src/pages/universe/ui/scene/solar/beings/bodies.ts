@@ -41,7 +41,12 @@ export async function createBody(being: Being): Promise<Body3D | null> {
         seed,
       })
     case 'swarm':
-      return createSwarmBody(await loadModel(spec.model), spec.count, color, seed)
+      return createSwarmBody(
+        await loadModel(spec.model),
+        spec.count,
+        color,
+        seed,
+      )
     case 'serpent':
       return createSerpentBody(spec.style, color, spec)
     case 'void':

@@ -36,7 +36,11 @@ function orbit(
   const a = seed.u * 6.283 + t * (0.25 + seed.speed * 2)
   const b = seed.s * 6.283 + t * (0.2 + seed.speed * 1.5)
   const r = 0.85 * (0.3 + 0.7 * Math.sqrt(seed.s))
-  return out.set(Math.sin(a) * r, Math.cos(b) * r * 0.7, Math.sin(a + b) * r * 0.55)
+  return out.set(
+    Math.sin(a) * r,
+    Math.cos(b) * r * 0.7,
+    Math.sin(a + b) * r * 0.55,
+  )
 }
 
 export function createSwarmBody(

@@ -1,24 +1,29 @@
-// 빌드한 서비스 워커(dist/client/sw.js)에 지금 묶음의 해시 파일 목록과 텍스처 해시를 넣습니다.
-// 새 서비스 워커가 켜질 때 이 목록에 없는 옛 코드 파일과 바뀐 텍스처 캐시를 지웁니다.
+// 빌드한 서비스 워커(dist/client/sw.js)에 지금 묶음의 해시 파일 목록과 텍스처·3D 모델 해시를 넣습니다.
+// 새 서비스 워커가 켜질 때 이 목록에 없는 옛 코드 파일과 바뀐 텍스처·모델 캐시를 지웁니다.
 import { createHash } from 'node:crypto'
 import { readFile, readdir, writeFile } from 'node:fs/promises'
 
 const client = new URL('../dist/client/', import.meta.url)
 const swPath = new URL('sw.js', client)
-const PLACEHOLDER = "/* SW_MANIFEST */ { assets: [], textures: 'dev' }"
+const PLACEHOLDER =
+  "/* SW_MANIFEST */ { assets: [], textures: 'dev', models: 'dev' }"
 
 const assets = (await readdir(new URL('assets/', client)))
   .filter((name) => !name.endsWith('.map'))
   .sort()
   .map((name) => `assets/${name}`)
 
-// 텍스처는 이름에 해시가 없으므로 이름과 내용으로 해시를 만듦
-const hash = createHash('sha256')
-for (const name of (await readdir(new URL('textures/', client))).sort()) {
-  hash.update(name)
-  hash.update(await readFile(new URL(`textures/${name}`, client)))
+// 텍스처와 3D 모델은 이름에 해시가 없으므로 폴더의 이름과 내용으로 해시를 만듦
+async function folderHash(folder) {
+  const hash = createHash('sha256')
+  for (const name of (await readdir(new URL(`${folder}/`, client))).sort()) {
+    hash.update(name)
+    hash.update(await readFile(new URL(`${folder}/${name}`, client)))
+  }
+  return hash.digest('hex').slice(0, 12)
 }
-const textures = hash.digest('hex').slice(0, 12)
+const textures = await folderHash('textures')
+const models = await folderHash('models')
 
 const source = await readFile(swPath, 'utf8')
 if (!source.includes(PLACEHOLDER))
@@ -27,7 +32,9 @@ await writeFile(
   swPath,
   source.replace(
     PLACEHOLDER,
-    `/* SW_MANIFEST */ ${JSON.stringify({ assets, textures })}`,
+    `/* SW_MANIFEST */ ${JSON.stringify({ assets, textures, models })}`,
   ),
 )
-console.log(`sw.js: 해시 파일 ${assets.length}개, 텍스처 ${textures}`)
+console.log(
+  `sw.js: 해시 파일 ${assets.length}개, 텍스처 ${textures}, 모델 ${models}`,
+)

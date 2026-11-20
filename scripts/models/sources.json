@@ -1,37 +1,328 @@
 {
   "$comment": "우주적 존재 3D 모델의 원본과 가공 설정. pnpm models가 file을 받아 public/models/<id>.glb로 가공합니다. clips는 남길 애니메이션(역할: 원본 이름), ratio는 삼각형을 줄일 비율입니다. 출처는 README에도 적습니다.",
   "models": [
-    { "id": "eagle", "title": "Flying Eagle", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/Ug45M2A4Vv", "file": "https://static.poly.pizza/3b941b1e-c187-44ee-9c32-7b76bb23ebf3.glb", "clips": { "loop": "eagle_flyA" }, "frames": 2 },
-    { "id": "raven", "title": "Flying Raven", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/p4puYPVor6", "file": "https://static.poly.pizza/e824fb52-b9a8-4a35-b930-05f8ad107a9c.glb", "clips": { "loop": "raven_flyA" } },
-    { "id": "parrot", "title": "Flying Parrot", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/3wCiMpao0L", "file": "https://static.poly.pizza/ecfa3ae3-e6f4-4b0b-b570-fd59a259bb50.glb", "clips": { "loop": "parrot_A" } },
-    { "id": "stork", "title": "Flying Stork", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/iO3aMS7KK8", "file": "https://static.poly.pizza/3e3ad2db-17c7-48f9-b4c3-2498cd856972.glb", "clips": { "loop": "storkFly_B" } },
-    { "id": "panther", "title": "Black Panther", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/JcAlAQynld", "file": "https://static.poly.pizza/4cfcb654-8fa0-4da4-91ab-9b92f5373cd5.glb", "clips": { "loop": "mountainlionRun_A" } },
-    { "id": "chowchow", "title": "Running Chow Chow", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/DLocG67Tsn", "file": "https://static.poly.pizza/d56e76b0-8889-4d43-b764-fdeaf479f0c9.glb", "clips": { "loop": "chowRun_A" } },
-    { "id": "wolf", "title": "Running Wolf", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/MyLvUaAaXO", "file": "https://static.poly.pizza/285f1120-e9f3-44d9-aafc-8f763a36bace.glb", "clips": { "loop": "wolfDash_A" } },
-    { "id": "dog", "title": "Running Dog", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/kv5eequb67", "file": "https://static.poly.pizza/ec6864a4-f6c9-47d9-bc59-fe4a0a43de90.glb", "clips": { "loop": "goldenRetreiver_runA" } },
-    { "id": "horse", "title": "Galloping Horse", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/idqRg0ucZ7", "file": "https://static.poly.pizza/f04ecfe0-7e8b-4fa3-bf23-a8df6175dfea.glb", "clips": { "loop": "horse_A" } },
-    { "id": "elk", "title": "Running Elk", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/nIkXY821lD", "file": "https://static.poly.pizza/18220bd6-73af-4379-bd3f-d5dc6ae89370.glb", "clips": { "loop": "elkRun_B" } },
-    { "id": "deer", "title": "Leaping Deer", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/BIq8fPvPeN", "file": "https://static.poly.pizza/a8677c4e-4a3f-4675-bdc7-3a9e310c2c57.glb", "clips": { "loop": "deerLeap_A" } },
-    { "id": "bear", "title": "Running Brown Bear", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/Coppphok4P", "file": "https://static.poly.pizza/29ac9b29-8c13-4c50-a85b-cd68c0e6c044.glb", "clips": { "loop": "bearBrown_B" }, "frames": 2 },
-    { "id": "goat", "title": "Charging Goat", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/EHW8HuR2d7", "file": "https://static.poly.pizza/a96b9107-71c9-40be-a0d1-4009eb6123b8.glb", "clips": { "loop": "goatCharge_A" } },
-    { "id": "buffalo", "title": "Tar Buffalo", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/hqvlYnTeQX", "file": "https://static.poly.pizza/11ca75f6-4498-4b9d-9eb5-feea401ffe51.glb", "clips": { "loop": "tarbuffaloA_runA" }, "frames": 2 },
-    { "id": "spider", "title": "Black Widow Spider", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/5YUViJK0lc", "file": "https://static.poly.pizza/4dcd979d-b913-4149-830c-41aafc717f08.glb", "clips": { "loop": "blackWidow_walkA" } },
-    { "id": "centipede", "title": "Centipede", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/3Yjp5vVR8L", "file": "https://static.poly.pizza/494e5d27-09f5-4d67-8afb-ec16103bfe8c.glb", "clips": { "loop": "centipede_walkA" } },
-    { "id": "crawler", "title": "Crawling Shadow Man", "author": "Google Data Arts Team", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/NNGmzNAiUX", "file": "https://static.poly.pizza/96cee4d2-3730-4e66-8f64-211b2c58f5b3.glb", "clips": { "loop": "shdw2_crawlE" }, "frames": 2 },
-    { "id": "wizard", "title": "Evil Wizard", "author": "AliceCassie", "licence": "CC0 1.0", "page": "https://poly.pizza/m/bdxawstqtq", "file": "https://static.poly.pizza/1d4ce672-62b4-43f6-a07c-3150195a210f.glb", "clips": {} },
-    { "id": "dragon", "title": "Dragon", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/VBvzjFIYws", "file": "https://static.poly.pizza/9714f533-5d2d-4cfd-b8f1-c8dfff64a672.glb", "clips": { "loop": "DragonArmature|Dragon_Flying", "attack": "DragonArmature|Dragon_Attack", "death": "DragonArmature|Dragon_Death" } },
-    { "id": "anglerfish", "title": "Anglerfish", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/MRjSlwCjHM", "file": "https://static.poly.pizza/0c4802f0-32f9-4a2a-90a5-56b94c33e37e.glb", "clips": { "loop": "Fish_Armature|Swimming_Normal", "attack": "Fish_Armature|Attack", "death": "Fish_Armature|Death" } },
-    { "id": "whale", "title": "Whale", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/JGFwp6xWgk", "file": "https://static.poly.pizza/7300e697-2543-4a9a-a77d-dedf29251fd7.glb", "clips": { "loop": "Armature|Swim" } },
-    { "id": "wasp", "title": "Wasp", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/3aQgc75sUR", "file": "https://static.poly.pizza/71cadefd-8e65-423a-9a95-3cdf7e012586.glb", "clips": { "loop": "WaspArmature|Wasp_Flying" }, "ratio": 0.35 },
-    { "id": "spaceship", "title": "Spaceship", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/uCeLfsdmNP", "file": "https://static.poly.pizza/e8817981-bfc4-448d-822f-5b76a5983675.glb", "clips": {}, "ratio": 0.5 },
-    { "id": "mech", "title": "Mech", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/4UvIHxnoSR", "file": "https://static.poly.pizza/dab7180d-5393-4cb1-aa8f-b56154b0d724.glb", "clips": { "loop": "RobotArmature|Idle", "attack": "RobotArmature|Shoot_Big", "death": "RobotArmature|Death" }, "ratio": 0.6 },
-    { "id": "human", "title": "Animated Human", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/c3Ibh9I3udk", "file": "https://static.poly.pizza/170235d2-cdeb-4cb2-a82f-4828585138fe.glb", "clips": { "loop": "Human Armature|Idle", "attack": "Human Armature|Punch", "death": "Human Armature|Death" } },
-    { "id": "woman", "title": "Animated Woman", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/9kF7eTDbhO", "file": "https://static.poly.pizza/cf08b740-dd48-443e-9fde-6d3d54abf119.glb", "clips": { "loop": "Armature|Idle", "attack": "Armature|Punch", "death": "Armature|Death" } },
-    { "id": "king", "title": "King", "author": "Quaternius", "licence": "CC0 1.0", "page": "https://poly.pizza/m/I1gTjmuK2m", "file": "https://static.poly.pizza/29a3436b-3b06-4dbf-a236-bcec18f3351a.glb", "clips": { "loop": "CharacterArmature|Idle", "attack": "CharacterArmature|Sword_Slash", "death": "CharacterArmature|Death" }, "ratio": 0.4 },
-    { "id": "octopus", "title": "Octopus", "author": "Poly by Google", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/9F8QJKUT77V", "file": "https://static.poly.pizza/81286501-750b-4d4b-9c41-2e3bbadcc9ae.glb", "clips": {}, "ratio": 0.6 },
-    { "id": "squid", "title": "Squid", "author": "Poly by Google", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/aOY1Ae28E9k", "file": "https://static.poly.pizza/48d466f4-30aa-4605-92d3-d1bee6d32fbc.glb", "clips": {} },
-    { "id": "jellyfish", "title": "Jellyfish", "author": "Poly by Google", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/dA5osnS0Rzj", "file": "https://static.poly.pizza/5025e994-da02-45bc-9b98-fde96366b0ca.glb", "clips": {}, "ratio": 0.6 },
-    { "id": "turtle", "title": "Turtle", "author": "Poly by Google", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/fklSEvGm1Q8", "file": "https://static.poly.pizza/7c64cc2c-b9aa-4edd-bc32-9e95d66ca5e0.glb", "clips": {} },
-    { "id": "colossus", "title": "Giant Robot", "author": "Dann Beeson", "licence": "CC BY 3.0", "page": "https://poly.pizza/m/1kbGZOnhOwf", "file": "https://static.poly.pizza/2db3d598-a711-48ea-ac66-45165e37ee87.glb", "clips": {}, "ratio": 0.25 }
+    {
+      "id": "eagle",
+      "title": "Flying Eagle",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/Ug45M2A4Vv",
+      "file": "https://static.poly.pizza/3b941b1e-c187-44ee-9c32-7b76bb23ebf3.glb",
+      "clips": { "loop": "eagle_flyA" },
+      "frames": 2
+    },
+    {
+      "id": "raven",
+      "title": "Flying Raven",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/p4puYPVor6",
+      "file": "https://static.poly.pizza/e824fb52-b9a8-4a35-b930-05f8ad107a9c.glb",
+      "clips": { "loop": "raven_flyA" }
+    },
+    {
+      "id": "parrot",
+      "title": "Flying Parrot",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/3wCiMpao0L",
+      "file": "https://static.poly.pizza/ecfa3ae3-e6f4-4b0b-b570-fd59a259bb50.glb",
+      "clips": { "loop": "parrot_A" }
+    },
+    {
+      "id": "stork",
+      "title": "Flying Stork",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/iO3aMS7KK8",
+      "file": "https://static.poly.pizza/3e3ad2db-17c7-48f9-b4c3-2498cd856972.glb",
+      "clips": { "loop": "storkFly_B" }
+    },
+    {
+      "id": "panther",
+      "title": "Black Panther",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/JcAlAQynld",
+      "file": "https://static.poly.pizza/4cfcb654-8fa0-4da4-91ab-9b92f5373cd5.glb",
+      "clips": { "loop": "mountainlionRun_A" }
+    },
+    {
+      "id": "chowchow",
+      "title": "Running Chow Chow",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/DLocG67Tsn",
+      "file": "https://static.poly.pizza/d56e76b0-8889-4d43-b764-fdeaf479f0c9.glb",
+      "clips": { "loop": "chowRun_A" }
+    },
+    {
+      "id": "wolf",
+      "title": "Running Wolf",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/MyLvUaAaXO",
+      "file": "https://static.poly.pizza/285f1120-e9f3-44d9-aafc-8f763a36bace.glb",
+      "clips": { "loop": "wolfDash_A" }
+    },
+    {
+      "id": "dog",
+      "title": "Running Dog",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/kv5eequb67",
+      "file": "https://static.poly.pizza/ec6864a4-f6c9-47d9-bc59-fe4a0a43de90.glb",
+      "clips": { "loop": "goldenRetreiver_runA" }
+    },
+    {
+      "id": "horse",
+      "title": "Galloping Horse",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/idqRg0ucZ7",
+      "file": "https://static.poly.pizza/f04ecfe0-7e8b-4fa3-bf23-a8df6175dfea.glb",
+      "clips": { "loop": "horse_A" }
+    },
+    {
+      "id": "elk",
+      "title": "Running Elk",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/nIkXY821lD",
+      "file": "https://static.poly.pizza/18220bd6-73af-4379-bd3f-d5dc6ae89370.glb",
+      "clips": { "loop": "elkRun_B" }
+    },
+    {
+      "id": "deer",
+      "title": "Leaping Deer",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/BIq8fPvPeN",
+      "file": "https://static.poly.pizza/a8677c4e-4a3f-4675-bdc7-3a9e310c2c57.glb",
+      "clips": { "loop": "deerLeap_A" }
+    },
+    {
+      "id": "bear",
+      "title": "Running Brown Bear",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/Coppphok4P",
+      "file": "https://static.poly.pizza/29ac9b29-8c13-4c50-a85b-cd68c0e6c044.glb",
+      "clips": { "loop": "bearBrown_B" },
+      "frames": 2
+    },
+    {
+      "id": "goat",
+      "title": "Charging Goat",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/EHW8HuR2d7",
+      "file": "https://static.poly.pizza/a96b9107-71c9-40be-a0d1-4009eb6123b8.glb",
+      "clips": { "loop": "goatCharge_A" }
+    },
+    {
+      "id": "buffalo",
+      "title": "Tar Buffalo",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/hqvlYnTeQX",
+      "file": "https://static.poly.pizza/11ca75f6-4498-4b9d-9eb5-feea401ffe51.glb",
+      "clips": { "loop": "tarbuffaloA_runA" },
+      "frames": 2
+    },
+    {
+      "id": "spider",
+      "title": "Black Widow Spider",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/5YUViJK0lc",
+      "file": "https://static.poly.pizza/4dcd979d-b913-4149-830c-41aafc717f08.glb",
+      "clips": { "loop": "blackWidow_walkA" }
+    },
+    {
+      "id": "centipede",
+      "title": "Centipede",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/3Yjp5vVR8L",
+      "file": "https://static.poly.pizza/494e5d27-09f5-4d67-8afb-ec16103bfe8c.glb",
+      "clips": { "loop": "centipede_walkA" }
+    },
+    {
+      "id": "crawler",
+      "title": "Crawling Shadow Man",
+      "author": "Google Data Arts Team",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/NNGmzNAiUX",
+      "file": "https://static.poly.pizza/96cee4d2-3730-4e66-8f64-211b2c58f5b3.glb",
+      "clips": { "loop": "shdw2_crawlE" },
+      "frames": 2
+    },
+    {
+      "id": "wizard",
+      "title": "Evil Wizard",
+      "author": "AliceCassie",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/bdxawstqtq",
+      "file": "https://static.poly.pizza/1d4ce672-62b4-43f6-a07c-3150195a210f.glb",
+      "clips": {}
+    },
+    {
+      "id": "dragon",
+      "title": "Dragon",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/VBvzjFIYws",
+      "file": "https://static.poly.pizza/9714f533-5d2d-4cfd-b8f1-c8dfff64a672.glb",
+      "clips": {
+        "loop": "DragonArmature|Dragon_Flying",
+        "attack": "DragonArmature|Dragon_Attack",
+        "death": "DragonArmature|Dragon_Death"
+      }
+    },
+    {
+      "id": "anglerfish",
+      "title": "Anglerfish",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/MRjSlwCjHM",
+      "file": "https://static.poly.pizza/0c4802f0-32f9-4a2a-90a5-56b94c33e37e.glb",
+      "clips": {
+        "loop": "Fish_Armature|Swimming_Normal",
+        "attack": "Fish_Armature|Attack",
+        "death": "Fish_Armature|Death"
+      }
+    },
+    {
+      "id": "whale",
+      "title": "Whale",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/JGFwp6xWgk",
+      "file": "https://static.poly.pizza/7300e697-2543-4a9a-a77d-dedf29251fd7.glb",
+      "clips": { "loop": "Armature|Swim" }
+    },
+    {
+      "id": "wasp",
+      "title": "Wasp",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/3aQgc75sUR",
+      "file": "https://static.poly.pizza/71cadefd-8e65-423a-9a95-3cdf7e012586.glb",
+      "clips": { "loop": "WaspArmature|Wasp_Flying" },
+      "ratio": 0.35
+    },
+    {
+      "id": "spaceship",
+      "title": "Spaceship",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/uCeLfsdmNP",
+      "file": "https://static.poly.pizza/e8817981-bfc4-448d-822f-5b76a5983675.glb",
+      "clips": {},
+      "ratio": 0.5
+    },
+    {
+      "id": "mech",
+      "title": "Mech",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/4UvIHxnoSR",
+      "file": "https://static.poly.pizza/dab7180d-5393-4cb1-aa8f-b56154b0d724.glb",
+      "clips": {
+        "loop": "RobotArmature|Idle",
+        "attack": "RobotArmature|Shoot_Big",
+        "death": "RobotArmature|Death"
+      },
+      "ratio": 0.6
+    },
+    {
+      "id": "human",
+      "title": "Animated Human",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/c3Ibh9I3udk",
+      "file": "https://static.poly.pizza/170235d2-cdeb-4cb2-a82f-4828585138fe.glb",
+      "clips": {
+        "loop": "Human Armature|Idle",
+        "attack": "Human Armature|Punch",
+        "death": "Human Armature|Death"
+      }
+    },
+    {
+      "id": "woman",
+      "title": "Animated Woman",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/9kF7eTDbhO",
+      "file": "https://static.poly.pizza/cf08b740-dd48-443e-9fde-6d3d54abf119.glb",
+      "clips": {
+        "loop": "Armature|Idle",
+        "attack": "Armature|Punch",
+        "death": "Armature|Death"
+      }
+    },
+    {
+      "id": "king",
+      "title": "King",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/I1gTjmuK2m",
+      "file": "https://static.poly.pizza/29a3436b-3b06-4dbf-a236-bcec18f3351a.glb",
+      "clips": {
+        "loop": "CharacterArmature|Idle",
+        "attack": "CharacterArmature|Sword_Slash",
+        "death": "CharacterArmature|Death"
+      },
+      "ratio": 0.4
+    },
+    {
+      "id": "octopus",
+      "title": "Octopus",
+      "author": "Poly by Google",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/9F8QJKUT77V",
+      "file": "https://static.poly.pizza/81286501-750b-4d4b-9c41-2e3bbadcc9ae.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "squid",
+      "title": "Squid",
+      "author": "Poly by Google",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/aOY1Ae28E9k",
+      "file": "https://static.poly.pizza/48d466f4-30aa-4605-92d3-d1bee6d32fbc.glb",
+      "clips": {}
+    },
+    {
+      "id": "jellyfish",
+      "title": "Jellyfish",
+      "author": "Poly by Google",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/dA5osnS0Rzj",
+      "file": "https://static.poly.pizza/5025e994-da02-45bc-9b98-fde96366b0ca.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "turtle",
+      "title": "Turtle",
+      "author": "Poly by Google",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/fklSEvGm1Q8",
+      "file": "https://static.poly.pizza/7c64cc2c-b9aa-4edd-bc32-9e95d66ca5e0.glb",
+      "clips": {}
+    },
+    {
+      "id": "colossus",
+      "title": "Giant Robot",
+      "author": "Dann Beeson",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/1kbGZOnhOwf",
+      "file": "https://static.poly.pizza/2db3d598-a711-48ea-ac66-45165e37ee87.glb",
+      "clips": {},
+      "ratio": 0.25
+    }
   ]
 }

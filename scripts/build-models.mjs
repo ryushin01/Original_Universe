@@ -31,7 +31,11 @@ import {
   simplify,
   weld,
 } from '@gltf-transform/functions'
-import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer'
+import {
+  MeshoptDecoder,
+  MeshoptEncoder,
+  MeshoptSimplifier,
+} from 'meshoptimizer'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const { models } = JSON.parse(

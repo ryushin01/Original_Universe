@@ -588,8 +588,15 @@ export function createBeingLayer(): BeingLayer {
         .addScaledVector(up, bob)
       // 서로를 보되 3/4쯤 이쪽으로 돌아 모습이 잘 보이게, 홀로면 비스듬히 이쪽을 봄
       if (side !== 0 && !over)
-        v.facing.copy(right).multiplyScalar(-side * 0.8).addScaledVector(toCamera, 0.6)
-      else v.facing.copy(toCamera).multiplyScalar(0.75).addScaledVector(right, 0.66)
+        v.facing
+          .copy(right)
+          .multiplyScalar(-side * 0.8)
+          .addScaledVector(toCamera, 0.6)
+      else
+        v.facing
+          .copy(toCamera)
+          .multiplyScalar(0.75)
+          .addScaledVector(right, 0.66)
       v.facing.normalize()
     })
 
@@ -719,7 +726,9 @@ export function createBeingLayer(): BeingLayer {
         }
         // 3D 몸이 오면 별자리 그림에서 몸으로 천천히 넘어감
         if (v.body)
-          v.bodyMix = ctx.reducedMotion ? 1 : clamp(v.bodyMix + ctx.dt * 1.2, 0, 1)
+          v.bodyMix = ctx.reducedMotion
+            ? 1
+            : clamp(v.bodyMix + ctx.dt * 1.2, 0, 1)
         const sketch = v.opacity * (1 - v.bodyMix)
         v.figure.visible = sketch > 0
         if (v.figure.visible) {

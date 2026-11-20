@@ -11,7 +11,12 @@ export type Anchor = 'head' | 'back' | 'hips' | 'tail'
 
 export type Extra =
   /** 날개 (깃털 / 박쥐 같은 막), 쌍 수 */
-  | { kind: 'wings'; style: 'feather' | 'membrane'; pairs?: number; span?: number }
+  | {
+      kind: 'wings'
+      style: 'feather' | 'membrane'
+      pairs?: number
+      span?: number
+    }
   /** 머리 위의 빛 고리 */
   | { kind: 'halo' }
   /** 머리 뒤의 해 원반 (size: 크기 배율) */
@@ -94,7 +99,12 @@ export const BODIES: Record<string, BodySpec> = {
   kronos: { kind: 'model', model: 'human', scale: 1.1 },
   odin: { kind: 'model', model: 'king' },
   thor: { kind: 'model', model: 'human' },
-  surtr: { kind: 'model', model: 'human', scale: 1.1, extras: [{ kind: 'disc' }] },
+  surtr: {
+    kind: 'model',
+    model: 'human',
+    scale: 1.1,
+    extras: [{ kind: 'disc' }],
+  },
   gonggong: { kind: 'serpent', style: 'loong' },
   // 천사
   seraphim: { kind: 'winged', pairs: 3 },
@@ -113,7 +123,12 @@ export const BODIES: Record<string, BodySpec> = {
   // 사신
   'azure-dragon': { kind: 'serpent', style: 'loong' },
   'white-tiger': { kind: 'model', model: 'panther' },
-  'vermilion-bird': { kind: 'model', model: 'parrot', scale: BIRD, extras: FIRE },
+  'vermilion-bird': {
+    kind: 'model',
+    model: 'parrot',
+    scale: BIRD,
+    extras: FIRE,
+  },
   'black-tortoise': {
     kind: 'model',
     model: 'turtle',
@@ -121,7 +136,11 @@ export const BODIES: Record<string, BodySpec> = {
   },
   'yellow-dragon': { kind: 'serpent', style: 'loong' },
   // 상서로운 짐승
-  qilin: { kind: 'model', model: 'deer', extras: [{ kind: 'horns', count: 1 }] },
+  qilin: {
+    kind: 'model',
+    model: 'deer',
+    extras: [{ kind: 'horns', count: 1 }],
+  },
   fenghuang: { kind: 'model', model: 'parrot', scale: BIRD, extras: FIRE },
   yinglong: { kind: 'serpent', style: 'loong', wings: true },
   haetae: {

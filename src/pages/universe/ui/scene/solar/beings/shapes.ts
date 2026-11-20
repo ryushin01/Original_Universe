@@ -109,7 +109,10 @@ function orbitDisk(
       const t = f.reducedMotion ? 0 : f.time
       seeds.forEach((s, i) => {
         const a = s.angle + t * 0.9 * (inner / s.r) ** 1.5
-        stars.set(i, v.set(Math.cos(a) * s.r, s.y, Math.sin(a) * s.r).applyMatrix4(tilt))
+        stars.set(
+          i,
+          v.set(Math.cos(a) * s.r, s.y, Math.sin(a) * s.r).applyMatrix4(tilt),
+        )
       })
       stars.commit(f, scale)
     },
@@ -130,7 +133,11 @@ export function createVoidBody(color: string, seed: number): Body3D {
     }),
   )
   core.renderOrder = 6
-  const horizon = hologramPair(new SphereGeometry(0.47, 32, 16), base.body, base.wire)
+  const horizon = hologramPair(
+    new SphereGeometry(0.47, 32, 16),
+    base.body,
+    base.wire,
+  )
   ;(horizon.children[1] as Mesh).visible = false
   const disk = orbitDisk(color, 700, 0.55, 1, seed)
   base.pose.add(core, horizon, disk.stars.lines, disk.stars.stars)
@@ -161,7 +168,11 @@ export function createGlobesBody(color: string, seed: number): Body3D {
   const random = seededRandom(seed)
   const count = 18
   const globes = Array.from({ length: count }, () => ({
-    dir: new Vector3(random() - 0.5, random() - 0.5, random() - 0.5).normalize(),
+    dir: new Vector3(
+      random() - 0.5,
+      random() - 0.5,
+      random() - 0.5,
+    ).normalize(),
     r: 0.15 + random() * 0.5,
     size: 0.12 + random() * 0.17,
     phase: random() * 6.28,
@@ -174,8 +185,18 @@ export function createGlobesBody(color: string, seed: number): Body3D {
   fill.renderOrder = 7
   lines.renderOrder = 8
   const centers = new Float32Array(count * 3)
-  globes.forEach((g, i) => v.copy(g.dir).multiplyScalar(g.r).toArray(centers, i * 3))
-  const stars = new Constellation(color, count, linkNearest(centers, count), 0.06)
+  globes.forEach((g, i) =>
+    v
+      .copy(g.dir)
+      .multiplyScalar(g.r)
+      .toArray(centers, i * 3),
+  )
+  const stars = new Constellation(
+    color,
+    count,
+    linkNearest(centers, count),
+    0.06,
+  )
   stars.lineOpacity = 0.3
   base.pose.add(fill, lines, stars.lines, stars.stars)
   return {
@@ -187,7 +208,10 @@ export function createGlobesBody(color: string, seed: number): Body3D {
         // 저마다 다른 축으로 천천히 맴돌며 부풀었다 줄어듦
         v.copy(g.dir)
           .multiplyScalar(g.r)
-          .applyAxisAngle(w.set(0.3, 1, 0.2).normalize(), t * 0.15 + g.phase * 0.1)
+          .applyAxisAngle(
+            w.set(0.3, 1, 0.2).normalize(),
+            t * 0.15 + g.phase * 0.1,
+          )
         const size = g.size * (1 + 0.12 * Math.sin(t * 1.3 + g.phase))
         m.compose(v, qa.identity(), w.set(size, size, size))
         fill.setMatrixAt(i, m)
@@ -212,7 +236,9 @@ export function createGlobesBody(color: string, seed: number): Body3D {
 /** 덩어리 표면을 들끓게 하는 값 (-1~1 언저리) */
 function boil(x: number, y: number, z: number, t: number) {
   return (
-    Math.sin(x * 3.1 + t * 0.7) * Math.sin(y * 2.7 - t * 0.5) * Math.sin(z * 3.4 + t * 0.6) +
+    Math.sin(x * 3.1 + t * 0.7) *
+      Math.sin(y * 2.7 - t * 0.5) *
+      Math.sin(z * 3.4 + t * 0.6) +
     0.5 * Math.sin(x * 5.3 - t * 0.9 + z * 2.1) * Math.cos(y * 4.7 + t * 0.4)
   )
 }
@@ -253,14 +279,26 @@ export function createBlobBody(
   // 촉수: 아래·바깥으로 퍼진 뿌리에서 물결치며 뻗음
   const tentacles = Array.from({ length: tentacleCount }, (_, k) => {
     const a = (k / Math.max(1, tentacleCount)) * Math.PI * 2 + random() * 0.4
-    const dir = new Vector3(Math.cos(a), -0.4 - random() * 0.6, Math.sin(a)).normalize()
+    const dir = new Vector3(
+      Math.cos(a),
+      -0.4 - random() * 0.6,
+      Math.sin(a),
+    ).normalize()
     const tube = new Tube(20, 5, (s) => 0.055 * (1 - s) + 0.006)
     base.pose.add(hologramPair(tube.geometry, base.body, base.wire))
     return { dir, tube, phase: random() * 6.28, length: 0.6 + random() * 0.35 }
   })
   const wings = winged
     ? [0, 1].map((k) => {
-        const pair = new WingPair('feather', base.body, base.wire, color, 0.7, k ? 0.5 : -0.2, k * 1.4)
+        const pair = new WingPair(
+          'feather',
+          base.body,
+          base.wire,
+          color,
+          0.7,
+          k ? 0.5 : -0.2,
+          k * 1.4,
+        )
         pair.object.position.set(0, 0.25, k ? -0.18 : 0.12)
         base.pose.add(pair.object)
         return pair
@@ -269,7 +307,12 @@ export function createBlobBody(
   // 표면의 눈·입 같은 별
   const picked = spreadPick(blob.rest, blob.rest.length / 3, 26)
   const tips = tentacles.length
-  const stars = new Constellation(color, picked.length + tips, new Uint16Array(0), 0.06)
+  const stars = new Constellation(
+    color,
+    picked.length + tips,
+    new Uint16Array(0),
+    0.06,
+  )
   stars.sparkle = 0.6
   base.pose.add(stars.lines, stars.stars)
   const position = blob.geometry.attributes.position
@@ -287,7 +330,10 @@ export function createBlobBody(
           const s = i / (ten.tube.count - 1)
           v.copy(ten.dir)
             .multiplyScalar(0.42 + s * ten.length)
-            .addScaledVector(side, Math.sin(s * 6 - t * 2 + ten.phase) * 0.12 * s)
+            .addScaledVector(
+              side,
+              Math.sin(s * 6 - t * 2 + ten.phase) * 0.12 * s,
+            )
           v.y += Math.cos(s * 4 - t * 1.4 + ten.phase) * 0.08 * s
           v.toArray(ten.tube.spine, i * 3)
         }
@@ -323,7 +369,12 @@ export function createEyeBody(color: string, seed: number): Body3D {
   irisMesh.position.z = 0.52
   const pupil = new Mesh(
     new CircleGeometry(0.15, 32),
-    new MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0, depthWrite: false }),
+    new MeshBasicMaterial({
+      color: '#000000',
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    }),
   )
   pupil.position.z = 0.53
   pupil.renderOrder = 9
@@ -341,13 +392,22 @@ export function createEyeBody(color: string, seed: number): Body3D {
   const links: number[] = []
   for (let k = 0; k < veins; k++)
     for (let i = 1; i < per; i++) links.push(k * per + i - 1, k * per + i)
-  const veinStars = new Constellation(color, veins * per, new Uint16Array(links), 0.035)
+  const veinStars = new Constellation(
+    color,
+    veins * per,
+    new Uint16Array(links),
+    0.035,
+  )
   veinStars.lineOpacity = 0.45
   for (let k = 0; k < veins; k++)
     for (let i = 0; i < per; i++) {
       const a = (k / veins) * Math.PI * 2
       const back = 0.35 + i * 0.28
-      v.set(Math.cos(a) * Math.sin(back), Math.sin(a) * Math.sin(back), Math.cos(back)).multiplyScalar(0.61)
+      v.set(
+        Math.cos(a) * Math.sin(back),
+        Math.sin(a) * Math.sin(back),
+        Math.cos(back),
+      ).multiplyScalar(0.61)
       veinStars.set(k * per + i, v)
     }
   eye.add(veinStars.lines, veinStars.stars)
@@ -395,10 +455,19 @@ export function createWheelsBody(color: string): Body3D {
     base.pose.add(mesh)
     return mesh
   })
-  const core = hologramPair(new IcosahedronGeometry(0.12, 1), base.body, base.wire)
+  const core = hologramPair(
+    new IcosahedronGeometry(0.12, 1),
+    base.body,
+    base.wire,
+  )
   base.pose.add(core)
   const perWheel = 16
-  const stars = new Constellation(color, perWheel * 3 + 1, new Uint16Array(0), 0.07)
+  const stars = new Constellation(
+    color,
+    perWheel * 3 + 1,
+    new Uint16Array(0),
+    0.07,
+  )
   stars.sparkle = 0.7
   base.pose.add(stars.lines, stars.stars)
   return {
@@ -416,7 +485,12 @@ export function createWheelsBody(color: string): Body3D {
         for (let i = 0; i < perWheel; i++) {
           // 테두리에 가득한 눈
           const a = (i / perWheel) * Math.PI * 2
-          stars.set(k * perWheel + i, v.set(Math.cos(a) * r, Math.sin(a) * r, 0).applyMatrix4(wheel.matrix))
+          stars.set(
+            k * perWheel + i,
+            v
+              .set(Math.cos(a) * r, Math.sin(a) * r, 0)
+              .applyMatrix4(wheel.matrix),
+          )
         }
       })
       stars.set(perWheel * 3, v.set(0, 0, 0))
@@ -464,7 +538,10 @@ export function createHarvesterBody(color: string): Body3D {
     const from = new Vector3(0, 0, 0)
     const to = new Vector3(Math.cos(a) * 0.34, Math.sin(a) * 0.34, 0.87)
     arm.position.copy(from).add(to).multiplyScalar(0.5)
-    arm.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), to.clone().sub(from).normalize())
+    arm.quaternion.setFromUnitVectors(
+      new Vector3(0, 1, 0),
+      to.clone().sub(from).normalize(),
+    )
     arm.scale.set(1, from.distanceTo(to), 1)
     base.pose.add(arm)
   }
@@ -496,13 +573,25 @@ export function createHarvesterBody(color: string): Body3D {
       ringB.updateMatrix()
       for (let i = 0; i < panels; i++) {
         const a = (i / panels) * Math.PI * 2
-        stars.set(i, v.set(Math.cos(a) * 0.95, Math.sin(a) * 0.95, 0).applyMatrix4(ringB.matrix))
+        stars.set(
+          i,
+          v
+            .set(Math.cos(a) * 0.95, Math.sin(a) * 0.95, 0)
+            .applyMatrix4(ringB.matrix),
+        )
       }
       for (let i = 0; i < 12; i++) {
         // 깔때기 입구에서 빨려 드는 빛
         const a = (i / 12) * Math.PI * 2 + t * 1.2
         const k = (t * 0.6 + i / 12) % 1
-        stars.set(panels + i, v.set(Math.cos(a) * 0.34 * (1 - k), Math.sin(a) * 0.34 * (1 - k), 0.87 - k * 0.6))
+        stars.set(
+          panels + i,
+          v.set(
+            Math.cos(a) * 0.34 * (1 - k),
+            Math.sin(a) * 0.34 * (1 - k),
+            0.87 - k * 0.6,
+          ),
+        )
       }
       stars.set(panels + 12, v.set(0, 0, 0))
       stars.commit(f, scaleOf(base.pose))
@@ -520,7 +609,11 @@ export function createHarvesterBody(color: string): Body3D {
 
 /* ── 날개 여러 쌍 (천사) ───────────────────────────────── */
 
-export function createWingedBody(color: string, pairs: number, faces: number): Body3D {
+export function createWingedBody(
+  color: string,
+  pairs: number,
+  faces: number,
+): Body3D {
   const base = frame(color)
   const coreG = new IcosahedronGeometry(0.2, 1)
   const faceG = new IcosahedronGeometry(0.075, 1)
@@ -533,7 +626,16 @@ export function createWingedBody(color: string, pairs: number, faces: number): B
     { spread: 1.05, y: -0.12, tilt: 0.35, amplitude: 0.12, span: 0.7 },
   ].slice(0, pairs)
   const wings = layout.map((l, k) => {
-    const pair = new WingPair('feather', base.body, base.wire, color, l.span, l.spread, k * 0.9, l.amplitude)
+    const pair = new WingPair(
+      'feather',
+      base.body,
+      base.wire,
+      color,
+      l.span,
+      l.spread,
+      k * 0.9,
+      l.amplitude,
+    )
     pair.object.position.y = l.y
     pair.object.rotation.x = l.tilt
     base.pose.add(pair.object)
@@ -563,10 +665,15 @@ export function createWingedBody(color: string, pairs: number, faces: number): B
       ring.updateMatrix()
       for (let i = 0; i < 12; i++) {
         const a = (i / 12) * Math.PI * 2 - t * 0.4
-        stars.set(i, v.set(Math.cos(a) * 0.3, Math.sin(a * 2) * 0.03, Math.sin(a) * 0.3))
+        stars.set(
+          i,
+          v.set(Math.cos(a) * 0.3, Math.sin(a * 2) * 0.03, Math.sin(a) * 0.3),
+        )
       }
       stars.set(12, v.set(0, 0, 0))
-      faceMeshes.forEach((mesh, k) => stars.set(13 + k, v.copy(mesh.position).applyMatrix4(ring.matrix)))
+      faceMeshes.forEach((mesh, k) =>
+        stars.set(13 + k, v.copy(mesh.position).applyMatrix4(ring.matrix)),
+      )
       const scale = scaleOf(base.pose)
       stars.commit(f, scale)
       for (const pair of wings) pair.update(f, scale, 0.7)
@@ -613,7 +720,14 @@ export function createColourBody(color: string, seed: number): Body3D {
         const a = d.u * 6.283 + t * (0.4 + d.speed * 8)
         const b = d.s * 6.283 + t * (0.3 + d.speed * 6)
         const r = 0.95 * (0.3 + 0.7 * Math.sqrt(d.s))
-        stars.set(i, v.set(Math.sin(a) * r, Math.cos(b) * r * 0.75, Math.sin(a + b) * r * 0.5))
+        stars.set(
+          i,
+          v.set(
+            Math.sin(a) * r,
+            Math.cos(b) * r * 0.75,
+            Math.sin(a + b) * r * 0.5,
+          ),
+        )
         hue.setHSL((d.u + t * 0.05 + d.s * 0.3) % 1, 0.7, 0.6)
         stars.tint(i, hue.r * 1.4, hue.g * 1.4, hue.b * 1.4)
       })

@@ -94,7 +94,10 @@ export class Constellation {
   ) {
     this.positions = new Float32Array(count * 3)
     const starGeometry = new BufferGeometry()
-    starGeometry.setAttribute('position', new BufferAttribute(this.positions, 3))
+    starGeometry.setAttribute(
+      'position',
+      new BufferAttribute(this.positions, 3),
+    )
     const sizes = new Float32Array(count)
     this.twinkle = new Float32Array(count)
     for (let i = 0; i < count; i++) {
@@ -180,7 +183,9 @@ export class Constellation {
     for (let i = 0; i < this.count; i++)
       alpha[i] = frame.reducedMotion
         ? 1 - this.sparkle / 2
-        : 1 - this.sparkle + this.sparkle * Math.sin(frame.time * 2.2 + this.twinkle[i])
+        : 1 -
+          this.sparkle +
+          this.sparkle * Math.sin(frame.time * 2.2 + this.twinkle[i])
     this.alpha.needsUpdate = true
     ;(this.lines.material as LineBasicMaterial).opacity =
       this.lineOpacity * frame.opacity

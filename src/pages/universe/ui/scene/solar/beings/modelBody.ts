@@ -209,7 +209,10 @@ export function createModelBody(
     const rest = new Float32Array(position.count * 3)
     const fit = template.kind === 'static' ? new Matrix4() : template.fit
     for (let i = 0; i < position.count; i++)
-      tmp.fromBufferAttribute(position, i).applyMatrix4(fit).toArray(rest, i * 3)
+      tmp
+        .fromBufferAttribute(position, i)
+        .applyMatrix4(fit)
+        .toArray(rest, i * 3)
     const picked = spreadPick(rest, position.count, VERTEX_STARS)
     const pickedRest = new Float32Array(picked.length * 3)
     picked.forEach((v, i) =>

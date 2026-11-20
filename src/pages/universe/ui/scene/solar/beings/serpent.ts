@@ -115,7 +115,10 @@ export function createSerpentBody(
     )
     tubes.push(main)
     pose.add(hologramPair(main.geometry, body, wire))
-    heads.push({ object: makeHead(style === 'ring' ? 1.1 : 1, style === 'loong'), tube: main })
+    heads.push({
+      object: makeHead(style === 'ring' ? 1.1 : 1, style === 'loong'),
+      tube: main,
+    })
   }
 
   // 동양 용: 다리 넷 (앞 s=0.2, 뒤 s=0.62), 등지느러미
@@ -173,7 +176,11 @@ export function createSerpentBody(
   starPoints.forEach((sp, k) => {
     if (k > 0 && starPoints[k - 1].tube === sp.tube) links.push(k - 1, k)
   })
-  const stars = new Constellation(color, starPoints.length, new Uint16Array(links))
+  const stars = new Constellation(
+    color,
+    starPoints.length,
+    new Uint16Array(links),
+  )
   pose.add(stars.lines, stars.stars)
 
   let lunge = -1
@@ -191,7 +198,10 @@ export function createSerpentBody(
       main!.point(i, p)
       main!.point(Math.max(0, i - 1), q)
       dir.subVectors(q, p).normalize()
-      side.crossVectors(dir, lift.set(0, 1, 0)).normalize().multiplyScalar(leg.side)
+      side
+        .crossVectors(dir, lift.set(0, 1, 0))
+        .normalize()
+        .multiplyScalar(leg.side)
       const paddle = Math.sin(t * 2 + leg.at * 9 + leg.side) * 0.05
       for (let j = 0; j < leg.tube.count; j++) {
         const s = j / (leg.tube.count - 1)
@@ -205,7 +215,9 @@ export function createSerpentBody(
     }
     // 등지느러미: 등뼈를 따라 위로
     spikes.forEach((spike, k) => {
-      const i = Math.round((0.08 + (k / spikes.length) * 0.75) * (main!.count - 1))
+      const i = Math.round(
+        (0.08 + (k / spikes.length) * 0.75) * (main!.count - 1),
+      )
       main!.point(i, spike.position)
       spike.position.y += 0.06
     })

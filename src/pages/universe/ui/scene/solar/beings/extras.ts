@@ -138,7 +138,10 @@ function membraneWing(): { geometry: BufferGeometry; joints: number[][] } {
 }
 
 const wingShapes: Partial<
-  Record<'feather' | 'membrane', { geometry: BufferGeometry; joints: number[][] }>
+  Record<
+    'feather' | 'membrane',
+    { geometry: BufferGeometry; joints: number[][] }
+  >
 > = {}
 
 function wingShape(style: 'feather' | 'membrane') {
@@ -243,7 +246,13 @@ function makeExtra(extra: Extra, color: string): ExtraPart {
 
   switch (extra.kind) {
     case 'wings': {
-      const pair = new WingPair(extra.style, body, wire, color, extra.span ?? 0.85)
+      const pair = new WingPair(
+        extra.style,
+        body,
+        wire,
+        color,
+        extra.span ?? 0.85,
+      )
       object.add(pair.object)
       return {
         object,
@@ -277,9 +286,14 @@ function makeExtra(extra: Extra, color: string): ExtraPart {
       const face = hologramPair(disc, body, wire)
       const rim = hologramPair(ring, body, wire)
       object.add(face, rim)
-      const rays = new Constellation(color, 24, new Uint16Array(
-        Array.from({ length: 12 }, (_, i) => [i * 2, i * 2 + 1]).flat(),
-      ), 0.04)
+      const rays = new Constellation(
+        color,
+        24,
+        new Uint16Array(
+          Array.from({ length: 12 }, (_, i) => [i * 2, i * 2 + 1]).flat(),
+        ),
+        0.04,
+      )
       object.add(rays.lines, rays.stars)
       object.scale.setScalar(extra.size ?? 1)
       return {
@@ -291,7 +305,10 @@ function makeExtra(extra: Extra, color: string): ExtraPart {
           for (let i = 0; i < 12; i++) {
             const a = (i / 12) * Math.PI * 2 + frame.time * 0.15
             const long = i % 2 ? 0.46 : 0.56
-            rays.set(i * 2, scratch.set(Math.cos(a) * 0.34, Math.sin(a) * 0.34, 0))
+            rays.set(
+              i * 2,
+              scratch.set(Math.cos(a) * 0.34, Math.sin(a) * 0.34, 0),
+            )
             rays.set(
               i * 2 + 1,
               scratch.set(Math.cos(a) * long, Math.sin(a) * long, 0),
@@ -329,7 +346,12 @@ function makeExtra(extra: Extra, color: string): ExtraPart {
       const links: number[] = []
       for (let j = 0; j < 3; j++)
         for (let i = 1; i < per; i++) links.push(j * per + i - 1, j * per + i)
-      const stars = new Constellation(color, per * 3, new Uint16Array(links), 0.05)
+      const stars = new Constellation(
+        color,
+        per * 3,
+        new Uint16Array(links),
+        0.05,
+      )
       stars.sparkle = 0.5
       stars.lineOpacity = 0.7
       for (let j = 0; j < 3; j++)
@@ -394,15 +416,20 @@ function makeExtra(extra: Extra, color: string): ExtraPart {
               const s = i / (tube.count - 1)
               if (coil) {
                 // 몸을 한 바퀴 반 감아 내려감 (머리는 앞 위)
-                const a = Math.PI / 2 + s * Math.PI * 3 + Math.sin(t * 0.8) * 0.05
+                const a =
+                  Math.PI / 2 + s * Math.PI * 3 + Math.sin(t * 0.8) * 0.05
                 const r = 0.62 + 0.04 * Math.sin(s * 9 - t * 1.5)
                 scratch.set(Math.cos(a) * r, 0.42 - s * 0.7, Math.sin(a) * r)
               } else {
                 // 엉덩이(꼬리 뿌리)에서 아래·뒤로 늘어지며 물결침
                 scratch.set(
-                  root.x + side * (0.08 + s * 0.25) + Math.sin(s * 7 - t * 2 + k) * 0.06 * s,
+                  root.x +
+                    side * (0.08 + s * 0.25) +
+                    Math.sin(s * 7 - t * 2 + k) * 0.06 * s,
                   root.y - s * 0.95,
-                  root.z - s * 0.5 + Math.sin(s * 5 - t * 1.6 + k * 2) * 0.14 * s,
+                  root.z -
+                    s * 0.5 +
+                    Math.sin(s * 5 - t * 1.6 + k * 2) * 0.14 * s,
                 )
               }
               scratch.toArray(tube.spine, i * 3)

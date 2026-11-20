@@ -2,14 +2,7 @@
  * 우주적 존재 3D 모델 (public/models/<id>.glb, `pnpm models`로 만듦. 출처는 scripts/models/sources.json·README)
  * 존재가 처음 나타날 때 그 모델만 받아 장면 공간에 맞춥니다: 가운데를 원점에, 반지름 1, 앞 +Z, 위 +Y.
  */
-import {
-  Box3,
-  Euler,
-  Matrix4,
-  Mesh,
-  Quaternion,
-  Vector3,
-} from 'three'
+import { Box3, Euler, Matrix4, Mesh, Quaternion, Vector3 } from 'three'
 import type { AnimationClip, Object3D } from 'three'
 import { asset } from '@/shared/config'
 import type { Deform } from './hologram'
@@ -119,7 +112,9 @@ export interface ModelTemplate {
 }
 
 type Loader = {
-  loadAsync(url: string): Promise<{ scene: Object3D; animations: AnimationClip[] }>
+  loadAsync(
+    url: string,
+  ): Promise<{ scene: Object3D; animations: AnimationClip[] }>
 }
 
 let loader: Promise<Loader> | undefined
@@ -152,9 +147,7 @@ export function fitMatrix(box: Box3, spec: ModelSpec): Matrix4 {
   return new Matrix4()
     .makeRotationFromQuaternion(rotation)
     .multiply(new Matrix4().makeScale(1 / radius, 1 / radius, 1 / radius))
-    .multiply(
-      new Matrix4().makeTranslation(-center.x, -center.y, -center.z),
-    )
+    .multiply(new Matrix4().makeTranslation(-center.x, -center.y, -center.z))
 }
 
 /** 움직이는 동안 차지하는 범위 (모프 모델은 모든 프레임을 합침: 뛰어오르는 사슴 등) */
@@ -180,6 +173,14 @@ function motionBounds(scene: Object3D): Box3 {
 
 async function load(id: ModelId): Promise<ModelTemplate> {
   const gltf = await (await getLoader()).loadAsync(asset(`models/${id}.glb`))
+  return prepareModel(id, gltf)
+}
+
+/** 받은 glTF를 장면 공간에 맞춘 틀로 (단위 테스트는 파일에서 해석한 glTF로 부름) */
+export function prepareModel(
+  id: ModelId,
+  gltf: { scene: Object3D; animations: AnimationClip[] },
+): ModelTemplate {
   const scene = gltf.scene
   scene.updateMatrixWorld(true)
   let kind: ModelKind = 'static'
