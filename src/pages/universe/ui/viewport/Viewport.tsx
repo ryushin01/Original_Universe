@@ -25,7 +25,7 @@ import { visibleBeings } from '../../model/world/mythic'
 import { setCollisionInfo } from '../../model/local/collisionInfo'
 import { forwardable } from '../scene/protocol'
 import type { Viewport as ViewportSize } from '../scene/protocol'
-import { pick, t } from '../i18n'
+import { otherLocale, pick, pickOther, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import {
   canUseWorker,
@@ -399,6 +399,11 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
                   )}
                 >
                   {pick(item.name)}
+                  <Show when={pickOther(item.name)}>
+                    <span class={styles.labelAlt} lang={otherLocale()}>
+                      {pickOther(item.name)}
+                    </span>
+                  </Show>
                 </span>
               )
             }}

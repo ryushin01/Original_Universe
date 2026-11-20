@@ -9,6 +9,9 @@ export interface PassportField {
 
 interface PassportCardProps {
   title: string
+  /** 제목의 다른 언어 표기 (천체·존재 이름을 두 언어로 함께 적음) */
+  altTitle?: string
+  altLang?: string
   subtitle: string
   /** 가운데 원의 배경 (CSS background) */
   image: string
@@ -35,6 +38,11 @@ export function PassportCard(props: PassportCardProps) {
   return (
     <div class={styles.card}>
       <p class={styles.title}>{props.title}</p>
+      <Show when={props.altTitle}>
+        <p class={styles.altTitle} lang={props.altLang}>
+          {props.altTitle}
+        </p>
+      </Show>
       <p class={styles.subtitle}>{props.subtitle}</p>
       <div class={styles.passport}>
         <svg

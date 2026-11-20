@@ -82,3 +82,17 @@
   text-decoration: line-through;
   opacity: 0.75;
 }
+
+/* 이름 두 줄: 지금 언어 이름 아래 다른 언어 이름 */
+.names {
+  display: inline-grid;
+  justify-items: center;
+  line-height: 1.15;
+}
+
+.alt {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}

@@ -16,6 +16,17 @@ export function t(key: MessageKey, params?: Params): string {
 /** 두 언어 문장 한 쌍에서 현재 언어 */
 export const pick = (text: Text) => text[locale()]
 
+/** 지금 언어가 아닌 쪽 (이름을 두 언어로 함께 적을 때) */
+export const otherLocale = () => (locale() === 'ko' ? 'en' : 'ko')
+
+/** 이름의 다른 언어 표기 (두 언어가 같으면 빈 문자열) */
+export const pickOther = (text: Text) =>
+  text[otherLocale()] === text[locale()] ? '' : text[otherLocale()]
+
+/** 천체·존재 이름을 한 줄에 두 언어로: '지구 · Earth' (선택 목록처럼 글자만 쓰는 곳) */
+export const bothNames = (text: Text) =>
+  pickOther(text) ? `${pick(text)} · ${pickOther(text)}` : pick(text)
+
 export const messageEntries = () =>
   Object.entries(ALL) as Array<[string, readonly [string, string]]>
 

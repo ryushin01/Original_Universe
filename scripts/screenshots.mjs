@@ -76,11 +76,11 @@ async function shot(page, name, wait = 2500) {
   console.log('저장', name)
 }
 
-/** 목적지 목록에서 고릅니다(버튼이나 라디오). */
+/** 목적지 목록에서 고릅니다(버튼이나 라디오). 이름 뒤에 다른 언어 이름이 붙어도 됨 */
 const destination = (page, name) =>
   page
     .locator('button:not([role="tab"]), [role="radio"], label')
-    .filter({ hasText: new RegExp(`^${name}$`) })
+    .filter({ hasText: new RegExp(`^${name}(\\s|$)`) })
     .first()
     .click()
 
