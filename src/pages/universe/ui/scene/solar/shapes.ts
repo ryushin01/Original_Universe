@@ -1,13 +1,14 @@
 /**
- * 작은 천체(혜성 핵·소행성)의 울퉁불퉁한 모양. 내려받을 수 있는 모양 모델이 없어서,
- * 탐사·레이더로 알려진 크기 비율에 맞춰 공을 늘이고 허리를 잘록하게(두 덩이가 붙은 땅콩 모양)
- * 한 뒤, 시드로 정한 언덕과 충돌구를 더해 만듭니다. 시드가 같으면 모양도 같습니다.
+ * 작은 천체(혜성 핵·소행성)의 울퉁불퉁한 모양.
+ * 실제 모양 모델(아포피스 레이더 모델, 핼리 Stooke 모델: shapeData.ts)은 따로 불러와 바꿔 끼우고,
+ * 그 전에는 탐사·레이더로 알려진 크기 비율에 맞춰 공을 늘이고 허리를 잘록하게(두 덩이가 붙은 땅콩 모양)
+ * 한 뒤 시드로 정한 언덕과 충돌구를 더한 근사 모양을 그립니다. 시드가 같으면 모양도 같습니다.
  */
-import { BufferAttribute, SphereGeometry } from 'three'
-import type { BufferGeometry } from 'three'
+import { BufferAttribute, BufferGeometry, SphereGeometry } from 'three'
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { seededRandom } from '@/shared/lib'
 import type { BodyId } from '../../../model/solar/bodies'
+import type { PackedShape } from './shapeData'
 
 export interface ShapeSpec {
   /** 축 비율 (x가 가장 긴 축) */
@@ -126,4 +127,46 @@ export function makeShapeGeometry(
   geometry.computeVertexNormals()
   geometry.computeBoundingSphere()
   return geometry
+}
+
+const fromBase64 = (text: string) =>
+  Uint8Array.from(atob(text), (c) => c.charCodeAt(0)).buffer
+
+/**
+ * 실제 모양 모델을 메시로 풂: 가장 먼 점이 반지름 1, 면이 바깥을 보게(부피가 음수면 감는 방향을 뒤집음)
+ */
+export function decodeShape(packed: PackedShape): BufferGeometry {
+  const raw = new Int16Array(fromBase64(packed.positions))
+  const positions = Float32Array.from(raw, (v) => v / 32767)
+  const indices = new Uint16Array(fromBase64(packed.indices))
+  let volume = 0
+  for (let f = 0; f < indices.length; f += 3) {
+    const [a, b, c] = [indices[f], indices[f + 1], indices[f + 2]].map((i) => [
+      positions[3 * i],
+      positions[3 * i + 1],
+      positions[3 * i + 2],
+    ])
+    volume +=
+      a[0] * (b[1] * c[2] - b[2] * c[1]) -
+      a[1] * (b[0] * c[2] - b[2] * c[0]) +
+      a[2] * (b[0] * c[1] - b[1] * c[0])
+  }
+  if (volume < 0)
+    for (let f = 0; f < indices.length; f += 3)
+      [indices[f + 1], indices[f + 2]] = [indices[f + 2], indices[f + 1]]
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(positions, 3))
+  geometry.setIndex(new BufferAttribute(indices, 1))
+  geometry.computeVertexNormals()
+  geometry.computeBoundingSphere()
+  return geometry
+}
+
+/** 실제 모양 모델 불러오기 (따로 나눈 조각이라 첫 화면을 무겁게 하지 않음) */
+export async function loadRealShape(
+  id: BodyId,
+): Promise<BufferGeometry | null> {
+  const { SHAPE_DATA } = await import('./shapeData')
+  const packed = (SHAPE_DATA as Partial<Record<BodyId, PackedShape>>)[id]
+  return packed ? decodeShape(packed) : null
 }

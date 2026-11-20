@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { BufferAttribute } from 'three'
-import { SHAPES, makeShapeGeometry } from './shapes'
+import { SHAPES, decodeShape, makeShapeGeometry } from './shapes'
+import { SHAPE_DATA } from './shapeData'
 
 const radii = (pos: BufferAttribute) =>
   Array.from({ length: pos.count }, (_, i) =>
@@ -51,5 +52,37 @@ describe('작은 천체의 울퉁불퉁한 모양', () => {
     }
     const lobe = Math.min(girth(box.min.x * 0.5), girth(box.max.x * 0.5))
     expect(girth(0)).toBeLessThan(lobe)
+  })
+
+  it('실제 모양 모델: 아포피스(꼭짓점 2000·면 3996)와 핼리 핵을 바깥을 보는 메시로 푼다', () => {
+    const apophis = decodeShape(SHAPE_DATA.apophis)
+    expect(apophis.getAttribute('position').count).toBe(2000)
+    expect(apophis.index!.count).toBe(3996 * 3)
+    for (const [id, packed] of Object.entries(SHAPE_DATA)) {
+      const g = decodeShape(packed)
+      const pos = g.getAttribute('position') as BufferAttribute
+      expect(Math.max(...radii(pos)), id).toBeCloseTo(1, 3)
+      // 법선이 대체로 바깥(꼭짓점 방향)을 봄
+      const n = g.getAttribute('normal') as BufferAttribute
+      let outward = 0
+      for (let i = 0; i < pos.count; i++)
+        if (
+          n.getX(i) * pos.getX(i) +
+            n.getY(i) * pos.getY(i) +
+            n.getZ(i) * pos.getZ(i) >
+          0
+        )
+          outward++
+      expect(outward / pos.count, id).toBeGreaterThan(0.9)
+    }
+    // 알려진 크기: 아포피스 약 0.34~0.45 km, 핼리 핵 약 15 km로 길쭉함
+    expect(SHAPE_DATA.apophis.sizeKm).toBeGreaterThan(0.3)
+    expect(SHAPE_DATA.apophis.sizeKm).toBeLessThan(0.5)
+    expect(SHAPE_DATA.halley.sizeKm).toBeGreaterThan(14)
+    const halley = decodeShape(SHAPE_DATA.halley)
+    halley.computeBoundingBox()
+    const size = halley.boundingBox!.getSize(halley.boundingBox!.min.clone())
+    const [long, , short] = [size.x, size.y, size.z].sort((a, b) => b - a)
+    expect(long / short).toBeGreaterThan(1.5)
   })
 })
