@@ -34,9 +34,9 @@ test.describe('첫 화면', () => {
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
     await page.goto('/')
-    await expect(page).toHaveTitle(/UNIVERSE SIMULATOR/)
+    await expect(page).toHaveTitle(/ORIGINAL UNIVERSE/)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      /Universe Simulator/i,
+      /Original Universe/i,
     )
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
     // 3D는 렌더링 워커가 그림. 소프트웨어 WebGL(SwiftShader)은 컨텍스트를 만드는 데만
@@ -114,7 +114,7 @@ test.describe('첫 화면', () => {
     await page.goto('/')
     const meta = (property: string) =>
       page.locator(`meta[property="${property}"]`).getAttribute('content')
-    expect(await meta('og:title')).toMatch(/UNIVERSE SIMULATOR/)
+    expect(await meta('og:title')).toMatch(/ORIGINAL UNIVERSE/)
     expect(await meta('og:description')).toBeTruthy()
     const image = await meta('og:image')
     expect(image).toMatch(/\/og-image\.jpg$/)

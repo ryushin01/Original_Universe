@@ -1,4 +1,4 @@
-/** 배포 경로 접두사 (GitHub Pages에서는 /Universe_Simulator/) */
+/** 배포 경로 접두사 (GitHub Pages에서는 /Original_Universe/) */
 export const BASE = import.meta.env.BASE_URL
 
 /** public 폴더의 파일 주소 */
@@ -15,4 +15,4 @@ export function prefersSmallTextures(): boolean {
   )
 }
 
-export const REPOSITORY_URL = 'https://github.com/ryushin01/Universe_Simulator'
+export const REPOSITORY_URL = 'https://github.com/ryushin01/Original_Universe'

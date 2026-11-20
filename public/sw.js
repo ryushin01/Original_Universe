@@ -1,8 +1,9 @@
-// UNIVERSE SIMULATOR 서비스 워커: 다시 방문하면 코드·텍스처를 캐시에서 바로 씁니다.
+// ORIGINAL UNIVERSE 서비스 워커: 다시 방문하면 코드·텍스처를 캐시에서 바로 씁니다.
 // - 페이지(HTML): 네트워크 먼저, 끊기면 캐시
 // - 해시가 붙은 코드(assets/)와 텍스처(textures/): 캐시 먼저
 // - 새 버전이 켜질 때 지금 묶음에 없는 옛 코드 파일과, 바뀐 텍스처 캐시를 지웁니다
 //   (지우지 않으면 배포마다 옛 파일이 쌓여 저장 공간을 계속 차지함)
+// - 이름을 바꾸기 전 주소(/Universe_Simulator/)에서 받아 둔 파일도 지웁니다
 
 // 빌드 때 scripts/finalize-sw.mjs가 지금 묶음의 해시 파일 목록과 텍스처 해시로 바꿉니다.
 const MANIFEST = /* SW_MANIFEST */ { assets: [], textures: 'dev' }
@@ -19,19 +20,30 @@ self.addEventListener('install', (event) => {
   self.skipWaiting()
 })
 
-/** 지금 묶음에 없는 해시 파일 (목록이 비어 있으면 빌드 전이므로 지우지 않음) */
-async function pruneAssets() {
-  if (MANIFEST.assets.length === 0) return
+/**
+ * 지울 항목: 지금 범위 밖의 주소(이름을 바꾸기 전 주소에서 받은 페이지·코드·텍스처)와,
+ * 지금 묶음에 없는 해시 파일 (목록이 비어 있으면 빌드 전이므로 해시 파일은 지우지 않음)
+ */
+function isStale(name, request, keep) {
+  const { pathname } = new URL(request.url)
+  if (!pathname.startsWith(SCOPE)) return true
+  if (name !== ASSET_CACHE || keep.size === 0) return false
+  const path = pathname.slice(SCOPE.length)
+  return path.startsWith('assets/') && !keep.has(path)
+}
+
+async function pruneEntries() {
   const keep = new Set(MANIFEST.assets)
-  const cache = await caches.open(ASSET_CACHE)
-  const requests = await cache.keys()
   await Promise.all(
-    requests
-      .filter((request) => {
-        const path = new URL(request.url).pathname.slice(SCOPE.length)
-        return path.startsWith('assets/') && !keep.has(path)
-      })
-      .map((request) => cache.delete(request)),
+    [...CURRENT].map(async (name) => {
+      const cache = await caches.open(name)
+      const requests = await cache.keys()
+      await Promise.all(
+        requests
+          .filter((request) => isStale(name, request, keep))
+          .map((request) => cache.delete(request)),
+      )
+    }),
   )
 }
 
@@ -47,7 +59,7 @@ self.addEventListener('activate', (event) => {
             .map((key) => caches.delete(key)),
         ),
       )
-      .then(pruneAssets)
+      .then(pruneEntries)
       .catch(() => {})
       .then(() => self.clients.claim()),
   )

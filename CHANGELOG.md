@@ -1,5 +1,15 @@
 # 변경 기록
 
+## 1.0.1 - 2026-11-20
+
+프로젝트 이름을 **Original Universe**로 바꿨습니다(저장소 `ryushin01/Universe_Simulator` → `ryushin01/Original_Universe`). 기능과 화면 디자인은 그대로입니다.
+
+- 운영 주소를 https://ryushin01.github.io/Original_Universe/ 로 옮김(빌드 경로 `BASE_PATH=/Original_Universe/`). GitHub Pages는 옛 주소(`/Universe_Simulator/`)를 새 주소로 넘겨 주지 않습니다
+- 제목, 첫 화면 큰 제목, 공유 미리보기(canonical·Open Graph), 홈 화면 앱 이름, 저장소 링크, 패키지 이름을 새 이름으로
+- 저장 목록과 언어 설정은 새 키(`original-universe:*`)로 한 번 옮겨 그대로 이어 씀(`moveStorageKey`)
+- 서비스 워커가 옛 주소에서 받아 둔 페이지·코드·텍스처 캐시를 지움
+- 공유 그림과 README 소개 화면을 새 제목으로 다시 찍음
+
 ## 1.0.0 - 2026-11-16
 
 정식 공개 버전입니다. 0.5.0(런칭 기본기)과 0.6.0(우주적 존재와 우주적 재해)을 묶어 1.0.0으로 냅니다. 화면 디자인은 그대로입니다.

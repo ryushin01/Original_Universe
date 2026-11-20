@@ -63,7 +63,7 @@ export function UniversePage() {
     }
   })
   createEffect(() => {
-    if (!isServer) document.title = `UNIVERSE SIMULATOR · ${t('page.tagline')}`
+    if (!isServer) document.title = `ORIGINAL UNIVERSE · ${t('page.tagline')}`
   })
 
   const inertDuringIntro = () => (intro() ? true : undefined)
@@ -87,7 +87,7 @@ export function UniversePage() {
       </Show>
       <header class={styles.header}>
         <div class={styles.brand}>
-          <h1 class={styles.title}>Universe Simulator</h1>
+          <h1 class={styles.title}>Original Universe</h1>
           <p class={styles.tagline}>{t('page.tagline')}</p>
           <Show when={intro()}>
             <p class={styles.lead}>{t('page.lead')}</p>
