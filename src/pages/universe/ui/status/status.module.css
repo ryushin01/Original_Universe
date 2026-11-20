@@ -299,3 +299,29 @@ details.block > summary {
     color: var(--ice);
   }
 }
+
+/* 카르다쇼프 척도 사다리 (높은 단계부터, 지금 자리는 밝게) */
+.ladder {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  & > li {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.4rem 0.6rem;
+    border-left: 2px solid var(--line);
+  }
+
+  & > li.ladderHere {
+    border-left-color: var(--glow);
+    background: rgb(79 195 255 / 0.08);
+  }
+}
+
+.ladderTitle {
+  font-size: 0.875rem;
+  color: var(--ice);
+}

@@ -8,6 +8,8 @@ import { SPEEDS } from './time'
 import { initialWorld } from './engine'
 import type { OrbitOverride } from '../solar/ephemeris'
 import type { RemovalReason, WorldState } from './types'
+import { isCivLevelId } from './civilization'
+import type { CivLevelId } from './civilization'
 
 /** 공유 링크의 매개변수 이름 (?s=...) */
 export const SHARE_PARAM = 's'
@@ -35,6 +37,8 @@ export interface Snapshot {
   /** 우주적 존재에게 물려 줄어든 햇빛 비율 (격돌이 끝난 뒤에도 몇 달 남음) */
   dim?: number
   structures: Array<[ProjectKind, number, number]>
+  /** 정한 문명 단계와 그 단계가 지은 구조물 (자연 성장이면 없음) */
+  civ?: [string, ...ProjectKind[]]
   overrides: Partial<
     Record<
       BodyId,
@@ -105,6 +109,14 @@ export function toSnapshot(state: WorldState): Snapshot {
       s.startYear,
       s.completeYear,
     ]),
+    ...(state.civ.level
+      ? {
+          civ: [state.civ.level, ...state.civ.granted] as [
+            string,
+            ...ProjectKind[],
+          ],
+        }
+      : {}),
     overrides,
     removed,
     bh: state.sunBlackHole,
@@ -168,6 +180,15 @@ export function validateSnapshot(raw: unknown): Snapshot | null {
       !finite(complete, start as number, MAX_YEAR)
     )
       return null
+  }
+  if (s.civ !== undefined) {
+    if (!Array.isArray(s.civ) || s.civ.length < 1 || s.civ.length > 20)
+      return null
+    const [level, ...granted] = s.civ
+    if (typeof level !== 'string' || !isCivLevelId(level) || level === 'today')
+      return null
+    for (const kind of granted)
+      if (typeof kind !== 'string' || !seen.has(kind)) return null
   }
   if (!s.overrides || typeof s.overrides !== 'object') return null
   for (const [id, value] of Object.entries(s.overrides)) {
@@ -259,6 +280,12 @@ export function fromSnapshot(snapshot: Snapshot): WorldState {
     ),
     overrides,
     removed,
+    civ: snapshot.civ
+      ? {
+          level: snapshot.civ[0] as CivLevelId,
+          granted: snapshot.civ.slice(1) as ProjectKind[],
+        }
+      : { level: null, granted: [] },
     sunBlackHole: snapshot.bh,
     earth: { tempC, coolingC, ocean, ozone, biosphere, popFactor, shiftAu },
     milestones: snapshot.milestones,
