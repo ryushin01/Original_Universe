@@ -1,6 +1,6 @@
 {
   "name": "original-universe",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.16.1",
@@ -28,6 +28,7 @@
     "screenshots": "node scripts/screenshots.mjs",
     "models": "node scripts/build-models.mjs",
     "textures": "node scripts/build-textures.mjs",
+    "shapes": "node scripts/build-shapes.mjs",
     "logotype": "node scripts/build-logotype.mjs"
   },
   "dependencies": {

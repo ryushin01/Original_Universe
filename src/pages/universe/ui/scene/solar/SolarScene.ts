@@ -126,7 +126,7 @@ import {
 } from '../common'
 import type { FrameContext, ScaleScene, SceneEnv, Target } from '../types'
 import { createBeingLayer } from './beings/BeingLayer'
-import { SHAPES, makeShapeGeometry } from './shapes'
+import { SHAPES, loadRealShape, makeShapeGeometry } from './shapes'
 import { createWarLayer } from './war/WarLayer'
 import { createCivFleetLayer } from './civ/CivFleetLayer'
 
@@ -425,6 +425,13 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
       material,
     )
     spin.add(mesh)
+    // 실제 모양 모델을 불러오면 근사 모양과 바꿈
+    if (shape)
+      void loadRealShape(id).then((real) => {
+        if (!real) return
+        mesh.geometry.dispose()
+        mesh.geometry = real
+      })
     spin.scale.setScalar(radius)
     group.add(spin)
     const pick = new Mesh(
