@@ -65,6 +65,8 @@ export interface RenderState {
   focus: string | null
   options: ViewOptions
   intro: boolean
+  /** 대상을 화면 오른쪽으로 옮겨 보이는 비율 (화면 너비 기준, 0이면 가운데). 소개 화면의 글이 왼쪽을 차지할 때 */
+  frameShift: number
   cosmicAge: number | null
   reducedMotion: boolean
   /** 이름표를 붙일 대상 (이름 보기를 끄면 빈 목록) */

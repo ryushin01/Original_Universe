@@ -31,6 +31,8 @@ scope.onmessage = (event) => {
           onLabels: (labels) => post({ type: 'labels', labels }),
           onCollision: (info) => post({ type: 'collision', info }),
           onReady: () => post({ type: 'ready' }),
+          onProgress: (loaded, total) =>
+            post({ type: 'progress', loaded, total }),
           onError: (error) => post({ type: 'error', message: String(error) }),
         })
         // 렌더러(WebGL 맥락)를 만들었으면 첫 장면이 늦어도 기다릴 수 있음

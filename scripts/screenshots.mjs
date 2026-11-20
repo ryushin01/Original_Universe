@@ -50,8 +50,16 @@ async function open({
   await page.goto(BASE + '/', { waitUntil: 'networkidle' })
   await page.evaluate(() => document.fonts.ready)
   await sceneReady(page)
+  // 소개 화면의 불러오기(텍스처까지)가 끝나 둘러보기가 열릴 때까지
+  await page
+    .getByRole('progressbar')
+    .waitFor({ state: 'detached', timeout: 90_000 })
+  await page.waitForTimeout(1000)
   if (start) {
-    await page.getByRole('button', { name: '탐사 시작' }).click()
+    await page
+      .locator('#intro-earth')
+      .getByRole('button', { name: '탐사 시작' })
+      .click()
     await page.getByRole('heading', { name: '우주 관리' }).waitFor()
     await sceneReady(page)
   }

@@ -62,6 +62,8 @@ export type FromWorker =
   /** WebGL을 열었음 (느려도 진행 중이므로 메인 스레드로 바꾸지 않고 더 기다림) */
   | { type: 'context' }
   | { type: 'ready' }
+  /** 텍스처를 받은 수와 받기 시작한 수 */
+  | { type: 'progress'; loaded: number; total: number }
   | { type: 'error'; message: string }
   | { type: 'labels'; labels: LabelPosition[] }
   | { type: 'collision'; info: CollisionInfo }

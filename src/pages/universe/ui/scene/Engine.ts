@@ -21,6 +21,7 @@ import { createStarsScene } from './stars/StarsScene'
 import { createGalaxyScene } from './galaxy/GalaxyScene'
 import { createLocalScene } from './local/LocalScene'
 import { createCosmicScene } from './cosmic/CosmicScene'
+import { onTextureProgress } from './common'
 
 const FACTORIES: Record<ScaleId, (env: SceneEnv) => ScaleScene> = {
   solar: createSolarScene,
@@ -45,6 +46,8 @@ export interface EngineOptions {
   onCollision: (info: CollisionInfo) => void
   /** 첫 장면을 처음 그렸을 때 */
   onReady: () => void
+  /** 텍스처를 받은 수와 받기 시작한 수 (소개 화면의 불러오기 표시) */
+  onProgress?: (loaded: number, total: number) => void
   /** WebGL을 쓸 수 없거나 그리다가 멈췄을 때 */
   onError: (error: unknown) => void
 }
@@ -92,6 +95,10 @@ export class Engine {
   private disposed = false
   /** 탭이 숨어 렌더 루프를 멈췄는지 */
   private paused = false
+  /** 대상을 오른쪽으로 옮겨 보이는 비율 (지금 값, 목표로 부드럽게 다가감) */
+  private shift = 0
+  /** 카메라에 마지막으로 적용한 화면 옮김 (바뀔 때만 다시 계산) */
+  private appliedShift = ''
 
   constructor(private options: EngineOptions) {
     this.width = options.width
@@ -106,6 +113,7 @@ export class Engine {
     // three.js는 첫 텍스처를 올릴 때 비등방성 필터 확장을 처음 묻는데, 그 동기 호출이
     // 셰이더 컴파일이 다 끝날 때까지 스레드를 붙잡으므로 GPU가 한가한 지금 미리 물어 둠
     this.renderer.capabilities.getMaxAnisotropy()
+    onTextureProgress(options.onProgress ?? null)
     this.camera = new PerspectiveCamera(45, 1, 0.01, 20_000)
     this.controls = new OrbitControls(this.camera, options.input)
     this.controls.enablePan = false
@@ -165,6 +173,25 @@ export class Engine {
         .finally(() => this.compiled.add(id))
     }
     return scene
+  }
+
+  /** 소개 화면의 글이 왼쪽을 차지할 때 대상이 오른쪽에 보이도록 투영을 옮김 */
+  private applyShift(goal: number, k: number) {
+    this.shift += (goal - this.shift) * k
+    if (Math.abs(goal - this.shift) < 1e-4) this.shift = goal
+    const key = `${this.shift.toFixed(4)}|${this.width}|${this.height}`
+    if (key === this.appliedShift) return
+    this.appliedShift = key
+    if (this.shift === 0) this.camera.clearViewOffset()
+    else
+      this.camera.setViewOffset(
+        this.width,
+        this.height,
+        -this.shift * this.width,
+        0,
+        this.width,
+        this.height,
+      )
   }
 
   private applyCameraRange(scene: ScaleScene) {
@@ -248,7 +275,9 @@ export class Engine {
     const scene = this.current
     const view = state.options
     const introOn = state.intro
-    const focusId = introOn && scaleId === 'solar' ? 'earth' : state.focus
+    // 소개 화면은 지구에서 시작해 둘러보기 구간이 고른 천체로 옮겨 감
+    const focusId =
+      introOn && scaleId === 'solar' ? (state.focus ?? 'earth') : state.focus
     // 소개 화면에서는 선택 표시와 이름표를 감춤
     const selectedId = introOn ? null : state.selection[scaleId]
     const ctx: FrameContext = {
@@ -308,8 +337,12 @@ export class Engine {
       : overview.distance * 0.02
     this.controls.maxDistance = overview.distance * 4
     this.controls.enableDamping = !reduced
-    this.controls.autoRotate = !introOn && (view.autoRotate ?? !reduced)
+    // 소개 화면에서는 천천히 돌며 대상을 보여 줌
+    this.controls.autoRotate = introOn
+      ? !reduced
+      : (view.autoRotate ?? !reduced)
     this.controls.update()
+    this.applyShift(state.frameShift, k)
 
     if (!this.compiled.has(scene.id)) {
       // 워커의 OffscreenCanvas는 아무것도 그리지 않으면 GL 명령을 GPU로 넘기지 않아
@@ -363,6 +396,7 @@ export class Engine {
     if (this.disposed) return
     this.disposed = true
     cancelFrame(this.frame)
+    onTextureProgress(null)
     this.controls.dispose()
     for (const scene of this.scenes.values()) scene.dispose()
     this.renderer.dispose()

@@ -13,6 +13,8 @@ export interface RenderCallbacks {
   onLabels: (labels: LabelPosition[]) => void
   onCollision: (info: CollisionInfo) => void
   onReady: () => void
+  /** 텍스처를 받은 수와 받기 시작한 수 */
+  onProgress?: (loaded: number, total: number) => void
   onError: (error: unknown) => void
 }
 
@@ -61,6 +63,9 @@ export function createWorkerClient(
         break
       case 'ready':
         callbacks.onReady()
+        break
+      case 'progress':
+        callbacks.onProgress?.(message.loaded, message.total)
         break
       case 'error':
         callbacks.onError(new Error(message.message))
