@@ -1,6 +1,8 @@
 /**
- * 태양계 장면의 우주적 존재: 싸움터에 존재를 별자리 모양으로 그리고,
- * 격돌 중에는 두 존재 사이에 번개 선과 여파 섬광을, 태양 잠식 때는 해를 가리는 원판을 그립니다.
+ * 태양계 장면의 우주적 존재: 싸움터에 존재를 3D 몸(홀로그램 모델·계산한 몸, beings/bodies.ts)으로 그리고,
+ * 몸을 받는 동안이나 받지 못하면 별자리 모양으로 그립니다.
+ * 격돌 중에는 두 존재가 서로를 보며 여파 때 덮치고, 그 사이에 번개 선과 여파 섬광을,
+ * 진 쪽은 쓰러지며 사라지고, 태양 잠식 때는 해를 가리는 원판을 그립니다.
  */
 import {
   AdditiveBlending,
@@ -14,9 +16,11 @@ import {
   LineBasicMaterial,
   LineLoop,
   LineSegments,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   Points,
+  Quaternion,
   ShaderMaterial,
   SphereGeometry,
   Vector3,
@@ -38,8 +42,13 @@ import {
   setLine,
 } from '../../common'
 import type { FrameContext, Target } from '../../types'
+import type { Body3D } from './body'
 import { drawBeing } from './figures'
 import type { Drawing } from './figures'
+
+/** 3D 몸 만들기 묶음 (GLTFLoader·몸 코드는 존재가 처음 나타날 때 받음) */
+let bodiesModule: Promise<typeof import('./bodies')> | undefined
+const loadBodies = () => (bodiesModule ??= import('./bodies'))
 
 const MAX_LINE_VERTS = 4000
 const HAZE = 640
@@ -107,6 +116,14 @@ interface Visual {
   opacity: number
   /** 지금 보여야 하는지 (아니면 사라지는 중) */
   wanted: boolean
+  /** 3D 몸 (받는 중이거나 없으면 별자리 그림만) */
+  body?: Body3D
+  /** 별자리 그림에서 3D 몸으로 넘어간 정도 (0~1) */
+  bodyMix: number
+  /** 몸이 바라볼 쪽 (장면 좌표) */
+  facing: Vector3
+  /** 싸움에 져 쓰러지는 중 */
+  fell: boolean
 }
 
 interface Clash {
@@ -250,6 +267,9 @@ function makeVisual(being: Being, group: Group, pickables: Mesh[]): Visual {
     radius: 1,
     opacity: 0,
     wanted: true,
+    bodyMix: 0,
+    facing: new Vector3(0, 0, 1),
+    fell: false,
   }
 }
 
@@ -372,6 +392,10 @@ function fill(visual: Visual, drawing: Drawing, t: number) {
 
 const right = new Vector3()
 const up = new Vector3()
+const toCamera = new Vector3()
+const origin = new Vector3()
+const look = new Matrix4()
+const turn = new Quaternion()
 
 export function createBeingLayer(): BeingLayer {
   const group = new Group()
@@ -380,6 +404,7 @@ export function createBeingLayer(): BeingLayer {
   const clashes = new Map<number, Clash>()
   const flashes: Flash[] = []
   let skyFlash = 0
+  let disposed = false
 
   // 해를 무는 원판 (태양 잠식): 해의 가운데 면에 놓고, 해 표면이 앞에 있는 자리에만 그려
   // (깊이 비교 GreaterDepth) 해 바깥 하늘은 가리지 않고 해만 초승달처럼 이지러지게 함
@@ -431,8 +456,22 @@ export function createBeingLayer(): BeingLayer {
   function visualOf(id: string): Visual {
     let v = visuals.get(id)
     if (!v) {
-      v = makeVisual(BEING_BY_ID[id], group, pickables)
-      visuals.set(id, v)
+      const visual = makeVisual(BEING_BY_ID[id], group, pickables)
+      visuals.set(id, visual)
+      // 3D 몸은 따로 받아 오면 붙임 (그동안·실패하면 별자리 그림)
+      loadBodies()
+        .then((m) => m.createBody(visual.being))
+        .then((body) => {
+          if (!body) return
+          if (disposed || visuals.get(id) !== visual) {
+            body.dispose()
+            return
+          }
+          visual.body = body
+          visual.root.add(body.object)
+        })
+        .catch(() => {})
+      v = visual
     }
     return v
   }
@@ -523,10 +562,21 @@ export function createBeingLayer(): BeingLayer {
     )
     right.setFromMatrixColumn(ctx.camera.matrixWorld, 0)
     up.setFromMatrixColumn(ctx.camera.matrixWorld, 1)
+    toCamera.subVectors(ctx.camera.position, center).normalize()
     const gap = ids.length === 2 ? (radii[0] + radii[1]) * 0.62 : 0
     const t = ctx.reducedMotion ? 0 : ctx.elapsed
     ids.forEach((id, k) => {
-      if (!shown.includes(id)) return
+      if (!shown.includes(id)) {
+        // 진 쪽: 쓰러지며 사라짐
+        const v = visuals.get(id)
+        if (v && !v.fell) {
+          v.fell = true
+          v.body?.fall()
+        }
+        return
+      }
+      // 쓰러지던 존재가 다시 나오면 새 몸으로
+      if (visuals.get(id)?.fell) removeVisual(id)
       const v = visualOf(id)
       v.wanted = true
       v.radius = radii[k]
@@ -536,6 +586,11 @@ export function createBeingLayer(): BeingLayer {
         .copy(center)
         .addScaledVector(right, side * gap)
         .addScaledVector(up, bob)
+      // 서로를 보되 3/4쯤 이쪽으로 돌아 모습이 잘 보이게, 홀로면 비스듬히 이쪽을 봄
+      if (side !== 0 && !over)
+        v.facing.copy(right).multiplyScalar(-side * 0.8).addScaledVector(toCamera, 0.6)
+      else v.facing.copy(toCamera).multiplyScalar(0.75).addScaledVector(right, 0.66)
+      v.facing.normalize()
     })
 
     const clash = clashOf(battle)
@@ -545,6 +600,8 @@ export function createBeingLayer(): BeingLayer {
       const actor = battle.pulses.filter((p) => p.done).at(-1)?.actor
       const actorId = actor === 'b' && battle.b ? battle.b : battle.a
       const v = visuals.get(actorId)
+      // 여파를 터뜨린 쪽이 덮침
+      v?.body?.strike()
       const at = v ? v.root.position.clone().lerp(center, 0.5) : center
       addFlash(at, BEING_BY_ID[actorId].color, radii[0] * 2.6, ctx.elapsed)
       skyFlash = Math.max(skyFlash, battle.site === 'deep' ? 1 : 0.45)
@@ -623,6 +680,11 @@ export function createBeingLayer(): BeingLayer {
     const v = visuals.get(id)
     if (!v) return
     group.remove(v.root)
+    // 3D 몸은 모델 틀과 모양을 함께 쓰므로 몸이 스스로 정리함
+    if (v.body) {
+      v.root.remove(v.body.object)
+      v.body.dispose()
+    }
     disposeObject(v.root)
     pickables.splice(pickables.indexOf(v.pick), 1)
     visuals.delete(id)
@@ -648,35 +710,61 @@ export function createBeingLayer(): BeingLayer {
       const pixelScale =
         (ctx.height / 2) * ctx.camera.projectionMatrix.elements[5]
       for (const [id, v] of [...visuals]) {
-        // 나타날 때·사라질 때 1초 남짓 흐려지거나 밝아짐
-        const step = ctx.reducedMotion ? 1 : ctx.dt * 1.2
+        // 나타날 때·사라질 때 1초 남짓 흐려지거나 밝아짐 (쓰러질 때는 천천히)
+        const step = ctx.reducedMotion ? 1 : ctx.dt * (v.fell ? 0.5 : 1.2)
         v.opacity = clamp(v.opacity + (v.wanted ? step : -step), 0, 1)
         if (!v.wanted && v.opacity <= 0) {
           removeVisual(id)
           continue
         }
-        const drawing = drawBeing(
-          v.being.form,
-          v.being.shape ?? {},
-          t + id.length,
-        )
-        fill(v, drawing, t)
-        v.figure.scale.setScalar(v.radius)
-        if (drawing.space === 'screen') faceCamera(v.figure, ctx.camera)
-        else v.figure.rotation.set(0.35, 0, 0)
-        ;(v.lines.material as LineBasicMaterial).opacity = 0.85 * v.opacity
-        const pm = (v.points.material as ShaderMaterial).uniforms
-        pm.uOpacity.value = v.opacity
-        pm.uPixelScale.value = pixelScale * v.radius
-        pm.uPixelRatio.value = ctx.pixelRatio
-        v.core.visible = Boolean(drawing.core)
-        if (drawing.core) {
-          v.core.scale.setScalar(drawing.core)
-          ;(v.core.material as MeshBasicMaterial).opacity = 0.92 * v.opacity
+        // 3D 몸이 오면 별자리 그림에서 몸으로 천천히 넘어감
+        if (v.body)
+          v.bodyMix = ctx.reducedMotion ? 1 : clamp(v.bodyMix + ctx.dt * 1.2, 0, 1)
+        const sketch = v.opacity * (1 - v.bodyMix)
+        v.figure.visible = sketch > 0
+        if (v.figure.visible) {
+          const drawing = drawBeing(
+            v.being.form,
+            v.being.shape ?? {},
+            t + id.length,
+          )
+          fill(v, drawing, t)
+          v.figure.scale.setScalar(v.radius)
+          if (drawing.space === 'screen') faceCamera(v.figure, ctx.camera)
+          else v.figure.rotation.set(0.35, 0, 0)
+          ;(v.lines.material as LineBasicMaterial).opacity = 0.85 * sketch
+          const pm = (v.points.material as ShaderMaterial).uniforms
+          pm.uOpacity.value = sketch
+          pm.uPixelScale.value = pixelScale * v.radius
+          pm.uPixelRatio.value = ctx.pixelRatio
+          v.core.visible = Boolean(drawing.core)
+          if (drawing.core) {
+            v.core.scale.setScalar(drawing.core)
+            ;(v.core.material as MeshBasicMaterial).opacity = 0.92 * sketch
+          }
+        }
+        if (v.body) {
+          const object = v.body.object
+          object.scale.setScalar(v.radius)
+          // 바라볼 쪽으로 천천히 돎 (+Z가 앞)
+          up.setFromMatrixColumn(ctx.camera.matrixWorld, 1)
+          look.lookAt(v.facing, origin, up)
+          turn.setFromRotationMatrix(look)
+          if (v.bodyMix === 0 || ctx.reducedMotion) object.quaternion.copy(turn)
+          else object.quaternion.slerp(turn, 1 - Math.exp(-ctx.dt * 2.5))
+          v.body.update({
+            dt: ctx.dt,
+            time: t,
+            opacity: v.opacity * v.bodyMix,
+            reducedMotion: ctx.reducedMotion,
+            camera: ctx.camera,
+            pixelScale,
+            pixelRatio: ctx.pixelRatio,
+          })
         }
         v.aura.scale.setScalar(v.radius * 3.2)
         const glow = (v.aura.material as ShaderMaterial).uniforms
-        glow.uIntensity.value = 0.45 * v.opacity
+        glow.uIntensity.value = 0.45 * v.opacity * (1 - 0.35 * v.bodyMix)
         glow.uTime.value = ctx.elapsed
         faceCamera(v.aura, ctx.camera)
         v.pick.scale.setScalar(v.radius * 0.9)
@@ -722,6 +810,7 @@ export function createBeingLayer(): BeingLayer {
     },
     flash: () => skyFlash,
     dispose() {
+      disposed = true
       for (const id of [...visuals.keys()]) removeVisual(id)
       for (const id of [...clashes.keys()]) removeClash(id)
       for (const f of flashes) disposeObject(f.mesh)
