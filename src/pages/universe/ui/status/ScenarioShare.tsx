@@ -1,8 +1,10 @@
 import { For, Show, createSignal, onMount } from 'solid-js'
 import { locale } from '@/shared/i18n'
+import { moveStorageKey } from '@/shared/lib'
 import { Button, StatusMessage } from '@/shared/ui'
 import { world, worldActions } from '../../model/world/store'
 import {
+  LEGACY_SAVE_KEY,
   MAX_SAVES,
   SAVE_KEY,
   SHARE_PARAM,
@@ -25,6 +27,7 @@ interface Saved {
 }
 
 function readSaves(): Saved[] {
+  moveStorageKey(window.localStorage, LEGACY_SAVE_KEY, SAVE_KEY)
   try {
     const raw = JSON.parse(window.localStorage.getItem(SAVE_KEY) ?? '[]')
     if (!Array.isArray(raw)) return []

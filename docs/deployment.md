@@ -2,10 +2,10 @@
 
 `main`에 올라가면 `.github/workflows/pages.yml`이 GitHub Pages에 배포합니다.
 
-| 주소                                                      | 내용       |
-| --------------------------------------------------------- | ---------- |
-| https://ryushin01.github.io/Universe_Simulator/           | 시뮬레이터 |
-| https://ryushin01.github.io/Universe_Simulator/storybook/ | Storybook  |
+| 주소                                                     | 내용       |
+| -------------------------------------------------------- | ---------- |
+| https://ryushin01.github.io/Original_Universe/           | 시뮬레이터 |
+| https://ryushin01.github.io/Original_Universe/storybook/ | Storybook  |
 
 ## 빌드 과정
 
@@ -18,10 +18,10 @@
 
 ## 하위 경로
 
-Pages 주소는 저장소 이름 아래(`/Universe_Simulator/`)라서, 빌드할 때 `BASE_PATH`로 경로 접두사를 넘깁니다.
+Pages 주소는 저장소 이름 아래(`/Original_Universe/`)라서, 빌드할 때 `BASE_PATH`로 경로 접두사를 넘깁니다.
 
 ```bash
-BASE_PATH=/Universe_Simulator/ pnpm build:all
+BASE_PATH=/Original_Universe/ pnpm build:all
 ```
 
 - `vite.config.ts`의 `base`가 이 값을 씁니다. 기본값은 `/`입니다.
@@ -40,7 +40,7 @@ BASE_PATH=/Universe_Simulator/ pnpm build:all
 
 ## 검색·공유 미리보기
 
-- `index.html`에 canonical, Open Graph(제목·설명·그림 1200×630·주소·언어), 트위터 카드를 둡니다. 주소는 운영 주소(`https://ryushin01.github.io/Universe_Simulator/`)로 고정입니다.
+- `index.html`에 canonical, Open Graph(제목·설명·그림 1200×630·주소·언어), 트위터 카드를 둡니다. 주소는 운영 주소(`https://ryushin01.github.io/Original_Universe/`)로 고정입니다.
 - 공유 그림 `public/og-image.jpg`는 실제 소개 화면을 찍은 것입니다. 화면이 바뀌면 `pnpm build`·`pnpm preview` 뒤 `ONLY=og BASE_URL=http://localhost:4183 pnpm screenshots`로 다시 찍습니다.
 - GitHub Pages 프로젝트 사이트라 `robots.txt`는 도메인 맨 위에서만 읽힙니다. 이 저장소에는 두지 않습니다.
 

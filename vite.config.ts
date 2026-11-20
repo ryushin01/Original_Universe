@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import solid from 'vite-plugin-solid'
 
-// GitHub Pages처럼 하위 경로에 올릴 때 BASE_PATH=/Universe_Simulator/ 로 빌드
+// GitHub Pages처럼 하위 경로에 올릴 때 BASE_PATH=/Original_Universe/ 로 빌드
 const base = process.env.BASE_PATH ?? '/'
 
 // Lightning CSS 대상 브라우저 (주 버전 << 16 | 부 버전 << 8)

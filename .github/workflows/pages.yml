@@ -29,10 +29,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # 저장소 이름 하위 경로(https://ryushin01.github.io/Universe_Simulator/)에 맞춰 빌드, Storybook은 /storybook/
+      # 저장소 이름 하위 경로(https://ryushin01.github.io/Original_Universe/)에 맞춰 빌드, Storybook은 /storybook/
       - run: pnpm build:all
         env:
-          BASE_PATH: /Universe_Simulator/
+          BASE_PATH: /Original_Universe/
       # 없는 주소로 들어와도 앱이 열리도록 함
       - run: cp dist/client/index.html dist/client/404.html
       - uses: actions/upload-pages-artifact@v5

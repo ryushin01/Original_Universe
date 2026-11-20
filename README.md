@@ -1,11 +1,11 @@
-# UNIVERSE SIMULATOR - 우주 환경·재해 대응 시뮬레이터
+# ORIGINAL UNIVERSE - 우주 환경·재해 대응 시뮬레이터
 
-[![CI](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.0.0-7c9cff)
+[![CI](https://github.com/ryushin01/Original_Universe/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/Original_Universe/actions/workflows/ci.yml)
+![version](https://img.shields.io/badge/version-1.0.1-7c9cff)
 
 태양계에서 우주 거대 구조까지 오가며 소행성 충돌, 태양 폭풍, 초신성·감마선 폭발, 블랙홀 근접 통과, 유성우, 태양의 노화, 신화 속 우주적 존재의 격돌을 일으키고 다이슨 스웜·링월드·궤도 이동 같은 우주 구조물로 대응해 보는 3D 우주 시뮬레이터입니다. [TerraNova](https://github.com/ryushin01/TerraNova)의 우주판입니다.
 
-**[데모 바로 보기](https://ryushin01.github.io/Universe_Simulator/)** · [Storybook](https://ryushin01.github.io/Universe_Simulator/storybook/)
+**[데모 바로 보기](https://ryushin01.github.io/Original_Universe/)** · [Storybook](https://ryushin01.github.io/Original_Universe/storybook/)
 
 > **프로젝트 상태:** 1.0.0으로 정식 공개한 **개인 프로젝트**입니다. 행성 위치는 NASA JPL 궤도 요소로 계산하지만, 태양 진화·기후·피해 규모·우주 구조물은 단순화한 모델이라 교육·탐색용으로만 쓰세요. 디자인은 [Space Advisor](https://www.cssdesignawards.com/sites/space-advisor/28977/)(Akufen)를 참고했습니다.
 
@@ -74,17 +74,17 @@ pnpm install
 pnpm dev    # http://localhost:3100
 ```
 
-| 명령                                   | 설명                                                                          |
-| -------------------------------------- | ----------------------------------------------------------------------------- |
-| `pnpm build` / `pnpm preview`          | 정적 사이트 빌드와 첫 화면 사전 렌더링(`dist/client`) / 빌드 결과 실행        |
-| `pnpm build:all`                       | 사이트와 Storybook을 함께 빌드 (하위 경로는 `BASE_PATH=/Universe_Simulator/`) |
-| `pnpm lint` / `lint:fsd` / `typecheck` | ESLint / FSD 구조 검사 / 타입 검사                                            |
-| `pnpm test`                            | 천체 역학·재해·엔진 단위 테스트와 컴포넌트 테스트                             |
-| `pnpm test:e2e`                        | 프로덕션 빌드 E2E·접근성 검사 (먼저 `build` 필요)                             |
-| `pnpm lighthouse`                      | Lighthouse CI 점수 검사 (먼저 `build` 필요)                                   |
-| `pnpm storybook`                       | Storybook 개발 서버 (`http://localhost:6106`)                                 |
-| `pnpm fonts`                           | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                                |
-| `pnpm screenshots`                     | README 화면 다시 찍기 (`build` 뒤 `preview`를 띄운 다음 `BASE_URL` 지정)      |
+| 명령                                   | 설명                                                                         |
+| -------------------------------------- | ---------------------------------------------------------------------------- |
+| `pnpm build` / `pnpm preview`          | 정적 사이트 빌드와 첫 화면 사전 렌더링(`dist/client`) / 빌드 결과 실행       |
+| `pnpm build:all`                       | 사이트와 Storybook을 함께 빌드 (하위 경로는 `BASE_PATH=/Original_Universe/`) |
+| `pnpm lint` / `lint:fsd` / `typecheck` | ESLint / FSD 구조 검사 / 타입 검사                                           |
+| `pnpm test`                            | 천체 역학·재해·엔진 단위 테스트와 컴포넌트 테스트                            |
+| `pnpm test:e2e`                        | 프로덕션 빌드 E2E·접근성 검사 (먼저 `build` 필요)                            |
+| `pnpm lighthouse`                      | Lighthouse CI 점수 검사 (먼저 `build` 필요)                                  |
+| `pnpm storybook`                       | Storybook 개발 서버 (`http://localhost:6106`)                                |
+| `pnpm fonts`                           | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                               |
+| `pnpm screenshots`                     | README 화면 다시 찍기 (`build` 뒤 `preview`를 띄운 다음 `BASE_URL` 지정)     |
 
 ## 프로젝트 구조
 
