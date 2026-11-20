@@ -218,3 +218,48 @@
     color: var(--ice);
   }
 }
+
+/* 우주 대전: 한 편에 가세할 신적 존재들 */
+.roster {
+  display: grid;
+  gap: 0.5rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  & > legend {
+    padding: 0;
+    margin-bottom: 0.4rem;
+  }
+}
+
+.rosterList {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  & > li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+}
+
+.rosterText {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.875rem;
+}
+
+.rosterAdd {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}

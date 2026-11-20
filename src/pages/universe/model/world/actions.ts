@@ -75,6 +75,7 @@ import {
   isCivLevelId,
   withRequirements,
 } from './civilization'
+import { MAX_BEINGS } from '../war/combat'
 
 export interface ActionResult {
   ok: boolean
@@ -887,8 +888,8 @@ export interface WarDeclaration {
   /** 행성 파괴포 표적 (없으면 쏘지 않음) */
   target: string | null
   /** 가세할 신적 존재·대형 병기 (빼면 없음) */
-  aBeing?: string | null
-  bBeing?: string | null
+  aBeings?: string[]
+  bBeings?: string[]
   aWeapon?: string | null
   bWeapon?: string | null
 }
@@ -927,13 +928,20 @@ export function canDeclareWar(
       '행성 파괴포로 쏠 수 없는 천체입니다.',
       'The planet-killer cannot target that body.',
     )
-  for (const id of [input.aBeing, input.bBeing])
-    if (id && !isBeingId(id))
-      return no('신적 존재를 다시 고르세요.', 'Choose the divine beings again.')
-  if (input.aBeing && input.aBeing === input.bBeing)
+  const aBeings = input.aBeings ?? []
+  const bBeings = input.bBeings ?? []
+  if (aBeings.length > MAX_BEINGS || bBeings.length > MAX_BEINGS)
     return no(
-      '한 신적 존재가 두 편에 함께 설 수는 없습니다.',
-      'One divine being cannot fight for both sides.',
+      `한 편에는 신적 존재를 ${MAX_BEINGS}명까지 내세울 수 있습니다.`,
+      `Each side can field up to ${MAX_BEINGS} divine beings.`,
+    )
+  const all = [...aBeings, ...bBeings]
+  if (all.some((id) => !isBeingId(id)))
+    return no('신적 존재를 다시 고르세요.', 'Choose the divine beings again.')
+  if (new Set(all).size !== all.length)
+    return no(
+      '한 신적 존재가 두 번 서거나 두 편에 함께 설 수는 없습니다.',
+      'A divine being cannot stand twice or fight for both sides.',
     )
   for (const id of [input.aWeapon, input.bWeapon])
     if (id && !isMegaweaponId(id))
@@ -951,8 +959,8 @@ export function declareWar(state: WorldState, input: WarDeclaration): Outcome {
     site: input.site as SiteId,
     size: input.size as FleetSize,
     target: input.target as BodyId | null,
-    aBeing: input.aBeing || null,
-    bBeing: input.bBeing || null,
+    aBeings: input.aBeings ?? [],
+    bBeings: input.bBeings ?? [],
     aWeapon: (input.aWeapon || null) as MegaweaponId | null,
     bWeapon: (input.bWeapon || null) as MegaweaponId | null,
   })

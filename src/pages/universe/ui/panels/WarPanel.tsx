@@ -3,15 +3,8 @@ import { locale } from '@/shared/i18n'
 import { Button, ChoiceGroup, SelectField, StatusMessage } from '@/shared/ui'
 import type { SelectOption } from '@/shared/ui'
 import { formatPercent } from '@/shared/lib'
-import {
-  ALIGNMENT_NAME,
-  BEING_BY_ID,
-  ELEMENT_NAME,
-  FACTION_NAME,
-  SITES,
-  SITE_BY_ID,
-} from '../../model/mythic/catalog'
-import type { Being, SiteId } from '../../model/mythic/catalog'
+import { BEING_BY_ID, SITES, SITE_BY_ID } from '../../model/mythic/catalog'
+import type { SiteId } from '../../model/mythic/catalog'
 import {
   FACTIONS,
   FACTION_BY_ID,
@@ -32,6 +25,7 @@ import type {
   MegaweaponId,
 } from '../../model/war/catalog'
 import {
+  MAX_BEINGS,
   duelOdds,
   specialApplies,
   warDays,
@@ -53,7 +47,7 @@ import { formatDuration } from '../../model/world/text'
 import { bothNames, createActionMessage, pick, t } from '../i18n'
 import { BODIES } from '../../model/solar/bodies'
 import { championsLine } from '../warChampions'
-import { beingOptions } from './beingOptions'
+import { BeingRoster } from './BeingRoster'
 import styles from './panels.module.css'
 
 const factionOptions = (): SelectOption[] =>
@@ -72,14 +66,6 @@ const fleetText = (faction: Faction, size: FleetSize) =>
   fleetOf(faction, size)
     .map((x) => `${pick(x.cls.name)} ${x.count}`)
     .join(' · ')
-
-/** 진영·속성·권능·성향 한 줄 */
-const aboutBeing = (b: Being) =>
-  `${t('mythic.about', {
-    faction: pick(FACTION_NAME[b.faction]),
-    element: pick(ELEMENT_NAME[b.element]),
-    power: b.power,
-  })} · ${pick(ALIGNMENT_NAME[b.alignment])}`
 
 /** 진행 중인 우주 대전 카드: 두 세력의 남은 전력과 끝나기까지 남은 시간 */
 function ActiveWar(props: { id: number }) {
@@ -162,8 +148,8 @@ export function WarPanel() {
   const l = locale
   const [aId, setAId] = createSignal<FactionId>('axis')
   const [bId, setBId] = createSignal<FactionId>('alliance')
-  const [aBeing, setABeing] = createSignal(FACTION_BY_ID.axis.patron)
-  const [bBeing, setBBeing] = createSignal(FACTION_BY_ID.alliance.patron)
+  const [aBeings, setABeings] = createSignal([FACTION_BY_ID.axis.patron])
+  const [bBeings, setBBeings] = createSignal([FACTION_BY_ID.alliance.patron])
   const [aWeapon, setAWeapon] = createSignal<string>(
     FACTION_BY_ID.axis.megaweapon,
   )
@@ -178,8 +164,8 @@ export function WarPanel() {
   const a = () => FACTION_BY_ID[aId()]
   const b = () => FACTION_BY_ID[bId()]
   const extras = (): WarExtras => ({
-    aBeing: aBeing() || null,
-    bBeing: bBeing() || null,
+    aBeings: aBeings(),
+    bBeings: bBeings(),
     aWeapon: (aWeapon() || null) as MegaweaponId | null,
     bWeapon: (bWeapon() || null) as MegaweaponId | null,
   })
@@ -195,15 +181,16 @@ export function WarPanel() {
   const chosenTarget = () =>
     targets().includes(target() as never) ? target() : ''
 
-  /** 세력을 고르면 그 세력의 수호 존재와 대표 병기로 (상대 존재와 겹치면 상대 쪽을 비움) */
+  /** 세력을 고르면 그 세력의 수호 존재와 대표 병기로 (상대 편에 같은 존재가 있으면 거기서 뺌) */
   const useDefaults = (side: 'a' | 'b', faction: Faction) => {
+    const without = (ids: string[]) => ids.filter((x) => x !== faction.patron)
     if (side === 'a') {
-      setABeing(faction.patron)
-      if (bBeing() === faction.patron) setBBeing('')
+      setABeings([faction.patron])
+      setBBeings(without(bBeings()))
       setAWeapon(faction.megaweapon)
     } else {
-      setBBeing(faction.patron)
-      if (aBeing() === faction.patron) setABeing('')
+      setBBeings([faction.patron])
+      setABeings(without(aBeings()))
       setBWeapon(faction.megaweapon)
     }
   }
@@ -232,8 +219,8 @@ export function WarPanel() {
       .map((id) => pick(SPECIALS[id].name))
       .join(' · ') || '—'
 
-  const beingName = (id: string) =>
-    id ? pick(BEING_BY_ID[id].name) : t('war.none')
+  const beingNames = (ids: string[]) =>
+    ids.map((id) => pick(BEING_BY_ID[id].name)).join(' · ') || t('war.none')
   const weaponName = (id: string) =>
     id ? pick(MEGAWEAPONS[id as MegaweaponId].name) : t('war.none')
 
@@ -261,15 +248,12 @@ export function WarPanel() {
         options={factionOptions()}
         description={pick(a().summary)}
       />
-      <SelectField
-        label={t('war.beingA')}
-        value={aBeing()}
-        onChange={setABeing}
-        options={[
-          { value: '', label: t('war.noBeing') },
-          ...beingOptions(bBeing() || undefined),
-        ]}
-        description={aBeing() ? aboutBeing(BEING_BY_ID[aBeing()]) : undefined}
+      <BeingRoster
+        legend={t('war.beingsA', { n: MAX_BEINGS })}
+        addLabel={t('war.addBeingA')}
+        beings={aBeings()}
+        taken={bBeings()}
+        onChange={setABeings}
       />
       <SelectField
         label={t('war.weaponA')}
@@ -289,15 +273,12 @@ export function WarPanel() {
         options={factionOptions().filter((o) => o.value !== aId())}
         description={pick(b().summary)}
       />
-      <SelectField
-        label={t('war.beingB')}
-        value={bBeing()}
-        onChange={setBBeing}
-        options={[
-          { value: '', label: t('war.noBeing') },
-          ...beingOptions(aBeing() || undefined),
-        ]}
-        description={bBeing() ? aboutBeing(BEING_BY_ID[bBeing()]) : undefined}
+      <BeingRoster
+        legend={t('war.beingsB', { n: MAX_BEINGS })}
+        addLabel={t('war.addBeingB')}
+        beings={bBeings()}
+        taken={aBeings()}
+        onChange={setBBeings}
       />
       <SelectField
         label={t('war.weaponB')}
@@ -365,20 +346,26 @@ export function WarPanel() {
         </dd>
         <dt>{t('war.beings')}</dt>
         <dd>
-          {t('war.vs', { a: beingName(aBeing()), b: beingName(bBeing()) })}
+          {t('war.vs', { a: beingNames(aBeings()), b: beingNames(bBeings()) })}
         </dd>
-        <Show when={duel()}>
-          {(chance) => (
-            <>
-              <dt>{t('war.duel')}</dt>
-              <dd>
-                {t('war.oddsValue', {
-                  name: beingName(aBeing()),
-                  percent: formatPercent(chance(), l()),
-                })}
-              </dd>
-            </>
-          )}
+        <Show when={duel().length > 0}>
+          <dt>{t('war.duel')}</dt>
+          <dd>
+            <For each={duel()}>
+              {(pair, i) => (
+                <>
+                  <Show when={i() > 0}>
+                    <br />
+                  </Show>
+                  {t('war.duelPair', {
+                    a: pick(BEING_BY_ID[pair.a].name),
+                    b: pick(BEING_BY_ID[pair.b].name),
+                    percent: formatPercent(pair.chance, l()),
+                  })}
+                </>
+              )}
+            </For>
+          </dd>
         </Show>
         <dt>{t('war.megaweapons')}</dt>
         <dd>
