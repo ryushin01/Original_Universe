@@ -22,6 +22,7 @@ export type Faction =
   | 'angel'
   | 'demon'
   | 'beast'
+  | 'spirit'
   | 'monster'
   | 'machine'
 
@@ -42,6 +43,7 @@ export type BeingGroup =
   | 'westAsia'
   | 'greece'
   | 'norse'
+  | 'spirit'
   | 'monster'
   | 'machine'
 
@@ -1279,6 +1281,210 @@ export const BEINGS: Being[] = [
     origin: NORSE,
   },
 
+  /* ── 영수 ────────────────────────────────── */
+  {
+    id: 'gumiho',
+    name: both('구미호', 'Gumiho'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'fire',
+    alignment: 'wild',
+    power: 6,
+    calamities: ['madness', 'eclipse'],
+    form: 'beast',
+    shape: { canine: true, tail: 'fan' },
+    color: '#ff9f6b',
+    origin: both(
+      '한국·중국·일본 전승 (『산해경』의 아홉 꼬리 여우)',
+      'Korean, Chinese and Japanese folklore (the nine-tailed fox of the Classic of Mountains and Seas)',
+    ),
+  },
+  {
+    id: 'pixiu',
+    name: both('비휴', 'Pixiu'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'metal',
+    alignment: 'order',
+    power: 6,
+    calamities: ['scrap', 'blessing'],
+    form: 'beast',
+    shape: { feline: true, horn: true, wings: 2 },
+    color: '#e8c26a',
+    origin: both(
+      '중국 전승 (재물을 지키는 영수)',
+      'Chinese folklore (a guardian of wealth)',
+    ),
+  },
+  {
+    id: 'baku',
+    name: both('맥', 'Baku'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'water',
+    alignment: 'order',
+    power: 4,
+    calamities: ['blessing', 'quench'],
+    form: 'beast',
+    shape: { heavy: true },
+    color: '#9fb8ff',
+    origin: both(
+      '중국·일본 전승 (악몽을 먹는 맥)',
+      'Chinese and Japanese folklore (the nightmare-eating baku)',
+    ),
+  },
+  {
+    id: 'jingwei',
+    name: both('정위', 'Jingwei'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'wood',
+    alignment: 'wild',
+    power: 3,
+    calamities: ['drought', 'rain'],
+    form: 'bird',
+    shape: { crest: true },
+    size: 0.8,
+    color: '#9be37a',
+    origin: both(
+      '중국 신화 (『산해경』)',
+      'Chinese myth (Classic of Mountains and Seas)',
+    ),
+  },
+  {
+    id: 'bifang',
+    name: both('필방', 'Bifang'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'fire',
+    alignment: 'wild',
+    power: 5,
+    calamities: ['heat', 'flare'],
+    form: 'bird',
+    shape: { tail: 'long' },
+    color: '#ff6b4a',
+    origin: both(
+      '중국 신화 (『산해경』의 외다리 불새)',
+      'Chinese myth (the one-legged fire bird of the Classic of Mountains and Seas)',
+    ),
+  },
+  {
+    id: 'jade-rabbit',
+    name: both('옥토끼', 'Jade Rabbit'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'light',
+    alignment: 'order',
+    power: 3,
+    calamities: ['blessing', 'frost'],
+    form: 'beast',
+    shape: { halo: true },
+    size: 0.7,
+    color: '#f2f4ff',
+    origin: both(
+      '동아시아 전승 (달의 토끼)',
+      'East Asian folklore (the rabbit in the Moon)',
+    ),
+  },
+  {
+    id: 'chanchu',
+    name: both('섬여', 'Chan Chu'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'water',
+    alignment: 'wild',
+    power: 4,
+    calamities: ['eclipse', 'frost'],
+    form: 'turtle',
+    size: 0.8,
+    color: '#7fd1b9',
+    origin: both(
+      '중국 전승 (달의 두꺼비)',
+      'Chinese folklore (the toad in the Moon)',
+    ),
+  },
+  {
+    id: 'cheonma',
+    name: both('천마', 'Cheonma'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'light',
+    alignment: 'order',
+    power: 5,
+    calamities: ['blessing', 'quench'],
+    form: 'beast',
+    shape: { equine: true, wings: 2, mane: true },
+    color: '#cfe3ff',
+    origin: both(
+      '한국 전승 (신라 천마도)',
+      'Korean tradition (the Silla Heavenly Horse painting)',
+    ),
+  },
+  {
+    id: 'nue',
+    name: both('누에', 'Nue'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'void',
+    alignment: 'chaos',
+    power: 5,
+    calamities: ['madness', 'emp'],
+    form: 'beast',
+    shape: { feline: true, tail: 'long' },
+    color: '#a58bff',
+    origin: both(
+      '일본 전승 (『헤이케 이야기』)',
+      'Japanese legend (The Tale of the Heike)',
+    ),
+  },
+  {
+    id: 'raiju',
+    name: both('라이주', 'Raijū'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'metal',
+    alignment: 'wild',
+    power: 5,
+    calamities: ['emp', 'flare'],
+    form: 'beast',
+    shape: { canine: true },
+    color: '#8fd3ff',
+    origin: both(
+      '일본 전승 (번개와 함께 떨어지는 뇌수)',
+      'Japanese folklore (the thunder beast that falls with lightning)',
+    ),
+  },
+  {
+    id: 'unicorn',
+    name: both('유니콘', 'Unicorn'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'light',
+    alignment: 'order',
+    power: 5,
+    calamities: ['quench', 'blessing'],
+    form: 'beast',
+    shape: { equine: true, horn: true, mane: true },
+    color: '#fff1fb',
+    origin: both(
+      '유럽 전승 (중세 동물지)',
+      'European legend (medieval bestiaries)',
+    ),
+  },
+  {
+    id: 'griffin',
+    name: both('그리핀', 'Griffin'),
+    faction: 'spirit',
+    group: 'spirit',
+    element: 'earth',
+    alignment: 'order',
+    power: 6,
+    calamities: ['quake', 'scrap'],
+    form: 'beast',
+    shape: { feline: true, wings: 2, crest: true },
+    color: '#d9a85b',
+    origin: both('그리스·서아시아 전승', 'Greek and West Asian legend'),
+  },
   /* ── 몬스터 ────────────────────────────── */
   {
     id: 'kraken',
@@ -1437,6 +1643,7 @@ export const FACTION_NAME: Record<Faction, Text> = {
   angel: both('천사', 'Angel'),
   demon: both('악마', 'Demon'),
   beast: both('신수', 'Divine beast'),
+  spirit: both('영수', 'Spirit beast'),
   monster: both('몬스터', 'Monster'),
   machine: both('거대 로봇', 'Giant robot'),
 }
@@ -1461,6 +1668,7 @@ export const GROUP_NAME: Record<BeingGroup, Text> = {
   ),
   greece: both('신수 · 그리스', 'Divine beasts · Greece'),
   norse: both('신수 · 북유럽', 'Divine beasts · Norse'),
+  spirit: both('영수', 'Spirit beasts'),
   monster: both('몬스터', 'Monsters'),
   machine: both('거대 로봇', 'Giant robots'),
 }
