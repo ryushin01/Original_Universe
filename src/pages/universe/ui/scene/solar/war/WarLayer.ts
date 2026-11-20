@@ -2,6 +2,8 @@
  * 우주 대전 3D: 두 세력의 함대를 싸움터 양쪽에 대형으로 세우고, 광선·탄과 폭발, 도착 연출
  * (워프 진입, 차원 균열, 시간의 틈, 벌레떼, 고대 요새의 깨어남), 행성 파괴포 발사를 그립니다.
  * 남은 전력(world/war.ts의 warStrength)만큼 함선이 남고, 줄어든 만큼 폭발하며 사라집니다.
+ * 함대 옆에는 대형 병기가 떠서 깨어나 차례마다 쏘고, 함대 뒤 위쪽에는 가세한 신적 존재가
+ * 거대한 몸으로 서서 신의 일격을 내리치며, 두 존재는 결투해 진 쪽이 쓰러집니다.
  */
 import {
   AdditiveBlending,
@@ -11,6 +13,7 @@ import {
   CylinderGeometry,
   Group,
   InstancedMesh,
+  Line,
   LineBasicMaterial,
   LineSegments,
   Matrix4,
@@ -26,15 +29,28 @@ import { clamp, seededRandom } from '@/shared/lib'
 import type { BodyId } from '../../../../model/solar/bodies'
 import {
   FACTION_BY_ID,
+  MEGAWEAPONS,
   SMALL_CLASSES,
   WEAPONS,
   fleetOf,
 } from '../../../../model/war/catalog'
-import type { Faction, ShipClassId } from '../../../../model/war/catalog'
-import { WAR_AFTERGLOW_YEARS, warStrength } from '../../../../model/world/war'
+import type {
+  Faction,
+  MegaweaponId,
+  MegaweaponShot,
+  ShipClassId,
+  SpecialId,
+} from '../../../../model/war/catalog'
+import { BEING_BY_ID } from '../../../../model/mythic/catalog'
+import type { Being } from '../../../../model/mythic/catalog'
+import {
+  WAR_AFTERGLOW_YEARS,
+  fallenSide,
+  warStrength,
+} from '../../../../model/world/war'
 import type { War, WorldState } from '../../../../model/world/types'
 import { warIdOf, warSceneId } from '../../../../model/objects'
-import { faceCamera, makeGlow } from '../../common'
+import { faceCamera, makeGlow, setLine } from '../../common'
 import type { FrameContext, Target } from '../../types'
 import {
   makeBodyMaterial,
@@ -43,7 +59,10 @@ import {
 } from '../beings/hologram'
 import { SITE_SCALE, siteCenter } from '../sites'
 import type { SiteAnchors } from '../sites'
+import type { Body3D } from '../beings/body'
 import { SHIP_SIZE, lookKey, lookOf, shipGeometry } from './ships'
+import { megaweaponShape } from './megaweapons'
+import type { MegaweaponShape } from './megaweapons'
 import { createLaserStorm } from '../../effects/laserStorm'
 import type { LaserStorm } from '../../effects/laserStorm'
 
@@ -92,6 +111,24 @@ const BEAMS = 28
 const BOOM_SECONDS = 0.9
 const KILLER_SECONDS = 2.6
 const ARRIVAL_SECONDS = 1.4
+/** 대형 병기·신적 존재의 크기 (싸움터 배율을 곱함) */
+const MEGA_SIZE = 0.95
+const CHAMPION_SIZE = 0.85
+/** 대형 병기가 깨어나며 펼쳐지는 시간 (초) */
+const AWAKEN_SECONDS = 3
+
+/** 신적 존재의 3D 몸 묶음 (존재 층과 같은 묶음을 따로 받음) */
+let bodiesModule: Promise<typeof import('../beings/bodies')> | null = null
+const loadBodies = () => (bodiesModule ??= import('../beings/bodies'))
+
+/** 천천히 도는 꼴 (도는 축은 꼴의 위 +Y 또는 앞 +Z) */
+const SPIN: Partial<Record<string, { axis: Vector3; speed: number }>> = {
+  ring: { axis: new Vector3(0, 0, 1), speed: 0.25 },
+  mirrors: { axis: new Vector3(0, 0, 1), speed: 0.05 },
+  spire: { axis: new Vector3(0, 1, 0), speed: 0.3 },
+  hourglass: { axis: new Vector3(0, 1, 0), speed: 0.35 },
+  prism: { axis: new Vector3(0, 1, 0), speed: 0.15 },
+}
 
 interface Slot {
   cls: ShipClassId
@@ -110,6 +147,11 @@ interface Fleet {
   faction: Faction
   /** a는 +1, b는 −1 (싸움터 축의 어느 쪽인지) */
   sign: 1 | -1
+  /** 이번 프레임의 함대 가운데와 축 (옆 x, 앞 z), 방향 */
+  origin: Vector3
+  forward: Vector3
+  side: Vector3
+  turn: Quaternion
   slots: Slot[]
   meshes: Map<string, { body: InstancedMesh; wire: InstancedMesh }>
   bodyMaterial: ShaderMaterial
@@ -133,6 +175,47 @@ interface Boom {
   size: number
 }
 
+/** 대형 병기 */
+interface Mega {
+  id: MegaweaponId
+  side: 0 | 1
+  root: Group
+  core: Mesh
+  shape: MegaweaponShape
+  /** 이미 그린 발사 수 */
+  fired: number
+}
+
+/** 가세한 신적 존재 */
+interface Champion {
+  being: Being
+  side: 0 | 1
+  root: Group
+  aura: Mesh
+  body: Body3D | null
+  bodyMix: number
+  opacity: number
+  fell: boolean
+  /** 이미 그린 일격 수 */
+  struck: number
+  facing: Vector3
+}
+
+/** 대형 병기·신의 일격이 날아가는 모습 (끝나면 치움) */
+interface Shot {
+  kind: MegaweaponShot | 'divine'
+  start: number
+  life: number
+  from: Vector3
+  to: Vector3
+  color: string
+  size: number
+  meshes: Mesh[]
+  /** 무리 탄의 옆 흔들림 */
+  offsets: Vector3[]
+  hit: boolean
+}
+
 interface Visual {
   id: number
   root: Group
@@ -153,6 +236,13 @@ interface Visual {
     beam: Mesh
     flash: Mesh
   }
+  megas: Mega[]
+  champions: Champion[]
+  /** 신들의 결투 전 두 존재 사이의 번개 */
+  arc: Line
+  /** 결투 장면을 그렸는지 */
+  dueled: boolean
+  shots: Shot[]
   disposed: boolean
 }
 
@@ -171,6 +261,12 @@ const q4 = new Quaternion()
 const s3 = new Vector3()
 const basis = new Matrix4()
 const up = new Vector3(0, 1, 0)
+const camUp = new Vector3()
+const toCamera = new Vector3()
+const tmpDir = new Vector3()
+const zero = new Vector3()
+const look = new Matrix4()
+const turn = new Quaternion()
 
 /** 함대 대형을 짬 (시드가 같으면 같은 자리) */
 function makeSlots(faction: Faction, war: War): Slot[] {
@@ -244,6 +340,10 @@ function makeFleet(faction: Faction, war: War, sign: 1 | -1): Fleet {
   return {
     faction,
     sign,
+    origin: new Vector3(),
+    forward: new Vector3(),
+    side: new Vector3(),
+    turn: new Quaternion(),
     slots: makeSlots(faction, war),
     meshes: new Map(),
     bodyMaterial: makeBodyMaterial(faction.color),
@@ -298,7 +398,18 @@ function makeVisual(war: War, group: Group, pickables: Mesh[]): Visual {
   killerBeam.visible = false
   const killerFlash = makeGlow('#fff2c9', 1, 2.2)
   killerFlash.visible = false
-  root.add(lines, pick, killerBeam, killerFlash)
+  const arc = new Line(
+    new BufferGeometry(),
+    new LineBasicMaterial({
+      color: '#f2f6ff',
+      transparent: true,
+      opacity: 0,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    }),
+  )
+  arc.frustumCulled = false
+  root.add(lines, pick, killerBeam, killerFlash, arc)
   group.add(root)
   pickables.push(pick)
   const visual: Visual = {
@@ -326,9 +437,84 @@ function makeVisual(war: War, group: Group, pickables: Mesh[]): Visual {
       beam: killerBeam,
       flash: killerFlash,
     },
+    megas: [],
+    champions: [],
+    arc,
+    dueled: false,
+    shots: [],
     disposed: false,
   }
   root.add(visual.lances.mesh)
+  // 대형 병기: 꼴은 여러 전쟁이 함께 쓰고, 재질은 그 세력 함대의 홀로그램 재질
+  const sides = [
+    { weapon: war.aWeapon, being: war.aBeing },
+    { weapon: war.bWeapon, being: war.bBeing },
+  ]
+  sides.forEach(({ weapon, being }, k) => {
+    const side = k as 0 | 1
+    const fleet = fleets[side]
+    if (weapon && MEGAWEAPONS[weapon]) {
+      const shape = megaweaponShape(MEGAWEAPONS[weapon].form)
+      const megaRoot = new Group()
+      const body = new Mesh(shape.geometry, fleet.bodyMaterial)
+      const wire = new Mesh(shape.geometry, fleet.wireMaterial)
+      for (const mesh of [body, wire]) {
+        mesh.userData.sharedGeometry = true
+        mesh.frustumCulled = false
+      }
+      const core = makeGlow(
+        fleet.faction.lasers[0] ?? fleet.faction.color,
+        1,
+        1,
+      )
+      core.position.copy(shape.core)
+      megaRoot.add(body, wire, core)
+      megaRoot.visible = false
+      root.add(megaRoot)
+      visual.megas.push({
+        id: weapon,
+        side,
+        root: megaRoot,
+        core,
+        shape,
+        fired: 0,
+      })
+    }
+    const info = being ? BEING_BY_ID[being] : undefined
+    if (info) {
+      const championRoot = new Group()
+      const aura = makeGlow(info.color, 1, 0)
+      championRoot.add(aura)
+      championRoot.visible = false
+      root.add(championRoot)
+      const champion: Champion = {
+        being: info,
+        side,
+        root: championRoot,
+        aura,
+        body: null,
+        bodyMix: 0,
+        opacity: 0,
+        fell: false,
+        struck: 0,
+        facing: new Vector3(0, 0, 1),
+      }
+      visual.champions.push(champion)
+      // 3D 몸은 따로 받아 오면 붙임 (그동안은 빛무리만)
+      loadBodies()
+        .then((m) => m.createBody(info))
+        .then((b) => {
+          if (!b) return
+          if (visual.disposed) {
+            b.dispose()
+            return
+          }
+          champion.body = b
+          championRoot.add(b.object)
+        })
+        .catch(() => {})
+    }
+  })
   // 함선 모양은 따로 받아 오면 붙임 (같은 모양은 여러 전쟁이 함께 씀)
   for (const fleet of fleets) {
     const counts = new Map<string, number>()
@@ -358,6 +544,13 @@ function makeVisual(war: War, group: Group, pickables: Mesh[]): Visual {
 
 function disposeVisual(v: Visual, pickables: Mesh[]) {
   v.disposed = true
+  // 신적 존재의 몸은 모델 틀을 함께 쓰므로 몸이 스스로 정리함
+  for (const c of v.champions)
+    if (c.body) {
+      c.root.remove(c.body.object)
+      c.body.dispose()
+      c.body = null
+    }
   v.root.removeFromParent()
   const i = pickables.indexOf(v.pick)
   if (i >= 0) pickables.splice(i, 1)
@@ -407,7 +600,8 @@ export function createWarLayer(): WarLayer {
     const lift = new Vector3().crossVectors(axis, radial).normalize()
     center.addScaledVector(lift, 2.4 * scale)
     v.center.copy(center)
-    v.radius = (HALF_GAP + 0.4) * scale
+    // 함대 위의 신적 존재와 아래의 대형 병기까지 담음
+    v.radius = (HALF_GAP + 1.4) * scale
     v.pick.position.copy(center)
     v.pick.scale.setScalar(v.radius * 0.8)
 
@@ -441,6 +635,10 @@ export function createWarLayer(): WarLayer {
       const side3 = new Vector3().crossVectors(lift, forward).normalize()
       basis.makeBasis(side3, lift, forward)
       q4.setFromRotationMatrix(basis)
+      fleet.origin.copy(origin)
+      fleet.forward.copy(forward)
+      fleet.side.copy(side3)
+      fleet.turn.copy(q4)
       // 남은 전력만큼 함선을 남김 (큰 함선은 늦게 잃음)
       const order = fleet.slots
         .map((slot, i) => ({ slot, i }))
@@ -500,6 +698,435 @@ export function createWarLayer(): WarLayer {
     updateLances(v, now, over || reduced, scale)
     updateBooms(v, now, ctx)
     updateKiller(v, war, now, anchors, scale, ctx)
+    updateMegas(v, war, ctx, scale, sinceAppear)
+    updateChampions(v, war, world, ctx, scale)
+    updateShots(v, now, ctx, scale)
+  }
+
+  /** 끝난 교전 차례에서 한쪽이 일으킨 특수 작전 수 */
+  function doneCount(war: War, side: 0 | 1, id: SpecialId) {
+    const key = side === 0 ? 'a' : 'b'
+    let n = 0
+    for (const r of war.rounds)
+      if (r.done)
+        for (const x of r.specials) if (x.id === id && x.side === key) n++
+    return n
+  }
+
+  /** 대형 병기: 함대 옆에 떠서 깨어나며 펼쳐지고, 핵이 빛나며, 차례마다 쏨 */
+  function updateMegas(
+    v: Visual,
+    war: War,
+    ctx: FrameContext,
+    scale: number,
+    sinceAppear: number,
+  ) {
+    const reduced = ctx.reducedMotion
+    const t = reduced ? 0 : ctx.elapsed
+    const awaken = reduced ? 1 : ease(clamp(sinceAppear / AWAKEN_SECONDS, 0, 1))
+    for (const m of v.megas) {
+      const fleet = v.fleets[m.side]
+      const enemy = v.fleets[1 - m.side]
+      m.root.visible = fleet.opacity > 0.01
+      if (!m.root.visible) continue
+      const bob = 0.06 * Math.sin(t * 0.5 + m.side * 2)
+      // 화면에서 함대 아래쪽에 떠 있음 (위에는 신적 존재, 가운데는 함대):
+      // 내려다보는 각도에서도 가리지 않게 카메라의 위 방향으로 벌림
+      camUp.setFromMatrixColumn(ctx.camera.matrixWorld, 1)
+      m.root.position
+        .copy(fleet.origin)
+        .addScaledVector(camUp, (bob - 1.25) * scale)
+        .addScaledVector(fleet.forward, -0.6 * scale)
+      m.root.quaternion.copy(fleet.turn)
+      const spin = SPIN[MEGAWEAPONS[m.id].form]
+      if (spin && !reduced) m.root.rotateOnAxis(spin.axis, t * spin.speed)
+      // 깨어나며 커지고 핵이 밝아짐
+      m.root.scale.setScalar(MEGA_SIZE * scale * (0.3 + 0.7 * awaken))
+      m.core.scale.setScalar(m.shape.coreSize * 4)
+      const glow = (m.core.material as ShaderMaterial).uniforms
+      glow.uIntensity.value =
+        fleet.opacity *
+        awaken *
+        (0.8 + (reduced ? 0 : 0.35 * Math.sin(t * 2.2)))
+      glow.uTime.value = ctx.elapsed
+      faceCamera(m.core, ctx.camera)
+      const fired = doneCount(war, m.side, 'megaweapon')
+      if (fired > m.fired) {
+        m.fired = fired
+        if (!reduced && fleet.opacity > 0.2) {
+          m.root.updateMatrixWorld(true)
+          const from = m.root.localToWorld(m.shape.muzzle.clone())
+          const weapon = MEGAWEAPONS[m.id]
+          const palette = fleet.faction.lasers
+          startShot(v, {
+            kind: weapon.shot,
+            from,
+            to: enemy.origin.clone(),
+            color: palette[fired % palette.length] ?? fleet.faction.color,
+            size: scale,
+            now: ctx.elapsed,
+          })
+        }
+      }
+    }
+  }
+
+  /** 신적 존재: 함대 뒤 위쪽에 서서 적을 보고, 일격·결투, 진 쪽은 쓰러져 사라짐 */
+  function updateChampions(
+    v: Visual,
+    war: War,
+    world: WorldState,
+    ctx: FrameContext,
+    scale: number,
+  ) {
+    const reduced = ctx.reducedMotion
+    const t = reduced ? 0 : ctx.elapsed
+    const fallen = fallenSide(war, world.year)
+    const pixelScale =
+      (ctx.height / 2) * ctx.camera.projectionMatrix.elements[5]
+    camUp.setFromMatrixColumn(ctx.camera.matrixWorld, 1)
+    for (const c of v.champions) {
+      const fleet = v.fleets[c.side]
+      const enemy = v.fleets[1 - c.side]
+      if (fallen === (c.side === 0 ? 'a' : 'b') && !c.fell) {
+        c.fell = true
+        c.body?.fall()
+      }
+      const goal = c.fell ? 0 : fleet.opacity
+      c.opacity += (goal - c.opacity) * Math.min(1, ctx.dt * (c.fell ? 0.6 : 2))
+      if (reduced) c.opacity = goal
+      c.root.visible = c.opacity > 0.01
+      if (!c.root.visible) continue
+      const radius = CHAMPION_SIZE * scale * clamp(c.being.size ?? 1, 0.7, 1.4)
+      // 화면에서 함대 뒤 위쪽 (카메라의 위 방향으로 벌림)
+      c.root.position
+        .copy(fleet.origin)
+        .addScaledVector(fleet.forward, -1.2 * scale)
+        .addScaledVector(
+          camUp,
+          (1.3 + 0.05 * Math.sin(t * 0.6 + c.side * 2)) * scale,
+        )
+      // 적을 보되 3/4쯤 이쪽으로 돌아 모습이 잘 보이게
+      toCamera.subVectors(ctx.camera.position, c.root.position).normalize()
+      c.facing
+        .copy(fleet.forward)
+        .multiplyScalar(0.8)
+        .addScaledVector(toCamera, 0.6)
+        .normalize()
+      if (c.body) {
+        c.bodyMix = reduced ? 1 : clamp(c.bodyMix + ctx.dt * 1.2, 0, 1)
+        const object = c.body.object
+        object.scale.setScalar(radius)
+        look.lookAt(c.facing, zero, camUp)
+        turn.setFromRotationMatrix(look)
+        if (c.bodyMix < 0.05 || reduced) object.quaternion.copy(turn)
+        else object.quaternion.slerp(turn, 1 - Math.exp(-ctx.dt * 2.5))
+        c.body.update({
+          dt: ctx.dt,
+          time: t,
+          opacity: c.opacity * c.bodyMix,
+          reducedMotion: reduced,
+          camera: ctx.camera,
+          pixelScale,
+          pixelRatio: ctx.pixelRatio,
+        })
+      }
+      c.aura.scale.setScalar(radius * 3.2)
+      const glow = (c.aura.material as ShaderMaterial).uniforms
+      glow.uIntensity.value = 0.45 * c.opacity * (1 - 0.35 * c.bodyMix)
+      glow.uTime.value = ctx.elapsed
+      faceCamera(c.aura, ctx.camera)
+      // 신의 일격: 적 함대 한가운데로 내리침
+      const struck = doneCount(war, c.side, 'divine-strike')
+      if (struck > c.struck) {
+        c.struck = struck
+        if (!reduced && c.opacity > 0.2) {
+          c.body?.strike()
+          startShot(v, {
+            kind: 'divine',
+            from: c.root.position.clone(),
+            to: enemy.origin.clone(),
+            color: c.being.color,
+            size: scale,
+            now: ctx.elapsed,
+          })
+          skyFlash = Math.max(skyFlash, 0.35)
+        }
+      }
+    }
+    // 결투 전: 두 존재 사이에 번개, 결투 때: 이긴 쪽이 덮치고 진 쪽에 섬광
+    const arcMat = v.arc.material as LineBasicMaterial
+    const [a, b] = v.champions.length === 2 ? v.champions : [null, null]
+    if (a && b && !fallen && war.status === 'raging' && a.root.visible) {
+      const random = seededRandom(Math.floor(ctx.elapsed * 12) + v.id)
+      const pts: Vector3[] = []
+      const span = a.root.position.distanceTo(b.root.position)
+      for (let i = 0; i <= 18; i++) {
+        const p = a.root.position.clone().lerp(b.root.position, i / 18)
+        if (i > 0 && i < 18 && !reduced)
+          p.addScaledVector(camUp, (random() - 0.5) * span * 0.08)
+        pts.push(p)
+      }
+      setLine(v.arc, pts)
+      arcMat.opacity = reduced
+        ? 0.2
+        : (0.2 + 0.35 * Math.abs(Math.sin(ctx.elapsed * 6 + v.id))) *
+          Math.min(a.opacity, b.opacity)
+    } else arcMat.opacity = 0
+    if (a && b && fallen && !v.dueled) {
+      v.dueled = true
+      const winner = fallen === 'a' ? b : a
+      const loser = fallen === 'a' ? a : b
+      if (!reduced) {
+        winner.body?.strike()
+        startShot(v, {
+          kind: 'divine',
+          from: winner.root.position.clone(),
+          to: loser.root.position.clone(),
+          color: winner.being.color,
+          size: scale * 1.4,
+          now: ctx.elapsed,
+        })
+        skyFlash = Math.max(skyFlash, 0.6)
+      }
+    }
+  }
+
+  /** 대형 병기·신의 일격 한 발을 시작 */
+  function startShot(
+    v: Visual,
+    o: {
+      kind: Shot['kind']
+      from: Vector3
+      to: Vector3
+      color: string
+      size: number
+      now: number
+    },
+  ) {
+    const additive = (color: string, opacity = 0.9) =>
+      new MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+        blending: AdditiveBlending,
+      })
+    const meshes: Mesh[] = []
+    const offsets: Vector3[] = []
+    let life = 1.2
+    switch (o.kind) {
+      case 'beam':
+      case 'divine':
+        meshes.push(
+          new Mesh(
+            new CylinderGeometry(1, 1, 1, 12, 1, true),
+            additive(o.color),
+          ),
+          makeGlow(o.color, 1, 2),
+        )
+        life = o.kind === 'divine' ? 1.1 : 1.5
+        break
+      case 'slug':
+        meshes.push(
+          makeGlow('#ffffff', 1, 2.4),
+          new Mesh(
+            new CylinderGeometry(1, 1, 1, 6, 1, true),
+            additive(o.color, 0.6),
+          ),
+        )
+        life = 0.9
+        break
+      case 'orb': {
+        const core = new Mesh(
+          new SphereGeometry(1, 16, 12),
+          new MeshBasicMaterial({ color: '#000000' }),
+        )
+        meshes.push(core, makeGlow(o.color, 1, 1.6))
+        life = 1.8
+        break
+      }
+      case 'swarm':
+        for (let i = 0; i < 12; i++) {
+          meshes.push(makeGlow(o.color, 1, 1.4))
+          offsets.push(
+            new Vector3(
+              Math.random() - 0.5,
+              Math.random() - 0.5,
+              Math.random() - 0.5,
+            ),
+          )
+        }
+        life = 1.4
+        break
+      case 'pulse': {
+        const shell = new Mesh(
+          new SphereGeometry(1, 24, 14),
+          new MeshBasicMaterial({
+            color: o.color,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.8,
+            depthWrite: false,
+            blending: AdditiveBlending,
+          }),
+        )
+        meshes.push(shell, makeGlow(o.color, 1, 1.8))
+        life = 1.7
+        break
+      }
+      case 'wave':
+        meshes.push(
+          new Mesh(
+            new TorusGeometry(1, 0.06, 3, 40, Math.PI * 1.2),
+            additive(o.color),
+          ),
+        )
+        life = 1.1
+        break
+    }
+    for (const mesh of meshes) {
+      mesh.frustumCulled = false
+      mesh.renderOrder = 6
+      v.root.add(mesh)
+    }
+    v.shots.push({
+      kind: o.kind,
+      start: o.now,
+      life,
+      from: o.from,
+      to: o.to,
+      color: o.color,
+      size: o.size,
+      meshes,
+      offsets,
+      hit: false,
+    })
+  }
+
+  function updateShots(
+    v: Visual,
+    now: number,
+    ctx: FrameContext,
+    scale: number,
+  ) {
+    v.shots = v.shots.filter((shot) => {
+      const k = (now - shot.start) / shot.life
+      if (k >= 1) {
+        for (const mesh of shot.meshes) {
+          mesh.removeFromParent()
+          mesh.geometry.dispose()
+          ;(mesh.material as MeshBasicMaterial).dispose()
+        }
+        return false
+      }
+      const { from, to, size } = shot
+      const dir = tmpDir.subVectors(to, from)
+      const length = dir.length()
+      dir.normalize()
+      const at = (u: number) => from.clone().lerp(to, u)
+      const fade = 1 - k
+      const hitAt = (u: number) => {
+        if (shot.hit || k < u) return
+        shot.hit = true
+        boom(v, to, size * 2.2, now)
+        skyFlash = Math.max(skyFlash, shot.kind === 'divine' ? 0.4 : 0.3)
+      }
+      switch (shot.kind) {
+        case 'beam':
+        case 'divine': {
+          const [beam, flash] = shot.meshes
+          const width = (shot.kind === 'divine' ? 0.09 : 0.06) * size * fade
+          beam.position.copy(at(0.5))
+          beam.quaternion.setFromUnitVectors(up, dir)
+          beam.scale.set(width, length, width)
+          ;(beam.material as MeshBasicMaterial).opacity = 0.9 * fade
+          flash.position.copy(to)
+          flash.scale.setScalar(size * (0.8 + 1.6 * ease(k)))
+          ;(flash.material as ShaderMaterial).uniforms.uIntensity.value =
+            2 * fade
+          faceCamera(flash, ctx.camera)
+          hitAt(0.05)
+          break
+        }
+        case 'slug': {
+          // 날아가는 탄과 꼬리: 앞 55% 동안 날아가 맞음
+          const u = clamp(k / 0.55, 0, 1)
+          const [head, trail] = shot.meshes
+          head.position.copy(at(u))
+          head.scale.setScalar(size * 0.5)
+          faceCamera(head, ctx.camera)
+          ;(head.material as ShaderMaterial).uniforms.uIntensity.value =
+            u < 1 ? 2.2 : 0
+          const tail = Math.max(0, u - 0.25)
+          trail.position.copy(at((tail + u) / 2))
+          trail.quaternion.setFromUnitVectors(up, dir)
+          trail.scale.set(
+            0.012 * size,
+            Math.max(1e-3, length * (u - tail)),
+            0.012 * size,
+          )
+          ;(trail.material as MeshBasicMaterial).opacity = 0.6 * fade
+          hitAt(0.55)
+          break
+        }
+        case 'orb': {
+          // 검은 구가 천천히 날아가 함대 가운데서 무너짐
+          const u = clamp(k / 0.7, 0, 1)
+          const [core, glow] = shot.meshes
+          const r = size * 0.18 * (u < 1 ? 1 : 1 - (k - 0.7) / 0.3)
+          core.position.copy(at(u))
+          core.scale.setScalar(Math.max(1e-3, r))
+          glow.position.copy(core.position)
+          glow.scale.setScalar(size * 0.9)
+          ;(glow.material as ShaderMaterial).uniforms.uIntensity.value =
+            1.4 * fade
+          faceCamera(glow, ctx.camera)
+          hitAt(0.7)
+          break
+        }
+        case 'swarm':
+          shot.meshes.forEach((mesh, i) => {
+            const delay = (i / shot.meshes.length) * 0.35
+            const u = clamp((k - delay) / 0.5, 0, 1)
+            const wobble = Math.sin(u * Math.PI) * 0.4 * size
+            mesh.position.copy(at(u)).addScaledVector(shot.offsets[i], wobble)
+            mesh.scale.setScalar(size * 0.22)
+            ;(mesh.material as ShaderMaterial).uniforms.uIntensity.value =
+              u > 0 && u < 1 ? 1.5 : 0
+            faceCamera(mesh, ctx.camera)
+          })
+          hitAt(0.75)
+          break
+        case 'pulse': {
+          // 핵에서 퍼지는 파동이 적 함대를 지나감
+          const [shell, glow] = shot.meshes
+          shell.position.copy(from)
+          shell.scale.setScalar(Math.max(1e-3, length * 1.15 * ease(k)))
+          ;(shell.material as MeshBasicMaterial).opacity = 0.7 * fade
+          glow.position.copy(from)
+          glow.scale.setScalar(size * (0.6 + k))
+          ;(glow.material as ShaderMaterial).uniforms.uIntensity.value =
+            1.8 * fade
+          faceCamera(glow, ctx.camera)
+          hitAt(0.8)
+          break
+        }
+        case 'wave': {
+          // 초승달 날이 커지며 날아가 전열을 가름
+          const u = clamp(k / 0.6, 0, 1)
+          const [arc] = shot.meshes
+          arc.position.copy(at(u))
+          arc.lookAt(to)
+          arc.rotateZ(Math.PI * 0.4)
+          arc.scale.setScalar(scale * (0.4 + 1.2 * u))
+          ;(arc.material as MeshBasicMaterial).opacity = 0.9 * fade
+          hitAt(0.6)
+          break
+        }
+      }
+      return true
+    })
   }
 
   function boom(v: Visual, at: Vector3, size: number, now: number) {

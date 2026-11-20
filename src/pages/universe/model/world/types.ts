@@ -13,7 +13,12 @@ import type { IntruderKind } from '../hazards/flyby'
 import type { NBody } from '../hazards/nbody'
 import type { ProjectKind } from '../projects/catalog'
 import type { Calamity, SiteId } from '../mythic/catalog'
-import type { FactionId, FleetSize, SpecialId } from '../war/catalog'
+import type {
+  FactionId,
+  FleetSize,
+  MegaweaponId,
+  SpecialId,
+} from '../war/catalog'
 
 export interface Structure {
   id: number
@@ -186,6 +191,12 @@ export interface War {
   size: FleetSize
   /** 행성 파괴포의 표적 (없으면 쏘지 않음) */
   target: BodyId | null
+  /** 가세한 신적 존재 (우주적 존재 id, 없으면 null) */
+  aBeing: string | null
+  bBeing: string | null
+  /** 내세운 대형 병기 (없으면 null) */
+  aWeapon: MegaweaponId | null
+  bWeapon: MegaweaponId | null
   startYear: number
   endYear: number
   aPower: number

@@ -39,7 +39,8 @@ import {
   MOTIFS,
   WEAPONS,
 } from '../../model/war/catalog'
-import { warMotifs, warStrength } from '../../model/world/war'
+import { extrasOf, warMotifs, warStrength } from '../../model/world/war'
+import { championsLine } from '../warChampions'
 import {
   ALIGNMENT_NAME,
   BEING_BY_ID,
@@ -597,8 +598,11 @@ function WarDossier(props: { id: number }) {
               },
             ]}
           >
+            <Show when={championsLine(w(), world().year)}>
+              {(text) => <p class={styles.small}>{text()}</p>}
+            </Show>
             <ul class={styles.chips}>
-              <For each={warMotifs(w().a, w().b)}>
+              <For each={warMotifs(w().a, w().b, extrasOf(w()))}>
                 {(id) => <li>{pick(MOTIFS[id])}</li>}
               </For>
             </ul>

@@ -310,6 +310,9 @@ export type SpecialId =
   | 'planet-killer'
   | 'colony-uprising'
   | 'megastructure'
+  | 'divine-strike'
+  | 'divine-duel'
+  | 'megaweapon'
 
 export interface Special {
   id: SpecialId
@@ -448,7 +451,231 @@ export const SPECIALS: Record<SpecialId, Special> = {
     rounds: [1],
     motifs: ['megastructure', 'dyson-sphere', 'ringworld', 'space-elevator'],
   },
+  // 아래 셋은 세력이 아니라 가세한 신적 존재·대형 병기가 일으킴 (차례는 combat.ts)
+  'divine-strike': {
+    id: 'divine-strike',
+    name: both('신의 일격', 'Divine strike'),
+    rounds: [],
+    motifs: ['cosmic-being'],
+  },
+  'divine-duel': {
+    id: 'divine-duel',
+    name: both('신들의 결투', 'Duel of the gods'),
+    rounds: [],
+    motifs: ['cosmic-being'],
+  },
+  megaweapon: {
+    id: 'megaweapon',
+    name: both('대형 병기 발사', 'Megaweapon fires'),
+    rounds: [],
+    motifs: ['superweapon'],
+  },
 }
+
+/* ── 대형 병기 ────────────────────────────────────── */
+
+/**
+ * 함선과 다른 꼴의 거대 병기: 싸움터에 따로 떠서 정해진 차례에 큰 일격을 날림.
+ * 이름·모양은 이 프로젝트에서 지음 (특정 작품의 병기를 본뜨지 않음)
+ */
+export type MegaweaponId =
+  | 'colossus'
+  | 'bastion'
+  | 'nicoll-dyson'
+  | 'mass-driver'
+  | 'singularity'
+  | 'siege-beast'
+  | 'mind-spire'
+  | 'warden'
+  | 'cleaver'
+  | 'prism'
+  | 'hourglass'
+
+/** 3D 꼴 (ui/scene/solar/war/megaweapons.ts) */
+export type MegaweaponForm =
+  | 'colossus'
+  | 'bastion'
+  | 'mirrors'
+  | 'spine'
+  | 'ring'
+  | 'beast'
+  | 'spire'
+  | 'warden'
+  | 'blade'
+  | 'prism'
+  | 'hourglass'
+
+/** 쏘는 모습: 곧은 광선, 날아가는 탄, 검은 구, 작은 탄 무리, 퍼지는 파동, 초승달 날 */
+export type MegaweaponShot =
+  'beam' | 'slug' | 'orb' | 'swarm' | 'pulse' | 'wave'
+
+export interface Megaweapon {
+  id: MegaweaponId
+  name: Text
+  summary: Text
+  form: MegaweaponForm
+  shot: MegaweaponShot
+  /** 쏘는 교전 차례 (0부터) */
+  rounds: number[]
+  /** 한 번에 적 전력을 깎는 비율 */
+  strike: number
+  /** 쏠 때 제 전력을 되찾는 비율 (방벽·시간 되감기) */
+  boost?: number
+  motifs: MotifId[]
+}
+
+export const MEGAWEAPONS: Record<MegaweaponId, Megaweapon> = {
+  colossus: {
+    id: 'colossus',
+    name: both('전쟁 거신병', 'War colossus'),
+    summary: both(
+      '궤도를 걸어 다니는 산만 한 인간형 병기. 가슴의 주포로 전열을 태웁니다.',
+      'A mountain-sized humanoid war machine that strides through orbit and burns battle lines with its chest cannon.',
+    ),
+    form: 'colossus',
+    shot: 'beam',
+    rounds: [1, 3, 5],
+    strike: 0.035,
+    motifs: ['mech', 'superweapon'],
+  },
+  bastion: {
+    id: 'bastion',
+    name: both('방벽 거신', 'Bastion colossus'),
+    summary: both(
+      '육각 방패판을 겹쳐 든 거신. 방어막 파동으로 적을 밀어내며 아군을 감쌉니다.',
+      'A giant bearing a wall of hexagonal shield plates; its barrier pulse shoves the enemy back and shelters its own ships.',
+    ),
+    form: 'bastion',
+    shot: 'pulse',
+    rounds: [2, 4],
+    strike: 0.03,
+    boost: 0.03,
+    motifs: ['superweapon', 'lost-tech'],
+  },
+  'nicoll-dyson': {
+    id: 'nicoll-dyson',
+    name: both('니콜-다이슨 광선', 'Nicoll–Dyson beam'),
+    summary: both(
+      '다이슨 스웜의 반사경을 한 점에 모아 쏘는 항성 광선 (카르다쇼프 2단계 문명의 병기). 다이슨 스웜·다이슨 구를 지었으면 더 셉니다.',
+      'A stellar beam made by focusing a Dyson swarm’s mirrors on one point (a Kardashev Type II weapon). Stronger if you have built a Dyson swarm or sphere.',
+    ),
+    form: 'mirrors',
+    shot: 'beam',
+    rounds: [3],
+    strike: 0.09,
+    motifs: ['megastructure', 'dyson-sphere', 'superweapon', 'optical'],
+  },
+  'mass-driver': {
+    id: 'mass-driver',
+    name: both('궤도 질량 투사기', 'Orbital mass driver'),
+    summary: both(
+      '가속 고리 수백 개로 쇳덩이를 광속 가까이 쏘는 상대론적 요격체 발사대. 한 발이 공룡을 멸종시킨 소행성보다 셉니다 (카르다쇼프 1단계 문명의 병기).',
+      'A ring-lined launcher that throws iron slugs at near light speed: relativistic kill vehicles that each outhit the dinosaur-killing asteroid (a Kardashev Type I weapon).',
+    ),
+    form: 'spine',
+    shot: 'slug',
+    rounds: [1, 4],
+    strike: 0.05,
+    motifs: ['superweapon', 'megastructure'],
+  },
+  singularity: {
+    id: 'singularity',
+    name: both('특이점 투사기', 'Singularity projector'),
+    summary: both(
+      '거대한 고리가 작은 블랙홀을 빚어 던집니다. 스치는 함선은 조석력에 찢깁니다.',
+      'A vast ring that forges a tiny black hole and hurls it; ships it grazes are torn apart by tides.',
+    ),
+    form: 'ring',
+    shot: 'orb',
+    rounds: [2, 5],
+    strike: 0.05,
+    motifs: ['superweapon', 'galactic-empire'],
+  },
+  'siege-beast': {
+    id: 'siege-beast',
+    name: both('공성 거수', 'Siege leviathan'),
+    summary: both(
+      '위성만 하게 자란 생체 병기. 마디진 몸을 비틀며 산성 포자 떼를 뿜습니다.',
+      'A bio-weapon grown to the size of a moon; it writhes its segmented body and spews swarms of acid spores.',
+    ),
+    form: 'beast',
+    shot: 'swarm',
+    rounds: [1, 2, 3],
+    strike: 0.03,
+    motifs: ['swarm', 'alien', 'hive-mind', 'superweapon'],
+  },
+  'mind-spire': {
+    id: 'mind-spire',
+    name: both('정신 증폭 첨탑', 'Psionic spire'),
+    summary: both(
+      '승천한 정신들이 모인 첨탑. 생각의 파동으로 적 승무원을 쓰러뜨립니다.',
+      'A spire housing ascended minds; its thought-wave knocks enemy crews senseless.',
+    ),
+    form: 'spire',
+    shot: 'pulse',
+    rounds: [2, 4],
+    strike: 0.045,
+    motifs: ['psionics', 'posthuman', 'superweapon'],
+  },
+  warden: {
+    id: 'warden',
+    name: both('수호 거신', 'Warden colossus'),
+    summary: both(
+      '오래 잠들어 있던 선조의 자율 병기. 마디진 몸을 펼치며 깨어나, 빛나는 핵에서 기계를 멈추는 정지 파동을 내뿜습니다.',
+      'An autonomous precursor weapon asleep for ages. It unfolds its segmented body as it wakes and looses a stasis pulse from its glowing core that stops machines dead.',
+    ),
+    form: 'warden',
+    shot: 'pulse',
+    rounds: [2, 4],
+    strike: 0.05,
+    motifs: ['lost-tech', 'superweapon'],
+  },
+  cleaver: {
+    id: 'cleaver',
+    name: both('차원 절단기', 'Dimensional cleaver'),
+    summary: both(
+      '평행우주 너머에서 내리치는 초승달 날. 공간째로 전열을 가릅니다.',
+      'A crescent blade that swings in from beyond a parallel universe and splits the battle line along with space itself.',
+    ),
+    form: 'blade',
+    shot: 'wave',
+    rounds: [3],
+    strike: 0.09,
+    motifs: ['parallel', 'multiverse', 'superweapon'],
+  },
+  prism: {
+    id: 'prism',
+    name: both('마도 결정포', 'Arcane prism'),
+    summary: both(
+      '성운에서 캐낸 거대 결정. 마력을 일곱 빛깔 광선으로 갈라 쏩니다.',
+      'A colossal crystal mined from a nebula that splits arcane power into seven-coloured beams.',
+    ),
+    form: 'prism',
+    shot: 'beam',
+    rounds: [1, 3, 5],
+    strike: 0.035,
+    motifs: ['magitech', 'superweapon'],
+  },
+  hourglass: {
+    id: 'hourglass',
+    name: both('시간 정지포', 'Chrono-stasis engine'),
+    summary: both(
+      '맞물려 도는 고리 안의 모래시계. 적의 시간을 멈추고 아군의 시간을 되감습니다.',
+      'An hourglass inside interlocking rings that freezes the enemy’s time and rewinds its own.',
+    ),
+    form: 'hourglass',
+    shot: 'pulse',
+    rounds: [2, 4],
+    strike: 0.035,
+    boost: 0.025,
+    motifs: ['time-travel', 'superweapon'],
+  },
+}
+
+export const MEGAWEAPON_IDS = Object.keys(MEGAWEAPONS) as MegaweaponId[]
+
+export const isMegaweaponId = (id: string): id is MegaweaponId =>
+  Object.hasOwn(MEGAWEAPONS, id)
 
 /* ── 세력 ─────────────────────────────────────────── */
 
@@ -486,6 +713,10 @@ export interface Faction {
   fleet: Partial<Record<ShipClassId, number>>
   specials: SpecialId[]
   arrival: Arrival
+  /** 기본으로 가세하는 신적 존재 (model/mythic/catalog.ts의 id) */
+  patron: string
+  /** 기본으로 내세우는 대형 병기 */
+  megaweapon: MegaweaponId
 }
 
 export const FACTIONS: Faction[] = [
@@ -504,6 +735,8 @@ export const FACTIONS: Faction[] = [
     fleet: { battleship: 2, destroyer: 4, cruiser: 3, interceptor: 12 },
     specials: ['warp-strike', 'crimson-barrage'],
     arrival: 'warp',
+    patron: 'surtr',
+    megaweapon: 'colossus',
   },
   {
     id: 'alliance',
@@ -520,6 +753,8 @@ export const FACTIONS: Faction[] = [
     fleet: { carrier: 1, battleship: 2, cruiser: 2, frigate: 5, fighter: 12 },
     specials: ['shield-wall', 'carrier-wing'],
     arrival: 'cruise',
+    patron: 'black-tortoise',
+    megaweapon: 'bastion',
   },
   {
     id: 'federation',
@@ -536,6 +771,8 @@ export const FACTIONS: Faction[] = [
     fleet: { carrier: 1, battleship: 2, cruiser: 3, frigate: 4, fighter: 12 },
     specials: ['carrier-wing', 'boarding', 'megastructure'],
     arrival: 'cruise',
+    patron: 'yellow-dragon',
+    megaweapon: 'nicoll-dyson',
   },
   {
     id: 'colonies',
@@ -552,6 +789,8 @@ export const FACTIONS: Faction[] = [
     fleet: { cruiser: 3, frigate: 8, mech: 15, fighter: 12 },
     specials: ['colony-uprising', 'mech-drop', 'megastructure'],
     arrival: 'cruise',
+    patron: 'phoenix',
+    megaweapon: 'mass-driver',
   },
   {
     id: 'empire',
@@ -568,6 +807,8 @@ export const FACTIONS: Faction[] = [
     fleet: { dreadnought: 1, battleship: 2, destroyer: 3, interceptor: 9 },
     specials: ['warp-strike', 'planet-killer'],
     arrival: 'warp',
+    patron: 'ra',
+    megaweapon: 'singularity',
   },
   {
     id: 'swarm',
@@ -584,6 +825,8 @@ export const FACTIONS: Faction[] = [
     fleet: { bioship: 3, swarmer: 58 },
     specials: ['hive-regrowth'],
     arrival: 'swarm',
+    patron: 'beelzebub',
+    megaweapon: 'siege-beast',
   },
   {
     id: 'pirates',
@@ -600,6 +843,8 @@ export const FACTIONS: Faction[] = [
     fleet: { corsair: 22, frigate: 6, fighter: 26 },
     specials: ['raid'],
     arrival: 'cruise',
+    patron: 'kraken',
+    megaweapon: 'mass-driver',
   },
   {
     id: 'ascendancy',
@@ -616,6 +861,8 @@ export const FACTIONS: Faction[] = [
     fleet: { station: 1, cruiser: 4, drone: 35 },
     specials: ['self-repair'],
     arrival: 'warp',
+    patron: 'silent-colossus',
+    megaweapon: 'mind-spire',
   },
   {
     id: 'precursors',
@@ -632,6 +879,8 @@ export const FACTIONS: Faction[] = [
     fleet: { fortress: 1, cruiser: 2, drone: 24 },
     specials: ['lost-tech'],
     arrival: 'awaken',
+    patron: 'nodens',
+    megaweapon: 'warden',
   },
   {
     id: 'rift',
@@ -648,6 +897,8 @@ export const FACTIONS: Faction[] = [
     fleet: { battleship: 2, cruiser: 3, frigate: 4, fighter: 12 },
     specials: ['rift'],
     arrival: 'rift',
+    patron: 'yog-sothoth',
+    megaweapon: 'cleaver',
   },
   {
     id: 'arcane',
@@ -664,6 +915,8 @@ export const FACTIONS: Faction[] = [
     fleet: { battleship: 2, cruiser: 5, fighter: 16 },
     specials: ['psionic', 'arcane-ward', 'summon'],
     arrival: 'warp',
+    patron: 'odin',
+    megaweapon: 'prism',
   },
   {
     id: 'chrono',
@@ -680,6 +933,8 @@ export const FACTIONS: Faction[] = [
     fleet: { cruiser: 6, frigate: 7, interceptor: 17 },
     specials: ['rewind'],
     arrival: 'time',
+    patron: 'ouroboros',
+    megaweapon: 'hourglass',
   },
 ]
 

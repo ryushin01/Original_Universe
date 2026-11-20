@@ -2,7 +2,6 @@ import { For, Show, createSignal } from 'solid-js'
 import { locale } from '@/shared/i18n'
 import type { Locale } from '@/shared/i18n'
 import { Button, ChoiceGroup, SelectField, StatusMessage } from '@/shared/ui'
-import type { SelectOption } from '@/shared/ui'
 import { formatPercent } from '@/shared/lib'
 import {
   ALIGNMENT_NAME,
@@ -11,7 +10,6 @@ import {
   CALAMITIES,
   ELEMENT_NAME,
   FACTION_NAME,
-  GROUP_NAME,
   SITES,
   SITE_BY_ID,
 } from '../../model/mythic/catalog'
@@ -31,20 +29,13 @@ import {
   ragingBattles,
 } from '../../model/world/mythic'
 import { formatDuration, josa, nameOf } from '../../model/world/text'
-import { bothNames, createActionMessage, pick, t } from '../i18n'
+import { createActionMessage, pick, t } from '../i18n'
 import { createLore } from '../mythicLore'
 import type { MessageKey } from '../i18n'
+import { beingOptions } from './beingOptions'
 import styles from './panels.module.css'
 
 const RIVAL_SELECT_ID = 'mythic-rival'
-
-/** 고르는 목록: 진영·지역별 묶음 */
-const beingOptions = (exclude?: string): SelectOption[] =>
-  BEINGS.filter((b) => b.id !== exclude).map((b) => ({
-    value: b.id,
-    label: bothNames(b.name),
-    group: pick(GROUP_NAME[b.group]),
-  }))
 
 const who = (being: Being, l: Locale) =>
   l === 'ko' ? josa(being.name.ko, '이가') : being.name.en

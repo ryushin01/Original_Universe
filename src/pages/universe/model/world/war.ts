@@ -6,19 +6,28 @@ import { compose } from '@/shared/i18n'
 import type { Locale, Text } from '@/shared/i18n'
 import { formatMoney, seededRandom } from '@/shared/lib'
 import type { BodyId } from '../solar/bodies'
-import { BEINGS, SITE_BY_ID } from '../mythic/catalog'
+import { BEINGS, BEING_BY_ID, SITE_BY_ID } from '../mythic/catalog'
 import type { SiteId } from '../mythic/catalog'
 import { PROJECT_BY_KIND } from '../projects/catalog'
 import type { ProjectKind } from '../projects/catalog'
 import {
   FACTION_BY_ID,
   FLEET_SIZES,
+  MEGAWEAPONS,
+  MOTIF_IDS,
   SPECIALS,
   factionMotifs,
 } from '../war/catalog'
-import type { Faction, FactionId, FleetSize, SpecialId } from '../war/catalog'
-import { BREAK, ROUNDS, planWar } from '../war/combat'
-import type { Side, WarSupport } from '../war/combat'
+import type {
+  Faction,
+  FactionId,
+  FleetSize,
+  MegaweaponId,
+  MotifId,
+  SpecialId,
+} from '../war/catalog'
+import { BREAK, NO_EXTRAS, ROUNDS, planWar } from '../war/combat'
+import type { Side, WarExtras, WarSupport } from '../war/combat'
 import { withoutBodies } from '../hazards/nbody'
 import { makeImpact } from './factory'
 import { log } from './log'
@@ -84,16 +93,33 @@ export interface WarInput {
   size: FleetSize
   /** 행성 파괴포 표적 (어느 쪽에도 행성 파괴포가 없으면 무시) */
   target: BodyId | null
+  /** 가세할 신적 존재·대형 병기 (빼면 없음) */
+  aBeing?: string | null
+  bBeing?: string | null
+  aWeapon?: MegaweaponId | null
+  bWeapon?: MegaweaponId | null
 }
+
+/** 전쟁의 신적 존재·대형 병기 묶음 */
+export const extrasOf = (
+  war: Partial<Pick<War, 'aBeing' | 'bBeing' | 'aWeapon' | 'bWeapon'>>,
+): WarExtras => ({
+  aBeing: war.aBeing ?? null,
+  bBeing: war.bBeing ?? null,
+  aWeapon: war.aWeapon ?? null,
+  bWeapon: war.bWeapon ?? null,
+})
 
 export function makeWar(state: WorldState, input: WarInput): War {
   const seed = state.nextId * 7_368_787 + Math.round(state.year * 1291)
+  const extras = extrasOf(input)
   const plan = planWar(
     input.a,
     input.b,
     input.size,
     warSupport(state, input.site),
     seed,
+    extras,
   )
   const span = plan.days * DAY
   const rounds: WarRound[] = plan.rounds.map((r) => ({
@@ -114,6 +140,7 @@ export function makeWar(state: WorldState, input: WarInput): War {
     site: input.site,
     size: input.size,
     target: killer ? input.target : null,
+    ...extras,
     startYear: state.year,
     // 한쪽이 무너지면 그 차례 조금 뒤에 끝남
     endYear: last.broke
@@ -142,6 +169,16 @@ export function warStrength(war: War, year: number): { a: number; b: number } {
     prev = r
   }
   return { a: prev.a, b: prev.b }
+}
+
+/** 신들의 결투에서 진 쪽 (아직 결투 전이거나 결투가 없으면 null) */
+export function fallenSide(war: War, year: number): Side | null {
+  for (const r of war.rounds) {
+    if (r.year > year) break
+    const duel = r.specials.find((x) => x.id === 'divine-duel')
+    if (duel) return other(duel.side)
+  }
+  return null
 }
 
 /** 다음에 처리할 우주 대전 사건 시각 */
@@ -205,14 +242,58 @@ function arrivalText(id: FactionId, site: SiteId): Text {
   })
 }
 
+const beingName = (war: War, side: Side, l: Locale) => {
+  const id = side === 'a' ? war.aBeing : war.bBeing
+  return id ? BEING_BY_ID[id].name[l] : ''
+}
+
+const weaponName = (war: War, side: Side, l: Locale) => {
+  const id = side === 'a' ? war.aWeapon : war.bWeapon
+  return id ? MEGAWEAPONS[id].name[l] : ''
+}
+
+/** 가세한 신적 존재의 강림과 대형 병기의 등장 (첫 교전 차례) */
+function championsText(war: War, side: Side): Text | null {
+  const faction = side === 'a' ? war.a : war.b
+  const hasBeing = Boolean(side === 'a' ? war.aBeing : war.bBeing)
+  const hasWeapon = Boolean(side === 'a' ? war.aWeapon : war.bWeapon)
+  if (!hasBeing && !hasWeapon) return null
+  return compose((l) => {
+    const f = fname(faction, l)
+    const being = beingName(war, side, l)
+    const weapon = weaponName(war, side, l)
+    if (l === 'en') {
+      const parts = [
+        hasBeing ? `${being} descends to fight for ${f}` : '',
+        hasWeapon ? `${f}’s ${weapon} rises over the battlefield` : '',
+      ].filter(Boolean)
+      return `${parts.join('; ')}.`
+    }
+    const parts = [
+      hasBeing ? `${josa(being, '이가')} ${f} 편에 강림했습니다.` : '',
+      hasWeapon ? `${f}의 ${josa(weapon, '이가')} 전장에 떠올랐습니다.` : '',
+    ].filter(Boolean)
+    return parts.join(' ')
+  })
+}
+
 function specialText(id: SpecialId, war: War, side: Side): Text {
   const me = side === 'a' ? war.a : war.b
   const foe = side === 'a' ? war.b : war.a
   return compose((l) => {
     const a = fname(me, l)
     const b = fname(foe, l)
+    const being = beingName(war, side, l)
+    const rival = beingName(war, other(side), l)
+    const weapon = weaponName(war, side, l)
     if (l === 'en')
       switch (id) {
+        case 'divine-strike':
+          return `${being} smites ${b}’s fleet.`
+        case 'divine-duel':
+          return `Duel of the gods: ${being} strikes down ${rival}, and ${a} surges forward.`
+        case 'megaweapon':
+          return `${a}’s ${weapon} fires and tears through ${b}’s line.`
         case 'warp-strike':
           return `${a} drops out of warp on ${b}’s flank and fires a full broadside.`
         case 'carrier-wing':
@@ -245,6 +326,12 @@ function specialText(id: SpecialId, war: War, side: Side): Text {
           return `${a}: ${SPECIALS[id].name.en}.`
       }
     switch (id) {
+      case 'divine-strike':
+        return `${josa(being, '이가')} ${b} 함대를 내리쳤습니다.`
+      case 'divine-duel':
+        return `신들의 결투: ${josa(being, '이가')} ${josa(rival, '을를')} 쓰러뜨렸고, ${a}의 기세가 오릅니다.`
+      case 'megaweapon':
+        return `${a}의 ${josa(weapon, '이가')} 불을 뿜어 ${b}의 전열을 갈랐습니다.`
       case 'warp-strike':
         return `${josa(a, '이가')} 초광속 워프로 ${b}의 측면에 뛰어들어 일제 사격을 퍼부었습니다.`
       case 'carrier-wing':
@@ -483,6 +570,10 @@ function applyRound(
   if (index === 0) {
     s = log(s, arrivalText(war.a, war.site), 'warn')
     s = log(s, arrivalText(war.b, war.site), 'warn')
+    for (const side of ['a', 'b'] as const) {
+      const text = championsText(war, side)
+      if (text) s = log(s, text, 'warn')
+    }
   }
   for (const { side, id } of round.specials) {
     switch (id) {
@@ -497,6 +588,9 @@ function applyRound(
         break
       case 'megastructure':
         s = megastructureSupport(s, war, side)
+        break
+      case 'divine-duel':
+        s = log(s, specialText(id, war, side), 'warn')
         break
       default:
         s = log(s, specialText(id, war, side))
@@ -565,10 +659,18 @@ export function resolveWars(state: WorldState): WorldState {
 
 /* ── 미리보기 ─────────────────────────────────────── */
 
-/** 두 세력이 함께 보여 주는 스페이스 오페라 소재 (중복 없이) */
-export const warMotifs = (a: FactionId, b: FactionId) => [
-  ...new Set([
+/** 두 세력(과 가세한 신적 존재·대형 병기)이 함께 보여 주는 스페이스 오페라 소재 (목록 순서, 중복 없이) */
+export function warMotifs(
+  a: FactionId,
+  b: FactionId,
+  extras: WarExtras = NO_EXTRAS,
+): MotifId[] {
+  const all = new Set<MotifId>([
     ...factionMotifs(FACTION_BY_ID[a]),
     ...factionMotifs(FACTION_BY_ID[b]),
-  ]),
-]
+  ])
+  if (extras.aBeing || extras.bBeing) all.add('cosmic-being')
+  for (const id of [extras.aWeapon, extras.bWeapon])
+    if (id) for (const motif of MEGAWEAPONS[id].motifs) all.add(motif)
+  return MOTIF_IDS.filter((id) => all.has(id))
+}
