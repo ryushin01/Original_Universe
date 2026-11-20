@@ -1,10 +1,13 @@
 import {
   BufferGeometry,
   Color,
+  EdgesGeometry,
   Group,
+  IcosahedronGeometry,
   Line,
   LineBasicMaterial,
   LineLoop,
+  LineSegments,
   Mesh,
   MeshBasicMaterial,
   Raycaster,
@@ -18,6 +21,7 @@ import { clamp } from '@/shared/lib'
 import { STARS } from '../../../model/stars/catalog'
 import { destinationsOf } from '../../../model/objects'
 import { blackbodyColor } from '../../../model/solar/sun'
+import { civLevel } from '../../../model/world/civilization'
 import {
   disposeObject,
   blastKey,
@@ -48,6 +52,18 @@ interface StarVisual {
   blastId?: string
   /** 폭발 모습으로 바꿨는지 */
   exploded?: boolean
+  /** Ⅲ단계 문명이 감싼 다이슨 구 */
+  dyson: LineSegments
+}
+
+/** 다이슨 구에 감싸인 별: 보이는 빛은 막히고 데워진 껍질의 붉은 적외선빛만 새어 나옴 */
+const INFRARED = new Color('#ff7a52')
+const DYSON_GEOMETRY = new EdgesGeometry(new IcosahedronGeometry(1, 1))
+const dysonShell = () => {
+  const shell = new LineSegments(DYSON_GEOMETRY, lineMaterial('#9ad5ff', 0.55))
+  shell.userData.sharedGeometry = true
+  shell.visible = false
+  return shell
 }
 
 const lineMaterial = (color: string, opacity: number) =>
@@ -112,7 +128,9 @@ export function createStarsScene(): ScaleScene {
     ),
     lineMaterial('#a9bdff', 0.35),
   )
-  scene.add(sun, sunCore, sunPick, oort)
+  const sunDyson = dysonShell()
+  sunDyson.scale.setScalar(1.6)
+  scene.add(sun, sunCore, sunPick, oort, sunDyson)
 
   const visuals = new Map<string, StarVisual>()
   const pickables: Mesh[] = [sunPick]
@@ -134,7 +152,9 @@ export function createStarsScene(): ScaleScene {
       new MeshBasicMaterial({ visible: false }),
     )
     pick.userData.id = star.id
-    group.add(glow, core, pick)
+    const dyson = dysonShell()
+    dyson.scale.setScalar(Math.max(size * 0.9, 0.9))
+    group.add(glow, core, pick, dyson)
     // 황도면까지 내린 줄기 (입체감)
     const stem = new Line(
       new BufferGeometry().setFromPoints([
@@ -157,6 +177,7 @@ export function createStarsScene(): ScaleScene {
       size,
       color,
       blastId: star.blastId,
+      dyson,
     })
   }
 
@@ -213,6 +234,15 @@ export function createStarsScene(): ScaleScene {
       for (const key of flareStart.keys())
         if (!live.has(key)) flareStart.delete(key)
       faceCamera(sun, ctx.camera)
+      // 문명 단계: Ⅱ단계부터 태양, Ⅲ단계면 이웃 별들도 다이슨 구로 감쌈
+      const level = civLevel(ctx.world)?.id
+      const wrapStars = level === 'type3'
+      const wrapSun = level === 'type2' || level === 'type3'
+      sunDyson.visible = wrapSun
+      sunCore.visible = !wrapSun
+      const su = (sun.material as ShaderMaterial).uniforms
+      su.uIntensity.value = wrapSun ? 0.5 : 1.3
+      su.uColor.value.set(wrapSun ? INFRARED : '#ffd27a')
       for (const v of visuals.values()) {
         faceCamera(v.glow, ctx.camera)
         // 초신성이 된 별은 몇 초 동안 밝게 타오르고 잔해로 남음
@@ -230,14 +260,19 @@ export function createStarsScene(): ScaleScene {
           u.uColor.value.set('#e8f0ff')
           v.core.visible = false
           v.exploded = true
-        } else if (v.exploded) {
-          // 폭발 기록이 없는 세계(처음으로·불러오기)로 바뀌면 원래 별로
-          v.glow.scale.setScalar(v.size * 4)
-          u.uIntensity.value = 1
-          u.uColor.value.copy(v.color)
-          v.core.visible = true
-          v.exploded = false
+        } else {
+          if (v.exploded) {
+            // 폭발 기록이 없는 세계(처음으로·불러오기)로 바뀌면 원래 별로
+            v.glow.scale.setScalar(v.size * 4)
+            v.core.visible = true
+            v.exploded = false
+          }
+          u.uIntensity.value = wrapStars ? 0.6 : 1
+          u.uColor.value.copy(wrapStars ? INFRARED : v.color)
+          // 감싸인 별은 보이는 빛이 막혀 핵이 보이지 않음
+          v.core.visible = !wrapStars
         }
+        v.dyson.visible = wrapStars && !blast
       }
       const t = ctx.selected ? target(ctx.selected) : null
       shell.visible = Boolean(t)

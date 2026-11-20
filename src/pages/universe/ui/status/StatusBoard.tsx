@@ -27,6 +27,7 @@ import { habitability } from '../../model/solar/climate'
 import { formatPeople } from '../../model/world/text'
 import { pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
+import { KardashevDetails } from './Kardashev'
 import styles from './status.module.css'
 
 const TONE: Record<string, string> = {
@@ -156,6 +157,7 @@ export function StatusBoard() {
             <dd class={styles.warn}>{formatMoney(world().losses, l())}</dd>
           </Show>
         </dl>
+        <KardashevDetails power={power()} k={k()} />
       </div>
     </section>
   )

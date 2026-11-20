@@ -291,6 +291,31 @@ if (want('war', 'lasers')) {
   await context.close()
 }
 
+// 문명 단계: Ⅱ단계 항성 문명(다이슨 구·다이슨 스웜·링월드·함대)과 Ⅲ단계(다이슨 구에 감싸인 이웃 별)
+if (want('civ', 'civ3')) {
+  const { page, context } = await open()
+  await page.getByRole('tab', { name: '건설', exact: true }).click()
+  const section = page.getByRole('region', {
+    name: '문명 단계 (카르다쇼프 척도)',
+  })
+  const level = async (name) => {
+    await section.getByRole('radio', { name }).check({ force: true })
+    await section.getByRole('button', { name: '이 단계로 바꾸기' }).click()
+  }
+  if (want('civ')) {
+    await level(/Ⅱ단계 항성 문명/)
+    // 다이슨 구·함대의 셰이더를 처음 준비하느라 소프트웨어 렌더러에서는 오래 걸림
+    await shot(page, 'civ', 15000)
+  }
+  if (want('civ3')) {
+    await level(/Ⅲ단계 은하 문명/)
+    await page.getByRole('radio', { name: /이웃 별/ }).check({ force: true })
+    await sceneReady(page)
+    await shot(page, 'civ3', 3000)
+  }
+  await context.close()
+}
+
 if (want('mobile')) {
   const { page, context } = await open({
     viewport: { width: 390, height: 844 },

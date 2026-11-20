@@ -98,6 +98,7 @@ export const worldActions = {
     apply((w) => act.startMeteorStorm(w, showerId)),
   summon: (input: SummonInput) => apply((w) => act.summon(w, input)),
   declareWar: (input: WarDeclaration) => apply((w) => act.declareWar(w, input)),
+  setCivLevel: (id: string) => apply((w) => act.setCivLevel(w, id)),
   build: (kind: ProjectKind, instant = false) =>
     apply((w) => act.build(w, kind, instant)),
   startMission: (id: MissionId) =>

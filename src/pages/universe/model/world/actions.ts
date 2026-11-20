@@ -1,5 +1,5 @@
 import { both, compose } from '@/shared/i18n'
-import type { Text } from '@/shared/i18n'
+import type { Locale, Text } from '@/shared/i18n'
 import { clamp, formatMoney, formatSig } from '@/shared/lib'
 import { BODIES } from '../solar/bodies'
 import type { BodyId } from '../solar/bodies'
@@ -67,6 +67,14 @@ import {
   nameOf,
 } from './text'
 import type { MissionId, WorldState } from './types'
+import {
+  CIV_LEVEL_BY_ID,
+  civLevel,
+  civTitle,
+  civWasteHeatC,
+  isCivLevelId,
+  withRequirements,
+} from './civilization'
 
 export interface ActionResult {
   ok: boolean
@@ -710,6 +718,113 @@ export function build(
       l === 'ko'
         ? `${josa(spec.name.ko, '을를')} 짓기 시작했습니다. ${formatSimDate(structure.completeYear, l)}에 완공합니다.`
         : `${spec.name.en} is under construction until ${formatSimDate(structure.completeYear, l)}.`,
+    ),
+  )
+}
+
+/* ── 문명 단계 (카르다쇼프) ───────────────────────────── */
+
+/**
+ * 문명 단계를 정함: 그 단계의 구조물을 바로 완공하고(짓던 것은 바로 끝냄), 단계가 지었던 것 중
+ * 새 단계에 없는 것은 허묾. 직접 지은 구조물은 그대로 둠. '지금'이면 자연 성장으로 돌아감
+ */
+export function setCivLevel(state: WorldState, id: string): Outcome {
+  if (!isCivLevelId(id))
+    return fail(state, '문명 단계를 고르세요.', 'Choose a civilisation level.')
+  if (state.mission?.status === 'running')
+    return fail(
+      state,
+      '미션 중에는 문명 단계를 바꿀 수 없습니다.',
+      'The civilisation level is locked during missions.',
+    )
+  if (isRemoved(state, 'earth'))
+    return fail(
+      state,
+      '지구가 없어 문명 단계를 바꿀 수 없습니다.',
+      'With Earth gone, there is no civilisation to change.',
+    )
+  const level = CIV_LEVEL_BY_ID[id]
+  const wanted = withRequirements(level.structures)
+  const before = civLevel(state)
+  const removedKinds = state.civ.granted.filter((k) => !wanted.includes(k))
+  let structures = state.structures.filter(
+    (x) => !removedKinds.includes(x.kind),
+  )
+  const granted = state.civ.granted.filter((k) => wanted.includes(k))
+  const built: ProjectKind[] = []
+  let nextId = state.nextId
+  for (const kind of wanted) {
+    const existing = structures.find((x) => x.kind === kind)
+    if (existing) {
+      // 짓던 구조물은 바로 끝냄 (직접 지은 것이라 단계를 내려도 남음)
+      if (state.year < existing.completeYear) {
+        structures = structures.map((x) =>
+          x === existing ? { ...x, completeYear: state.year, done: true } : x,
+        )
+        built.push(kind)
+      }
+      continue
+    }
+    structures = [
+      ...structures,
+      {
+        id: nextId++,
+        kind,
+        startYear: state.year,
+        completeYear: state.year,
+        done: true,
+      },
+    ]
+    granted.push(kind)
+    built.push(kind)
+  }
+  let s: WorldState = {
+    ...state,
+    structures,
+    nextId,
+    civ: { level: id === 'today' ? null : id, granted },
+  }
+  if (built.includes('defense-net')) s = autoIntercept(s)
+  const rising = level.k >= (before?.k ?? 0.73)
+  const names = (kinds: ProjectKind[], l: Locale) =>
+    kinds.map((k) => PROJECT_BY_KIND[k].name[l]).join(', ')
+  const heat = civWasteHeatC(s)
+  s = log(
+    s,
+    compose((l) => {
+      const title = civTitle(level)[l]
+      const parts: string[] =
+        l === 'ko'
+          ? [
+              `문명 단계를 ${title}${rising ? '로 올렸습니다' : '로 낮췄습니다'}.`,
+              built.length ? `${names(built, l)} 완공.` : '',
+              removedKinds.length ? `${names(removedKinds, l)} 허묾.` : '',
+              level.fleet !== 'none' ? '지구 곁에 함대 배치.' : '',
+              heat >= 0.05
+                ? `지구에서 쓰는 에너지의 폐열로 기온이 약 ${heat.toFixed(1)}°C 오릅니다.`
+                : '',
+            ]
+          : [
+              `Civilisation ${rising ? 'raised' : 'lowered'} to ${title}.`,
+              built.length ? `Completed: ${names(built, l)}.` : '',
+              removedKinds.length
+                ? `Taken down: ${names(removedKinds, l)}.`
+                : '',
+              level.fleet !== 'none' ? 'A fleet now guards Earth.' : '',
+              heat >= 0.05
+                ? `Waste heat from Earth’s energy use warms it by about ${heat.toFixed(1)}°C.`
+                : '',
+            ]
+      return parts.filter(Boolean).join(' ')
+    }),
+    heat >= 3 ? 'warn' : 'good',
+  )
+  return done(
+    s,
+    compose((l) =>
+      l === 'ko'
+        ? `문명 단계: ${civTitle(level).ko}`
+        : `Civilisation level: ${civTitle(level).en}`,
     ),
   )
 }

@@ -73,6 +73,7 @@ import {
   bodyInsolation,
   bodyPositionAu,
   bodyTemperatureC,
+  civilizationPower,
   colonyPopulation,
   currentShower,
   dysonCapture,
@@ -83,6 +84,7 @@ import {
   intruderPositionAu,
   activeFlyby,
   isRemoved,
+  kardashev,
   marsAtmosphere,
   stormFrontAu,
   sunState,
@@ -126,6 +128,7 @@ import type { FrameContext, ScaleScene, SceneEnv, Target } from '../types'
 import { createBeingLayer } from './beings/BeingLayer'
 import { SHAPES, makeShapeGeometry } from './shapes'
 import { createWarLayer } from './war/WarLayer'
+import { createCivFleetLayer } from './civ/CivFleetLayer'
 
 /** 지구 텍스처: 화면이 좁거나 메모리가 적은 기기는 1024px 벌 */
 const earthTextures = (env: SceneEnv) =>
@@ -645,6 +648,9 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
   scene.add(beings.group)
   const wars = createWarLayer()
   scene.add(wars.group)
+  // 문명 단계(카르다쇼프)의 함대
+  const civFleet = createCivFleetLayer()
+  scene.add(civFleet.group)
 
   /* 유성 */
   const METEORS = 48
@@ -1019,7 +1025,11 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
       u.uDry.value = 1 - world.earth.ocean
       u.uIce.value = clamp((-10 - temp) / 40, 0, 1)
       const base = baselinePopulation(world.year)
-      u.uCityLights.value = clamp(earthPopulation(world) / base, 0, 1)
+      // 문명이 쓰는 에너지만큼 밝게 (지금 0.73이 1, 고대는 거의 꺼짐, Ⅰ단계 이상은 더 밝음)
+      const k = kardashev(civilizationPower(world)) ?? 0
+      u.uCityLights.value =
+        clamp(earthPopulation(world) / base, 0, 1) *
+        clamp((k - 0.45) / 0.28, 0, 1.6)
       if (visual.clouds) {
         const cu = (visual.clouds.material as ShaderMaterial).uniforms
         cu.uOffset.value = (ctx.elapsed * 0.004) % 1
@@ -1677,6 +1687,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
         sunShining: !sun.blackHole,
       })
       wars.update(ctx, { positions, sunRadius, mode })
+      civFleet.update(ctx, { positions, sunRadius, mode })
       // 핼리 혜성 꼬리 (태양 가까이에서만)
       const halley = visuals.get('halley')
       const halleyAu = bodyPositionAu(world, 'halley')
@@ -1703,6 +1714,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
     dispose() {
       beings.dispose()
       wars.dispose()
+      civFleet.dispose()
       disposeObject(scene)
       for (const cap of stormCaps.values()) cap.dispose()
     },

@@ -12,6 +12,7 @@ import type { BlastKind } from '../hazards/stellar'
 import type { IntruderKind } from '../hazards/flyby'
 import type { NBody } from '../hazards/nbody'
 import type { ProjectKind } from '../projects/catalog'
+import type { CivLevelId } from './civilization'
 import type { Calamity, SiteId } from '../mythic/catalog'
 import type {
   FactionId,
@@ -19,6 +20,12 @@ import type {
   MegaweaponId,
   SpecialId,
 } from '../war/catalog'
+
+export interface CivState {
+  level: CivLevelId | null
+  /** 단계를 정하며 지은 구조물 (단계를 내리면 이것만 허묾) */
+  granted: ProjectKind[]
+}
 
 export interface Structure {
   id: number
@@ -259,6 +266,8 @@ export interface WorldState {
   battles: Battle[]
   /** 세력 함대의 우주 대전 */
   wars: War[]
+  /** 정한 문명 단계 (카르다쇼프, null이면 자연 성장)와 그 단계가 지은 구조물 */
+  civ: CivState
   /** 태양 잠식: 우주적 존재가 해를 물어 줄어든 햇빛 비율 (0~0.95, 몇 달에 걸쳐 회복) */
   solarDim: number
   /** 유성 폭풍: 극대 앞뒤의 정해진 기간에만 활동도를 키움 */
