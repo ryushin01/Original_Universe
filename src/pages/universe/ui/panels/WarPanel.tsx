@@ -3,21 +3,41 @@ import { locale } from '@/shared/i18n'
 import { Button, ChoiceGroup, SelectField, StatusMessage } from '@/shared/ui'
 import type { SelectOption } from '@/shared/ui'
 import { formatPercent } from '@/shared/lib'
-import { SITES, SITE_BY_ID } from '../../model/mythic/catalog'
-import type { SiteId } from '../../model/mythic/catalog'
+import {
+  ALIGNMENT_NAME,
+  BEING_BY_ID,
+  ELEMENT_NAME,
+  FACTION_NAME,
+  SITES,
+  SITE_BY_ID,
+} from '../../model/mythic/catalog'
+import type { Being, SiteId } from '../../model/mythic/catalog'
 import {
   FACTIONS,
   FACTION_BY_ID,
   FLEET_SIZES,
   FLEET_SIZE_IDS,
+  MEGAWEAPONS,
+  MEGAWEAPON_IDS,
   MOTIFS,
   SPECIALS,
   WEAPONS,
   fleetOf,
   fleetPower,
 } from '../../model/war/catalog'
-import type { Faction, FactionId, FleetSize } from '../../model/war/catalog'
-import { specialApplies, warDays, warOdds } from '../../model/war/combat'
+import type {
+  Faction,
+  FactionId,
+  FleetSize,
+  MegaweaponId,
+} from '../../model/war/catalog'
+import {
+  duelOdds,
+  specialApplies,
+  warDays,
+  warOdds,
+} from '../../model/war/combat'
+import type { WarExtras } from '../../model/war/combat'
 import { viewActions } from '../../model/view'
 import { warSceneId } from '../../model/objects'
 import { world, worldActions } from '../../model/world/store'
@@ -32,16 +52,34 @@ import {
 import { formatDuration } from '../../model/world/text'
 import { bothNames, createActionMessage, pick, t } from '../i18n'
 import { BODIES } from '../../model/solar/bodies'
+import { championsLine } from '../warChampions'
+import { beingOptions } from './beingOptions'
 import styles from './panels.module.css'
 
 const factionOptions = (): SelectOption[] =>
   FACTIONS.map((f) => ({ value: f.id, label: pick(f.name) }))
+
+const weaponOptions = (): SelectOption[] => [
+  { value: '', label: t('war.noWeapon') },
+  ...MEGAWEAPON_IDS.map((id) => ({
+    value: id,
+    label: bothNames(MEGAWEAPONS[id].name),
+  })),
+]
 
 /** '우주항공모함 2 · 우주전함 4 · …' */
 const fleetText = (faction: Faction, size: FleetSize) =>
   fleetOf(faction, size)
     .map((x) => `${pick(x.cls.name)} ${x.count}`)
     .join(' · ')
+
+/** 진영·속성·권능·성향 한 줄 */
+const aboutBeing = (b: Being) =>
+  `${t('mythic.about', {
+    faction: pick(FACTION_NAME[b.faction]),
+    element: pick(ELEMENT_NAME[b.element]),
+    power: b.power,
+  })} · ${pick(ALIGNMENT_NAME[b.alignment])}`
 
 /** 진행 중인 우주 대전 카드: 두 세력의 남은 전력과 끝나기까지 남은 시간 */
 function ActiveWar(props: { id: number }) {
@@ -63,6 +101,7 @@ function ActiveWar(props: { id: number }) {
             />
           </div>
         )
+        const champions = () => championsLine(w(), world().year)
         return (
           <li class={styles.card}>
             <div class={styles.cardHead}>
@@ -80,6 +119,9 @@ function ActiveWar(props: { id: number }) {
                 ),
               })}
             </p>
+            <Show when={champions()}>
+              {(text) => <p class={styles.small}>{text()}</p>}
+            </Show>
             <p class={styles.small}>
               {t('war.strength', {
                 name: pick(a().name),
@@ -112,11 +154,22 @@ function ActiveWar(props: { id: number }) {
   )
 }
 
-/** 우주 대전 (스페이스 오페라 모드): 두 세력·함대 규모·전장을 고르고 개전 */
+/**
+ * 우주 대전 (스페이스 오페라 모드): 두 세력·가세할 신적 존재·대형 병기·함대 규모·전장을 고르고 개전.
+ * 세력을 고르면 그 세력의 수호 존재와 대표 병기가 기본으로 들어감 (바꾸거나 뺄 수 있음)
+ */
 export function WarPanel() {
   const l = locale
   const [aId, setAId] = createSignal<FactionId>('axis')
   const [bId, setBId] = createSignal<FactionId>('alliance')
+  const [aBeing, setABeing] = createSignal(FACTION_BY_ID.axis.patron)
+  const [bBeing, setBBeing] = createSignal(FACTION_BY_ID.alliance.patron)
+  const [aWeapon, setAWeapon] = createSignal<string>(
+    FACTION_BY_ID.axis.megaweapon,
+  )
+  const [bWeapon, setBWeapon] = createSignal<string>(
+    FACTION_BY_ID.alliance.megaweapon,
+  )
   const [size, setSize] = createSignal<FleetSize>('fleet')
   const [site, setSite] = createSignal<SiteId>('earth')
   const [target, setTarget] = createSignal('')
@@ -124,8 +177,17 @@ export function WarPanel() {
 
   const a = () => FACTION_BY_ID[aId()]
   const b = () => FACTION_BY_ID[bId()]
+  const extras = (): WarExtras => ({
+    aBeing: aBeing() || null,
+    bBeing: bBeing() || null,
+    aWeapon: (aWeapon() || null) as MegaweaponId | null,
+    bWeapon: (bWeapon() || null) as MegaweaponId | null,
+  })
   const support = () => warSupport(world(), site())
-  const odds = createMemo(() => warOdds(aId(), bId(), size(), support()))
+  const odds = createMemo(() =>
+    warOdds(aId(), bId(), size(), support(), extras()),
+  )
+  const duel = () => duelOdds(extras())
   const killer = () =>
     hasSpecial(aId(), 'planet-killer') || hasSpecial(bId(), 'planet-killer')
   const targets = () => superweaponTargets(world(), site())
@@ -133,13 +195,35 @@ export function WarPanel() {
   const chosenTarget = () =>
     targets().includes(target() as never) ? target() : ''
 
+  /** 세력을 고르면 그 세력의 수호 존재와 대표 병기로 (상대 존재와 겹치면 상대 쪽을 비움) */
+  const useDefaults = (side: 'a' | 'b', faction: Faction) => {
+    if (side === 'a') {
+      setABeing(faction.patron)
+      if (bBeing() === faction.patron) setBBeing('')
+      setAWeapon(faction.megaweapon)
+    } else {
+      setBBeing(faction.patron)
+      if (aBeing() === faction.patron) setABeing('')
+      setBWeapon(faction.megaweapon)
+    }
+  }
   const chooseA = (id: string) => {
     setAId(id as FactionId)
-    if (id === bId()) setBId(FACTIONS.find((f) => f.id !== id)!.id)
+    useDefaults('a', FACTION_BY_ID[id as FactionId])
+    if (id === bId()) {
+      const other = FACTIONS.find((f) => f.id !== id)!
+      setBId(other.id)
+      useDefaults('b', other)
+    }
   }
   const chooseB = (id: string) => {
     setBId(id as FactionId)
-    if (id === aId()) setAId(FACTIONS.find((f) => f.id !== id)!.id)
+    useDefaults('b', FACTION_BY_ID[id as FactionId])
+    if (id === aId()) {
+      const other = FACTIONS.find((f) => f.id !== id)!
+      setAId(other.id)
+      useDefaults('a', other)
+    }
   }
 
   const specialsText = (faction: Faction) =>
@@ -147,6 +231,11 @@ export function WarPanel() {
       .filter((id) => specialApplies(id, support()))
       .map((id) => pick(SPECIALS[id].name))
       .join(' · ') || '—'
+
+  const beingName = (id: string) =>
+    id ? pick(BEING_BY_ID[id].name) : t('war.none')
+  const weaponName = (id: string) =>
+    id ? pick(MEGAWEAPONS[id as MegaweaponId].name) : t('war.none')
 
   const declare = () =>
     feedback.report(
@@ -156,10 +245,11 @@ export function WarPanel() {
         site: site(),
         size: size(),
         target: killer() && chosenTarget() ? chosenTarget() : null,
+        ...extras(),
       }),
     )
 
-  const motifs = () => warMotifs(aId(), bId())
+  const motifs = () => warMotifs(aId(), bId(), extras())
 
   return (
     <div class={styles.panel}>
@@ -172,11 +262,53 @@ export function WarPanel() {
         description={pick(a().summary)}
       />
       <SelectField
+        label={t('war.beingA')}
+        value={aBeing()}
+        onChange={setABeing}
+        options={[
+          { value: '', label: t('war.noBeing') },
+          ...beingOptions(bBeing() || undefined),
+        ]}
+        description={aBeing() ? aboutBeing(BEING_BY_ID[aBeing()]) : undefined}
+      />
+      <SelectField
+        label={t('war.weaponA')}
+        value={aWeapon()}
+        onChange={setAWeapon}
+        options={weaponOptions()}
+        description={
+          aWeapon()
+            ? pick(MEGAWEAPONS[aWeapon() as MegaweaponId].summary)
+            : undefined
+        }
+      />
+      <SelectField
         label={t('war.b')}
         value={bId()}
         onChange={chooseB}
         options={factionOptions().filter((o) => o.value !== aId())}
         description={pick(b().summary)}
+      />
+      <SelectField
+        label={t('war.beingB')}
+        value={bBeing()}
+        onChange={setBBeing}
+        options={[
+          { value: '', label: t('war.noBeing') },
+          ...beingOptions(aBeing() || undefined),
+        ]}
+        description={bBeing() ? aboutBeing(BEING_BY_ID[bBeing()]) : undefined}
+      />
+      <SelectField
+        label={t('war.weaponB')}
+        value={bWeapon()}
+        onChange={setBWeapon}
+        options={weaponOptions()}
+        description={
+          bWeapon()
+            ? pick(MEGAWEAPONS[bWeapon() as MegaweaponId].summary)
+            : undefined
+        }
       />
       <ChoiceGroup<FleetSize>
         legend={t('war.size')}
@@ -230,6 +362,27 @@ export function WarPanel() {
             a: pick(WEAPONS[a().weapon].name),
             b: pick(WEAPONS[b().weapon].name),
           })}
+        </dd>
+        <dt>{t('war.beings')}</dt>
+        <dd>
+          {t('war.vs', { a: beingName(aBeing()), b: beingName(bBeing()) })}
+        </dd>
+        <Show when={duel()}>
+          {(chance) => (
+            <>
+              <dt>{t('war.duel')}</dt>
+              <dd>
+                {t('war.oddsValue', {
+                  name: beingName(aBeing()),
+                  percent: formatPercent(chance(), l()),
+                })}
+              </dd>
+            </>
+          )}
+        </Show>
+        <dt>{t('war.megaweapons')}</dt>
+        <dd>
+          {t('war.vs', { a: weaponName(aWeapon()), b: weaponName(bWeapon()) })}
         </dd>
         <dt>{t('war.specials')}</dt>
         <dd>

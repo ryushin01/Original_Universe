@@ -417,7 +417,7 @@ test.describe('시뮬레이션 흐름', () => {
     expect(errors).toEqual([])
   })
 
-  test('우주 대전: 악시스와 얼라이언스 함대가 맞붙고 끝나면 승자와 여파를 기록한다', async ({
+  test('우주 대전: 악시스와 얼라이언스 함대가 신적 존재·대형 병기와 맞붙고 끝나면 승자와 여파를 기록한다', async ({
     page,
   }) => {
     const errors: string[] = []
@@ -441,6 +441,11 @@ test.describe('시뮬레이션 흐름', () => {
     await expect(logText(page)).toContainText('우주 대전이 끝났습니다', {
       timeout: 40_000,
     })
+    // 세력마다 신적 존재가 가세하고 대형 병기가 떠오름
+    await expect(logText(page)).toContainText(
+      '수르트가 악시스 편에 강림했습니다',
+    )
+    await expect(logText(page)).toContainText('방벽 거신이 전장에 떠올랐습니다')
     expect(errors).toEqual([])
   })
 

@@ -63,4 +63,46 @@ describe('WarPanel', () => {
     const b = screen.getByRole('combobox', { name: '맞설 세력' })
     expect(within(b).queryByRole('option', { name: '악시스' })).toBeNull()
   })
+
+  it('세력마다 수호 존재와 대형 병기가 기본으로 들어가고, 바꾸거나 뺄 수 있다', async () => {
+    render(() => <WarPanel />)
+    const beingA = screen.getByRole('combobox', {
+      name: '공격 세력에 가세할 신적 존재',
+    })
+    const weaponA = screen.getByRole('combobox', {
+      name: '공격 세력의 대형 병기',
+    })
+    expect(beingA).toHaveValue('surtr')
+    expect(weaponA).toHaveValue('colossus')
+    expect(
+      screen.getByRole('combobox', { name: '맞설 세력에 가세할 신적 존재' }),
+    ).toHaveValue('black-tortoise')
+    expect(screen.getByText('수르트 대 현무')).toBeInTheDocument()
+    expect(screen.getByText('전쟁 거신병 대 방벽 거신')).toBeInTheDocument()
+    expect(screen.getByText('신들의 결투 승산')).toBeInTheDocument()
+    // 맞설 쪽 존재는 공격 쪽 목록에 없음 (한 존재가 두 편에 서지 않게)
+    expect(
+      within(beingA).queryByRole('option', { name: '현무 · Black Tortoise' }),
+    ).toBeNull()
+    // 세력을 바꾸면 그 세력의 수호 존재·대표 병기로
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: '공격 세력' }),
+      'empire',
+    )
+    expect(beingA).toHaveValue('ra')
+    expect(weaponA).toHaveValue('singularity')
+    // 존재를 빼면 결투가 없어짐
+    await userEvent.selectOptions(beingA, '')
+    expect(screen.queryByText('신들의 결투 승산')).toBeNull()
+    await userEvent.selectOptions(weaponA, 'warden')
+    await userEvent.click(screen.getByRole('button', { name: '개전' }))
+    const [w] = world().wars
+    expect(w.aBeing).toBeNull()
+    expect(w.aWeapon).toBe('warden')
+    expect(w.bBeing).toBe('black-tortoise')
+    const active = screen.getByRole('region', { name: '진행 중인 우주 대전' })
+    expect(
+      within(active).getByText('수호 거신 대 현무 · 방벽 거신'),
+    ).toBeInTheDocument()
+  })
 })

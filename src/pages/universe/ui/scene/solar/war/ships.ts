@@ -103,10 +103,10 @@ function positionsOnly(geometry: BufferGeometry): BufferGeometry {
   return result
 }
 
-type V3 = [number, number, number]
+export type V3 = [number, number, number]
 
 /** 부품 하나를 놓기: 위치·크기·회전(라디안) */
-function part(
+export function part(
   geometry: BufferGeometry,
   at: V3 = [0, 0, 0],
   scale: V3 = [1, 1, 1],

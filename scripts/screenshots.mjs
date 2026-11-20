@@ -277,7 +277,10 @@ if (want('war', 'lasers')) {
   await page.getByRole('tab', { name: '우주 대전', exact: true }).click()
   await page.getByRole('button', { name: '개전' }).click()
   await page.getByRole('button', { name: '전장 따라가기' }).click()
-  if (want('war')) await shot(page, 'war', 7000)
+  // 함대 위의 신적 존재·아래의 대형 병기가 잘 보이게 조금 당겨 봄
+  await page.waitForTimeout(4000 + SETTLE)
+  await page.getByRole('button', { name: '확대', exact: true }).click()
+  if (want('war')) await shot(page, 'war', 5000)
   if (want('lasers')) {
     await page
       .getByRole('radio', { name: /국부 은하군/ })
