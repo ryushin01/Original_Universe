@@ -76,8 +76,13 @@ describe('Dossier', () => {
     expect(screen.getByText('아펩', { selector: 'p' })).toBeInTheDocument()
     expect(screen.getByText(/신수 · 이집트 신화/)).toBeInTheDocument()
     expect(screen.getByText('격돌 중')).toBeInTheDocument()
-    // 상대 칸 (목적지 목록에도 같은 이름이 있음)
-    expect(screen.getAllByText('라').length).toBeGreaterThan(1)
+    // 이름은 두 언어로: 카드 제목 아래 영문, 목적지 목록은 '라 · Ra'
+    expect(screen.getByText('Apep', { selector: 'p' })).toHaveAttribute(
+      'lang',
+      'en',
+    )
+    expect(screen.getByText('라')).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: '라 · Ra' })).toBeInTheDocument()
     // 전승 설명은 따로 받아 조금 뒤에 나옴
     expect(await screen.findByText(/소행성 아포피스/)).toBeInTheDocument()
   })

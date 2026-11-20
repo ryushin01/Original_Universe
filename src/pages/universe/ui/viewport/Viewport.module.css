@@ -56,6 +56,15 @@
   }
 }
 
+/* 이름표의 다른 언어 이름 (한 줄 안에 작게) */
+.labelAlt {
+  margin-left: 0.4em;
+  font-size: 0.85em;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
 .selected {
   color: var(--accent-strong);
 }

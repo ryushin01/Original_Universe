@@ -63,13 +63,13 @@ export const MESSAGES = {
   'intro.position': ['{index} / {total}', '{index} / {total}'],
   'intro.earth.nav': ['지구', 'Earth'],
   'intro.earth.place': [
-    '지구 · 서울, 37.5665° N 126.9780° E',
-    'Earth · Seoul, 37.5665° N 126.9780° E',
+    '지구 Earth · 서울, 37.5665° N 126.9780° E',
+    'Earth 지구 · Seoul, 37.5665° N 126.9780° E',
   ],
   'intro.moon.nav': ['달', 'Moon'],
   'intro.moon.place': [
-    '달 · 지구에서 38만 4,400 km',
-    'The Moon · 384,400 km from Earth',
+    '달 Moon · 지구에서 38만 4,400 km',
+    'The Moon 달 · 384,400 km from Earth',
   ],
   'intro.moon.title': ['재해를 일으키다', 'Unleash cosmic hazards'],
   'intro.moon.body': [
@@ -78,8 +78,8 @@ export const MESSAGES = {
   ],
   'intro.saturn.nav': ['토성', 'Saturn'],
   'intro.saturn.place': [
-    '토성 · 고리 지름 28만 km',
-    'Saturn · rings 280,000 km across',
+    '토성 Saturn · 고리 지름 28만 km',
+    'Saturn 토성 · rings 280,000 km across',
   ],
   'intro.saturn.title': ['구조물로 막아 내다', 'Build your defence'],
   'intro.saturn.body': [
@@ -88,8 +88,8 @@ export const MESSAGES = {
   ],
   'intro.neptune.nav': ['해왕성', 'Neptune'],
   'intro.neptune.place': [
-    '해왕성 · 태양에서 45억 km',
-    'Neptune · 4.5 billion km from the Sun',
+    '해왕성 Neptune · 태양에서 45억 km',
+    'Neptune 해왕성 · 4.5 billion km from the Sun',
   ],
   'intro.neptune.title': ['신화가 깨어나다', 'Myths awaken'],
   'intro.neptune.body': [
@@ -98,8 +98,8 @@ export const MESSAGES = {
   ],
   'intro.galaxy.nav': ['은하', 'Galaxy'],
   'intro.galaxy.place': [
-    '우리 은하 · 지름 10만 광년',
-    'The Milky Way · 100,000 light-years across',
+    '우리 은하 Milky Way · 지름 10만 광년',
+    'The Milky Way 우리 은하 · 100,000 light-years across',
   ],
   'intro.galaxy.title': ['다섯 규모를 오가다', 'Cross five scales'],
   'intro.galaxy.body': [

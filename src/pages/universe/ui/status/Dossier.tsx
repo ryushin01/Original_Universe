@@ -59,7 +59,7 @@ import {
 } from '../../model/world/selectors'
 import { formatDuration } from '../../model/world/text'
 import { orbitalPeriodDays } from '../../model/solar/kepler'
-import { pick, t } from '../i18n'
+import { bothNames, otherLocale, pick, pickOther, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import { PassportCard } from './PassportCard'
 import { createLore } from '../mythicLore'
@@ -146,6 +146,8 @@ function BodyDossier(props: { id: BodyId }) {
   return (
     <PassportCard
       title={pick(body().name)}
+      altTitle={pickOther(body().name)}
+      altLang={otherLocale()}
       subtitle={subtitle()}
       image={bodyImage(props.id)}
       spin={Boolean(body().texture)}
@@ -261,6 +263,8 @@ function StarDossier(props: { id: string }) {
       fallback={
         <PassportCard
           title={l() === 'ko' ? '태양' : 'Sun'}
+          altTitle={l() === 'ko' ? 'Sun' : '태양'}
+          altLang={otherLocale()}
           subtitle={l() === 'ko' ? 'G2V · 우리 별' : 'G2V · our star'}
           image={`radial-gradient(circle at 40% 40%, #fff6d8, ${rgb(5772)} 55%, #b8551a)`}
           ring={null}
@@ -278,6 +282,8 @@ function StarDossier(props: { id: string }) {
       {(s) => (
         <PassportCard
           title={pick(s().name)}
+          altTitle={pickOther(s().name)}
+          altLang={otherLocale()}
           subtitle={pick(starClassName(s().spectral))}
           image={`radial-gradient(circle at 40% 40%, #ffffff, ${rgb(s().temperature)} 50%, #050810 95%)`}
           ring={null}
@@ -345,6 +351,8 @@ function GalaxyObjectDossier(props: { id: string }) {
       {(obj) => (
         <PassportCard
           title={pick(obj().name)}
+          altTitle={pickOther(obj().name)}
+          altLang={otherLocale()}
           subtitle={pick(obj().facts)}
           image={
             obj().kind === 'blackHole'
@@ -375,6 +383,8 @@ function LocalDossier(props: { id: string }) {
       {(galaxy) => (
         <PassportCard
           title={pick(galaxy().name)}
+          altTitle={pickOther(galaxy().name)}
+          altLang={otherLocale()}
           subtitle={pick(GALAXY_TYPE_NAME[galaxy().type])}
           image="conic-gradient(from 30deg, #2b3f80, #c8d4ff, #7c9cff, #fff1d6, #2b3f80)"
           ring={null}
@@ -431,6 +441,8 @@ function CosmicDossier(props: { id: string }) {
       {(structure) => (
         <PassportCard
           title={pick(structure().name)}
+          altTitle={pickOther(structure().name)}
+          altLang={otherLocale()}
           subtitle={pick(STRUCTURE_KIND_NAME[structure().kind])}
           image={
             structure().kind === 'void'
@@ -477,6 +489,8 @@ function IntruderDossier() {
         return (
           <PassportCard
             title={pick(f().name)}
+            altTitle={pickOther(f().name)}
+            altLang={otherLocale()}
             subtitle={`${pick(spec().name)} · ${t('dossier.intruder')}`}
             image={
               spec().blackHole
@@ -555,6 +569,8 @@ function BeingDossier(props: { id: string }) {
       {(b) => (
         <PassportCard
           title={pick(being().name)}
+          altTitle={pickOther(being().name)}
+          altLang={otherLocale()}
           subtitle={`${pick(FACTION_NAME[being().faction])} · ${pick(being().origin)}`}
           image={
             being().element === 'void'
@@ -666,7 +682,7 @@ export function Dossier() {
   // 지나가는 천체도 목적지처럼 고를 수 있게 (고른 상태가 빈칸으로 보이지 않도록)
   const intruderOption = () => {
     const f = scale() === 'solar' ? activeFlyby(world()) : undefined
-    return f ? [{ value: 'intruder', label: pick(f.name) }] : []
+    return f ? [{ value: 'intruder', label: bothNames(f.name) }] : []
   }
   // 싸움터의 우주적 존재도 고를 수 있게 (고른 상태가 빈칸으로 보이지 않도록 고른 존재는 늘 넣음)
   const beingOptions = () => {
@@ -676,7 +692,7 @@ export function Dossier() {
     if (chosen && !ids.includes(chosen)) ids.push(chosen)
     return ids.map((beingId) => ({
       value: beingObject(beingId).id,
-      label: pick(BEING_BY_ID[beingId].name),
+      label: bothNames(BEING_BY_ID[beingId].name),
     }))
   }
   return (
@@ -692,7 +708,7 @@ export function Dossier() {
           { value: '', label: '—' },
           ...objectsOf(scale()).map((o) => ({
             value: o.id,
-            label: pick(o.name),
+            label: bothNames(o.name),
           })),
           ...intruderOption(),
           ...beingOptions(),

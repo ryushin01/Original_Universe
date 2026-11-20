@@ -19,7 +19,7 @@ import {
   intruderPositionAu,
 } from '../../model/world/selectors'
 import { formatDuration } from '../../model/world/text'
-import { createActionMessage, pick, t } from '../i18n'
+import { bothNames, createActionMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -109,7 +109,10 @@ export function BlackHolePanel() {
         onChange={choosePreset}
         columns={2}
         choices={[
-          ...FLYBY_PRESETS.map((p) => ({ value: p.id, label: pick(p.name) })),
+          ...FLYBY_PRESETS.map((p) => ({
+            value: p.id,
+            label: bothNames(p.name),
+          })),
           { value: 'custom', label: t('hole.custom') },
         ]}
       />
@@ -124,7 +127,7 @@ export function BlackHolePanel() {
           columns={2}
           choices={(Object.keys(INTRUDERS) as IntruderKind[]).map((k) => ({
             value: k,
-            label: pick(INTRUDERS[k].name),
+            label: bothNames(INTRUDERS[k].name),
           }))}
         />
         <RangeField

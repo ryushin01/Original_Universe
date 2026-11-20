@@ -5,7 +5,7 @@ import { destinationsOf } from '../../model/objects'
 import { isRemoved } from '../../model/world/selectors'
 import { world } from '../../model/world/store'
 import { isBodyId } from '../../model/solar/bodies'
-import { pick, t } from '../i18n'
+import { otherLocale, pick, pickOther, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './DestinationStrip.module.css'
 
@@ -40,7 +40,15 @@ export function DestinationStrip() {
                 onChange={() => viewActions.select(item.id)}
                 class="sr-only"
               />
-              {pick(item.name)}
+              <span class={styles.names}>
+                {pick(item.name)}
+                {/* 보조 기술이 두 이름을 띄어 읽도록 (격자 안의 공백은 그려지지 않음) */}{' '}
+                <Show when={pickOther(item.name)}>
+                  <span class={styles.alt} lang={otherLocale()}>
+                    {pickOther(item.name)}
+                  </span>
+                </Show>
+              </span>
               <Show when={gone(item.id)}>
                 <span class="sr-only"> ({t('status.gone')})</span>
               </Show>

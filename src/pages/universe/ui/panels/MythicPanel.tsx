@@ -31,7 +31,7 @@ import {
   ragingBattles,
 } from '../../model/world/mythic'
 import { formatDuration, josa, nameOf } from '../../model/world/text'
-import { createActionMessage, pick, t } from '../i18n'
+import { bothNames, createActionMessage, pick, t } from '../i18n'
 import { createLore } from '../mythicLore'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
@@ -42,7 +42,7 @@ const RIVAL_SELECT_ID = 'mythic-rival'
 const beingOptions = (exclude?: string): SelectOption[] =>
   BEINGS.filter((b) => b.id !== exclude).map((b) => ({
     value: b.id,
-    label: pick(b.name),
+    label: bothNames(b.name),
     group: pick(GROUP_NAME[b.group]),
   }))
 

@@ -13,6 +13,18 @@
   text-align: center;
 }
 
+/* 다른 언어 이름 (한글 이름 아래 영문, 영문 이름 아래 한글) */
+.altTitle {
+  margin-top: -0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
 .subtitle {
   font-family: var(--font-display);
   font-size: 0.6875rem;
