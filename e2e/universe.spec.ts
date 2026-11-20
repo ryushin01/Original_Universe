@@ -142,9 +142,14 @@ test.describe('첫 화면', () => {
       .getAttribute('src')
     const sw = await (await request.get('/sw.js')).text()
     // 빌드 때 채운 목록 (자리 표시 그대로면 옛 파일을 지우지 못함)
-    expect(sw).not.toContain("{ assets: [], textures: 'dev' }")
+    expect(sw).not.toContain("{ assets: [], textures: 'dev', models: 'dev' }")
     expect(sw).toContain(`"${script!.replace(/^\//, '')}"`)
     expect(sw).toMatch(/"textures":"[0-9a-f]{12}"/)
+    expect(sw).toMatch(/"models":"[0-9a-f]{12}"/)
+    // 우주적 존재의 3D 모델(존재가 처음 나타날 때 받음)도 함께 배포됨
+    const model = await request.get('/models/eagle.glb')
+    expect(model.ok()).toBe(true)
+    expect((await model.body()).subarray(0, 4).toString()).toBe('glTF')
   })
 
   test('웹 앱 매니페스트와 아이콘이 있다', async ({ page, request }) => {
