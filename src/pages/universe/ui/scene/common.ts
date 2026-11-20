@@ -46,6 +46,19 @@ import {
 
 const cache = new Map<string, Promise<Texture>>()
 
+/** 받기 시작한 텍스처와 끝난 텍스처 수 (소개 화면의 불러오기 표시에 씀) */
+let texturesStarted = 0
+let texturesSettled = 0
+let progressListener: ((loaded: number, total: number) => void) | null = null
+
+/** 텍스처를 받기 시작하거나 끝낼 때마다 진행을 알림 (엔진 하나만 듣고, null이면 그만 들음) */
+export function onTextureProgress(
+  listener: ((loaded: number, total: number) => void) | null,
+) {
+  progressListener = listener
+  listener?.(texturesSettled, texturesStarted)
+}
+
 /** 이미지 해석을 메인 스레드 밖(ImageBitmap)에서 처리하는 텍스처 불러오기 */
 export function loadTexture(url: string, srgb = true): Promise<Texture> {
   const key = `${url}|${srgb}`
@@ -62,6 +75,14 @@ export function loadTexture(url: string, srgb = true): Promise<Texture> {
       return texture
     })
     cache.set(key, promise)
+    texturesStarted += 1
+    progressListener?.(texturesSettled, texturesStarted)
+    // 실패해도 끝난 것으로 셈 (장면은 텍스처 없이도 그림)
+    const settle = () => {
+      texturesSettled += 1
+      progressListener?.(texturesSettled, texturesStarted)
+    }
+    promise.then(settle, settle)
   }
   return promise
 }

@@ -56,21 +56,6 @@
   color: var(--label);
 }
 
-.lead {
-  max-width: 34rem;
-  margin: 0.75rem auto 0;
-  font-size: 0.9375rem;
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-.start {
-  justify-self: center;
-  margin-top: 1.25rem;
-  min-width: 13rem;
-  min-height: 3rem;
-}
-
 .languages {
   display: flex;
   flex-shrink: 0;
@@ -100,72 +85,10 @@
   color: var(--ice);
 }
 
-/* 소개 화면: 제목을 가운데 크게 */
+/* 소개 화면: 3D가 화면을 채우고 시뮬레이터 영역은 감춤 (머리말·불러오기·둘러보기는 intro/) */
 .introOn {
   height: 100svh;
   overflow: hidden;
-
-  & .header {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 1.5rem;
-    pointer-events: none;
-
-    & > * {
-      pointer-events: auto;
-    }
-  }
-
-  & .brand {
-    justify-items: center;
-    /* 지구의 밝은 구름 위에서도 글자 명도 대비가 유지되도록 옅은 배경막 */
-    padding: 2rem 2.5rem;
-    background: radial-gradient(
-      closest-side,
-      rgb(4 6 13 / 0.62),
-      rgb(4 6 13 / 0.38) 70%,
-      transparent
-    );
-  }
-
-  & .title {
-    font-size: clamp(1.9rem, 7vw, 4.75rem);
-    font-weight: 200;
-    letter-spacing: 0.24em;
-    text-indent: 0.24em;
-    text-shadow: 0 0 40px rgb(4 6 13 / 0.8);
-  }
-
-  & .tagline {
-    font-size: clamp(0.7rem, 1.6vw, 0.875rem);
-    letter-spacing: 0.3em;
-    color: var(--ice);
-  }
-
-  /* 글자 둘레를 어둡게 감싸는 후광 */
-  & .title,
-  & .tagline,
-  & .lead {
-    text-shadow:
-      0 0 2px rgb(4 6 13 / 0.95),
-      0 0 6px rgb(4 6 13 / 0.9),
-      0 0 16px rgb(4 6 13 / 0.85);
-  }
-
-  & .lead {
-    color: var(--ice);
-  }
-
-  & .languages {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-  }
 
   & .stage {
     position: fixed;
@@ -176,7 +99,8 @@
   & .panels,
   & .ladder,
   & .destinations,
-  & .mobileNav {
+  & .mobileNav,
+  & .hint {
     visibility: hidden;
   }
 }
