@@ -285,6 +285,24 @@ function championsText(war: War, side: Side): Text | null {
   })
 }
 
+/** 한 편이 한 차례에 내린 신의 일격들을 한 줄로 ('수르트·오딘·라 외 17명이 … 함대를 내리쳤습니다') */
+function strikesText(events: RoundEvent[], war: War): Text {
+  if (events.length === 1) return specialText(events[0], war)
+  const foe = events[0].side === 'a' ? war.b : war.a
+  const shown = events.slice(0, 3)
+  const more = events.length - shown.length
+  return compose((l) => {
+    const names = shown
+      .map((e) => beingName(e.being, l))
+      .join(l === 'ko' ? '·' : ', ')
+    const b = fname(foe, l)
+    if (l === 'en')
+      return `${names}${more ? ` and ${more} more` : ''} smite ${b}’s fleet.`
+    const who = more ? `${names} 외 ${more}명` : names
+    return `${josa(who, '이가')} ${b} 함대를 내리쳤습니다.`
+  })
+}
+
 function specialText(event: RoundEvent, war: War): Text {
   const { id, side } = event
   const me = side === 'a' ? war.a : war.b
@@ -584,9 +602,25 @@ function applyRound(
       if (text) s = log(s, text, 'warn')
     }
   }
+  const logged = new Set<Side>()
   for (const event of round.specials) {
     const { side, id } = event
     switch (id) {
+      case 'divine-strike':
+        // 한 편의 일격들은 처음 한 번에 묶어 기록
+        if (!logged.has(side)) {
+          logged.add(side)
+          s = log(
+            s,
+            strikesText(
+              round.specials.filter(
+                (e) => e.id === 'divine-strike' && e.side === side,
+              ),
+              war,
+            ),
+          )
+        }
+        break
       case 'raid':
         s = raid(s, war, side)
         break
