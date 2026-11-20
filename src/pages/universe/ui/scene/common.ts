@@ -59,8 +59,36 @@ export function onTextureProgress(
   listener?.(texturesSettled, texturesStarted)
 }
 
-/** 이미지 해석을 메인 스레드 밖(ImageBitmap)에서 처리하는 텍스처 불러오기 */
-export function loadTexture(url: string, srgb = true): Promise<Texture> {
+/** 진행에 넣는 텍스처를 다 받을 때를 기다리는 쪽 */
+const idleWaiters: Array<() => void> = []
+
+function flushIdle() {
+  if (texturesSettled < texturesStarted) return
+  for (const resolve of idleWaiters.splice(0)) resolve()
+}
+
+/**
+ * 지금까지 받기 시작한 (진행에 넣는) 텍스처를 다 받은 뒤. 장면을 만드는 동안
+ * 함께 시작하는 텍스처까지 기다리도록 한 박자 늦게 확인함
+ */
+export function texturesIdle(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      idleWaiters.push(resolve)
+      flushIdle()
+    }, 0)
+  })
+}
+
+/**
+ * 이미지 해석을 메인 스레드 밖(ImageBitmap)에서 처리하는 텍스처 불러오기.
+ * track이 false면 소개 화면의 불러오기 진행에 넣지 않음
+ */
+export function loadTexture(
+  url: string,
+  srgb = true,
+  track = true,
+): Promise<Texture> {
   const key = `${url}|${srgb}`
   let promise = cache.get(key)
   if (!promise) {
@@ -75,17 +103,27 @@ export function loadTexture(url: string, srgb = true): Promise<Texture> {
       return texture
     })
     cache.set(key, promise)
-    texturesStarted += 1
-    progressListener?.(texturesSettled, texturesStarted)
-    // 실패해도 끝난 것으로 셈 (장면은 텍스처 없이도 그림)
-    const settle = () => {
-      texturesSettled += 1
+    if (track) {
+      texturesStarted += 1
       progressListener?.(texturesSettled, texturesStarted)
+      // 실패해도 끝난 것으로 셈 (장면은 텍스처 없이도 그림)
+      const settle = () => {
+        texturesSettled += 1
+        progressListener?.(texturesSettled, texturesStarted)
+        flushIdle()
+      }
+      promise.then(settle, settle)
     }
-    promise.then(settle, settle)
   }
   return promise
 }
+
+/**
+ * 덜 급한 텍스처(작은 위성·왜행성·태양 표면 지도): 먼저 받던 텍스처가 다 끝난 뒤
+ * 진행에 넣지 않고 받음 (소개 화면의 불러오기를 늦추지 않게, 그동안은 잡음으로 그린 표면)
+ */
+export const loadTextureLater = (url: string, srgb = true) =>
+  texturesIdle().then(() => loadTexture(url, srgb, false))
 
 /* ── 좌표 ─────────────────────────────────────────────── */
 

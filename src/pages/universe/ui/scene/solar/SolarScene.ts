@@ -100,6 +100,8 @@ import {
   glowVertex,
   planetFragment,
   planetVertex,
+  PROMINENCE_DISK,
+  prominenceFragment,
   shellFragment,
   shellVertex,
   sunFragment,
@@ -112,6 +114,7 @@ import {
   faceCamera,
   impactKey,
   loadTexture,
+  loadTextureLater,
   makeGlow,
   makeSelectionShell,
   makeSky,
@@ -121,6 +124,7 @@ import {
 } from '../common'
 import type { FrameContext, ScaleScene, SceneEnv, Target } from '../types'
 import { createBeingLayer } from './beings/BeingLayer'
+import { SHAPES, makeShapeGeometry } from './shapes'
 import { createWarLayer } from './war/WarLayer'
 
 /** 지구 텍스처: 화면이 좁거나 메모리가 적은 기기는 1024px 벌 */
@@ -143,7 +147,7 @@ const PROCEDURAL: Partial<
   callisto: ['#3f3a33', '#7a7166', 7, 0, null, '#ffffff'],
   titan: ['#c98a35', '#e6b65a', 1.6, 0, null, '#ffffff'],
   pluto: ['#8a6a50', '#e2cdb0', 3, 0, [175, 20, 0.45], '#f6efe4'],
-  halley: ['#2b2723', '#55504a', 6, 0, null, '#ffffff'],
+  halley: ['#3b352f', '#6f675d', 6, 0, null, '#ffffff'],
   apophis: ['#6b625a', '#a39a90', 6, 0, null, '#ffffff'],
 }
 
@@ -339,10 +343,37 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
       uColor: { value: new Color('#ffd27a') },
       uTime: { value: 0 },
       uGiant: { value: 0 },
+      uMap: { value: null },
+      uHasMap: { value: 0 },
     },
   })
   const sunMesh = new Mesh(new SphereGeometry(1, 64, 32), sunMaterial)
+  // 표면 지도는 덜 급함 (그동안은 잡음으로 그린 쌀알 무늬)
+  if (BODIES.sun.texture)
+    loadTextureLater(asset(`textures/${BODIES.sun.texture}.webp`))
+      .then((texture) => {
+        sunMaterial.uniforms.uMap.value = texture
+        sunMaterial.uniforms.uHasMap.value = 1
+      })
+      .catch(() => {})
   const corona = makeGlow('#ffcf7a', 1, 1, 0.6)
+  // 채층과 홍염 (가장자리에 붙은 붉은 띠와 솟는 불꽃)
+  const prominence = new Mesh(
+    new PlaneGeometry(1, 1),
+    new ShaderMaterial({
+      vertexShader: glowVertex,
+      fragmentShader: prominenceFragment,
+      uniforms: {
+        uColor: { value: new Color('#ffd27a') },
+        uTime: { value: 0 },
+        uIntensity: { value: 1 },
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: AdditiveBlending,
+    }),
+  )
+  prominence.renderOrder = 5
   const sunHole = new Mesh(
     new PlaneGeometry(1, 1),
     new ShaderMaterial({
@@ -360,7 +391,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
     new MeshBasicMaterial({ visible: false }),
   )
   sunPick.userData.id = 'sun'
-  sunGroup.add(sunMesh, corona, sunHole, sunPick)
+  sunGroup.add(sunMesh, prominence, corona, sunHole, sunPick)
   scene.add(sunGroup)
   const nebula = new Mesh(
     new SphereGeometry(1, 64, 32),
@@ -379,12 +410,15 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
     const group = new Group()
     const spin = new Group()
     const material = makePlanetMaterial(id)
+    const shape = SHAPES[id]
     const mesh = new Mesh(
-      new SphereGeometry(
-        1,
-        body.kind === 'planet' ? 48 : 28,
-        body.kind === 'planet' ? 24 : 14,
-      ),
+      shape
+        ? makeShapeGeometry(shape)
+        : new SphereGeometry(
+            1,
+            body.kind === 'planet' ? 48 : 28,
+            body.kind === 'planet' ? 24 : 14,
+          ),
       material,
     )
     spin.add(mesh)
@@ -405,7 +439,10 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
     }
     if (body.texture) {
       const name = id === 'earth' ? TEXTURES.earth : body.texture
-      loadTexture(asset(`textures/${name}.webp`))
+      // 행성과 달은 바로, 작은 위성·왜행성은 그 뒤에 (소개 화면 불러오기를 늦추지 않게)
+      const load =
+        body.kind === 'planet' || id === 'moon' ? loadTexture : loadTextureLater
+      load(asset(`textures/${name}.webp`))
         .then((texture) => {
           material.uniforms.uMap.value = texture
           material.uniforms.uHasMap.value = 1
@@ -1513,6 +1550,10 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
       corona.visible = !sun.blackHole
       sunHole.visible = sun.blackHole
       sunMesh.scale.setScalar(sunRadius)
+      // 자전 (적도 약 25일, 표면 지도가 함께 돎)
+      sunMesh.quaternion.copy(
+        axesQuaternion(bodyAxes('sun', yearToJd(world.orbitYear)), quat),
+      )
       // 흑체 색은 거의 흰색이라 화면에서는 따뜻하게 (뜨거운 백색 왜성은 그대로)
       const warmth = clamp((9000 - sun.temperature) / 4000, 0, 1) * 0.55
       sunMaterial.uniforms.uColor.value
@@ -1525,6 +1566,23 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
         0,
         1,
       )
+      // 홍염: 백색 왜성·행성상 성운 단계에는 없음. 가까이서 보면 구의 윤곽이 판의 원보다
+      // 커 보이므로(원근) 윤곽 반지름에 맞춰 판을 키움
+      prominence.visible =
+        !sun.blackHole &&
+        sun.stage !== 'whiteDwarf' &&
+        sun.stage !== 'planetaryNebula'
+      if (prominence.visible) {
+        const dist = ctx.camera.position.distanceTo(sunGroup.position)
+        const limb =
+          sunRadius / Math.sqrt(Math.max(0.05, 1 - (sunRadius / dist) ** 2))
+        prominence.scale.setScalar((limb * 2) / PROMINENCE_DISK)
+        const pu = (prominence.material as ShaderMaterial).uniforms
+        pu.uColor.value.copy(sunMaterial.uniforms.uColor.value)
+        pu.uTime.value = ctx.reducedMotion ? 0 : ctx.elapsed
+        pu.uIntensity.value = sun.stage === 'main' ? 1 : 0.7
+        faceCamera(prominence, ctx.camera)
+      }
       const lum = Math.max(sun.luminosity, 1e-6)
       corona.scale.setScalar(
         sunRadius * (sun.stage === 'whiteDwarf' ? 14 : 4.6),

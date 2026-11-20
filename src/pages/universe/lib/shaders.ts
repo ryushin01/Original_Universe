@@ -235,33 +235,84 @@ void main() {
 }
 `
 
-/** 태양 표면 (쌀알 무늬, 흑점, 주연 감광) */
+/** 태양 표면 (쌀알 무늬, 활동 영역, 흑점, 주연 감광) */
 export const sunVertex = /* glsl */ `
 varying vec3 vLocal;
 varying vec3 vNormalV;
+varying vec2 vUv;
 void main() {
+  vUv = uv;
   vLocal = normalize(position);
   vNormalV = normalize(normalMatrix * normal);
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `
 
+/** 태양 표면 지도의 평균 밝기 (밝기만 따서 온도 색에 곱할 때 1이 되게) */
+const SUN_MAP_MEAN = 0.6
+
+/**
+ * 표면 지도(쌀알 무늬·밝은 활동 영역)는 밝기만 써서 온도에 따른 색은 그대로 두고,
+ * 잔 잡음으로 일렁이게 함. 거성이 되면 지도 대신 큰 대류 세포만 남음.
+ * (셰이더 문자열 안의 글자는 화면 글꼴 하위 집합에 들어가므로 설명은 여기에 씀)
+ */
 export const sunFragment = /* glsl */ `
 ${NOISE}
 uniform vec3 uColor;
 uniform float uTime;
 uniform float uGiant;
+uniform sampler2D uMap;
+uniform float uHasMap;
 varying vec3 vLocal;
 varying vec3 vNormalV;
+varying vec2 vUv;
 void main() {
   float scale = mix(18.0, 4.0, uGiant);
   float g = fbm(vLocal * scale + vec3(0.0, uTime * 0.03, 0.0));
   float cells = 0.8 + 0.3 * g;
+  if (uHasMap > 0.5) {
+    float lum = dot(texture2D(uMap, vUv).rgb, vec3(0.299, 0.587, 0.114)) / ${SUN_MAP_MEAN.toFixed(2)};
+    float shimmer = 0.9 + 0.14 * fbm(vLocal * 46.0 + vec3(uTime * 0.05));
+    float detail = 1.0 + (lum - 1.0) * 0.45 + max(lum - 1.25, 0.0) * 0.35;
+    cells = mix(detail * shimmer, cells, uGiant);
+  }
   // 흑점은 드물게 (강한 잡음 꼭대기만)
   float spots = smoothstep(0.8, 0.9, snoise(vLocal * 2.2 + uTime * 0.004)) * (1.0 - uGiant);
   float limb = pow(max(vNormalV.z, 0.0), 0.42);
   vec3 c = uColor * cells * (0.5 + 0.55 * limb) * (1.0 - spots * 0.65);
   gl_FragColor = vec4(c, 1.0);
+}
+`
+
+/** 홍염 판에서 태양 원판의 반지름 (uv 반지름, 판 가장자리가 1) */
+export const PROMINENCE_DISK = 0.62
+
+/**
+ * 태양 가장자리의 채층과 홍염: 카메라를 향한 판에 그림 (가산 혼합).
+ * chromo는 가장자리에 붙은 얇은 붉은 띠(채층), arcs는 고리처럼 솟는 큰 불꽃,
+ * threads는 가는 실 같은 불꽃. 각도는 방향 벡터로 잡음에 넣어 이음매가 없고,
+ * 높이 올라갈수록 옅어짐.
+ */
+export const prominenceFragment = /* glsl */ `
+${NOISE}
+uniform vec3 uColor;
+uniform float uTime;
+uniform float uIntensity;
+varying vec2 vUv;
+void main() {
+  vec2 p = vUv * 2.0 - 1.0;
+  float r = length(p);
+  float disk = ${PROMINENCE_DISK.toFixed(2)};
+  if (r < disk * 0.97 || r > 1.0) discard;
+  float h = max(r - disk, 0.0) / (1.0 - disk);
+  vec2 dir = p / r;
+  float chromo = exp(-h * 38.0) * smoothstep(disk * 0.97, disk, r);
+  float n = fbm(vec3(dir * 3.4, h * 2.6 - uTime * 0.035));
+  float arcs = smoothstep(0.12, 0.5, n) * exp(-h * 4.2);
+  float threads = smoothstep(0.45, 0.85, snoise(vec3(dir * 11.0, h * 7.0 - uTime * 0.06))) * exp(-h * 8.0);
+  float v = (chromo * 1.1 + arcs * 1.2 + threads * 0.7) * uIntensity * (1.0 - smoothstep(0.85, 1.0, r));
+  vec3 c = mix(vec3(1.0, 0.3, 0.2), uColor, 0.35);
+  gl_FragColor = vec4(c * v, v);
 }
 `
 

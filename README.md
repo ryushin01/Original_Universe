@@ -1,7 +1,7 @@
 # ORIGINAL UNIVERSE - 우주 환경·재해 대응 시뮬레이터
 
 [![CI](https://github.com/ryushin01/Original_Universe/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/Original_Universe/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.5.0-7c9cff)
+![version](https://img.shields.io/badge/version-1.6.0-7c9cff)
 
 태양계에서 우주 거대 구조까지 오가며 소행성 충돌, 태양 폭풍, 초신성·감마선 폭발, 블랙홀 근접 통과, 유성우, 태양의 노화, 신화 속 우주적 존재의 격돌을 일으키고 다이슨 스웜·링월드·궤도 이동 같은 우주 구조물로 대응해 보는 3D 우주 시뮬레이터입니다. [TerraNova](https://github.com/ryushin01/TerraNova)의 우주판입니다.
 
@@ -18,6 +18,10 @@
 | 토성과 측지선 선택 표시                                                      | 캐링턴급 태양 폭풍                                                                                             |
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | ![고리가 있는 토성을 정이십면체 선이 감싼 근접 화면](docs/images/saturn.jpg) | ![태양에서 퍼져 나간 캐링턴급 코로나 질량 방출 껍질이 금성과 지구 쪽으로 다가가는 모습](docs/images/storm.jpg) |
+
+| 태양 근접 (홍염·활동 영역)                                                                                 | 핼리 혜성 핵 (땅콩 모양)                                                                                   |
+| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| ![가장자리에 붉은 홍염이 솟고 쌀알 무늬와 밝은 활동 영역, 흑점이 있는 태양 근접 화면](docs/images/sun.jpg) | ![울퉁불퉁한 땅콩 모양의 어두운 핼리 혜성 핵과 오른쪽 정보 카드(질량·반지름·자전)](docs/images/halley.jpg) |
 
 | 블랙홀 근접 통과                                                                                                     | 우주적 존재의 격돌                                                                                                                                                                                                                 |
 | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -93,6 +97,7 @@ pnpm dev    # http://localhost:3100
 | `pnpm fonts`                           | 한글 웹 폰트 다시 만들기 (화면 글자를 바꾼 뒤)                               |
 | `pnpm logotype`                        | 소개 화면의 필기체 로고 윤곽 다시 만들기                                     |
 | `pnpm models`                          | 우주적 존재 3D 모델 받아 가공하기 (`scripts/models/sources.json`)            |
+| `pnpm textures`                        | 위성·왜행성·태양 텍스처 받아 가공하기 (libwebp의 `cwebp`·`dwebp` 필요)       |
 | `pnpm screenshots`                     | README 화면 다시 찍기 (`build` 뒤 `preview`를 띄운 다음 `BASE_URL` 지정)     |
 
 ## 프로젝트 구조
@@ -135,8 +140,9 @@ src/
 
 | 자료                                                                                                                                                                                | 저작자                                                                                           | 사용 허락                                                     | 원본                                                                                                        |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 행성 텍스처 (수성·금성·달·화성·목성·토성과 고리·천왕성·해왕성)                                                                                                                      | Solar System Scope                                                                               | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)     | [Solar System Scope Textures](https://www.solarsystemscope.com/textures/)                                   |
+| 행성·태양·세레스 텍스처 (수성·금성·달·화성·목성·토성과 고리·천왕성·해왕성·태양·세레스, 세레스는 일부 가상 지형)                                                                     | Solar System Scope                                                                               | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)     | [Solar System Scope Textures](https://www.solarsystemscope.com/textures/)                                   |
 | 지구 텍스처 (색·밤 불빛·구름)                                                                                                                                                       | three.js authors                                                                                 | MIT                                                           | [three.js 예제 텍스처 (r160)](https://github.com/mrdoob/three.js/tree/r160/examples/textures/planets)       |
+| 위성·명왕성 텍스처 (이오·유로파·가니메데·칼리스토·타이탄·명왕성, 빛깔을 맞추고 빈 곳을 채움)                                                                                        | NASA                                                                                             | NASA 미디어 이용 지침 (출처 표기)                             | [NASA 3D Resources](https://github.com/nasa/NASA-3D-Resources)                                              |
 | 행성 근사 궤도 요소                                                                                                                                                                 | E. M. Standish, NASA JPL                                                                         | 공개 과학 자료                                                | [Approximate Positions of the Planets](https://ssd.jpl.nasa.gov/planets/approx_pos.html)                    |
 | 소천체 궤도 요소 (세레스·아포피스·핼리 혜성·유성우 모천체)                                                                                                                          | NASA JPL Solar System Dynamics                                                                   | 공개 과학 자료                                                | [Small-Body Database API](https://ssd-api.jpl.nasa.gov/doc/sbdb.html)                                       |
 | three.js (3D)                                                                                                                                                                       | three.js authors                                                                                 | MIT                                                           | [three.js](https://github.com/mrdoob/three.js)                                                              |
