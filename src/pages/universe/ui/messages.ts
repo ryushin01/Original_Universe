@@ -93,8 +93,8 @@ export const MESSAGES = {
   ],
   'intro.neptune.title': ['신화가 깨어나다', 'Myths awaken'],
   'intro.neptune.body': [
-    '아우터 갓과 엘더 갓, 신수 40종과 천사·악마, 거대 로봇까지 우주적 존재 82종이 빛나는 3D 몸으로 나타나 격돌하고, 우주적 재해 15종이 태양계를 흔듭니다.',
-    'Outer Gods and Elder Gods, forty divine beasts, angels, demons and giant robots: 82 cosmic beings appear in glowing 3D, clash, and shake the Solar System with 15 cosmic calamities.',
+    '아우터 갓과 엘더 갓, 신수 40종과 영수 12종, 천사·악마, 거대 로봇까지 우주적 존재 94종이 빛나는 3D 몸으로 나타나 격돌하고, 우주적 재해 15종이 태양계를 흔듭니다.',
+    'Outer Gods and Elder Gods, forty divine beasts and twelve spirit beasts, angels, demons and giant robots: 94 cosmic beings appear in glowing 3D, clash, and shake the Solar System with 15 cosmic calamities.',
   ],
   'intro.galaxy.nav': ['은하', 'Galaxy'],
   'intro.galaxy.place': [

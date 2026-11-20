@@ -20,3 +20,6 @@ lhci-report
 
 # pnpm models가 받은 원본 모델
 .cache
+
+# Playwright MCP 스냅샷
+.playwright-mcp

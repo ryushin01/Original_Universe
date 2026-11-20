@@ -22,6 +22,7 @@ import {
   GALACTIC_YEAR,
   SUN_GALACTOCENTRIC_LY,
 } from '../../../model/galaxy/catalog'
+import type { NebulaLook } from '../../../model/galaxy/catalog'
 import { makeBlob, makeSpiralGalaxy } from '../../../lib/galaxyModel'
 import type { ParticleCloud } from '../../../lib/galaxyModel'
 import {
@@ -81,6 +82,15 @@ export function cloudPoints(cloud: ParticleCloud, size: number) {
   )
   points.frustumCulled = false
   return points
+}
+
+/** 성운 빛깔 (발광은 수소의 붉은빛, 행성상은 산소의 청록빛 등) */
+const NEBULA_COLORS: Record<NebulaLook, [number, number, number]> = {
+  emission: [1, 0.42, 0.58],
+  planetary: [0.42, 0.95, 0.88],
+  reflection: [0.5, 0.68, 1],
+  dark: [0.42, 0.26, 0.3],
+  remnant: [0.62, 0.82, 1],
 }
 
 export function createGalaxyScene(): ScaleScene {
@@ -219,6 +229,20 @@ export function createGalaxyScene(): ScaleScene {
             [0.75, 0.82, 1],
           ),
           60,
+        ),
+      )
+    // 성운은 빛깔에 맞는 구름 (크기는 보이도록 키움)
+    if (obj.look)
+      group.add(
+        cloudPoints(
+          makeBlob(
+            obj.look === 'planetary' ? 260 : 700,
+            obj.id.length * 13 + Math.round(obj.distanceLy),
+            obj.look === 'planetary' ? 0.55 : 1.3,
+            NEBULA_COLORS[obj.look],
+            obj.look === 'planetary' ? 0.9 : 0.6,
+          ),
+          obj.look === 'dark' ? 26 : 34,
         ),
       )
     const pick = new Mesh(

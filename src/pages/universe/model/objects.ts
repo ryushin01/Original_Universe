@@ -26,6 +26,17 @@ const ALL: Record<ScaleId, SceneObject[]> = {
   cosmic: COSMIC_STRUCTURES.map((s) => ({ id: s.id, name: s.name })),
 }
 
+/** 목적지 목록에는 넣지 않는 성운 (목록이 너무 길어지지 않게) */
+const EXTRA_NEBULAE = new Set([
+  'trifid',
+  'rosette',
+  'north-america',
+  'cats-eye',
+  'dumbbell',
+  'veil',
+  'helix',
+])
+
 const STRIP: Record<ScaleId, string[]> = {
   solar: [
     'sun',
@@ -57,7 +68,10 @@ const STRIP: Record<ScaleId, string[]> = {
     'betelgeuse',
     'rigel',
   ],
-  galaxy: GALAXY_OBJECTS.map((o) => o.id),
+  // 새로 더한 성운은 목적지 바로 가기에서 고름 (아래 목록은 대표 천체만)
+  galaxy: GALAXY_OBJECTS.filter((o) => !EXTRA_NEBULAE.has(o.id)).map(
+    (o) => o.id,
+  ),
   local: [
     'milky-way',
     'andromeda',
