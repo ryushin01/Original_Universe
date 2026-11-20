@@ -38,7 +38,7 @@ vi.mock('./models', async (importOriginal) => {
 })
 
 describe('우주적 존재의 3D 몸', () => {
-  it('82종 모두 몸 표가 있고, 모델을 쓰는 몸은 있는 모델을 가리킨다', () => {
+  it('모든 존재(94종)가 몸 표가 있고, 모델을 쓰는 몸은 있는 모델을 가리킨다', () => {
     const ids = new Set(BEINGS.map((being) => being.id))
     for (const being of BEINGS) {
       const spec = BODIES[being.id]

@@ -202,6 +202,50 @@ export const BODIES: Record<string, BodySpec> = {
   hati: { kind: 'model', model: 'wolf' },
   nidhogg: { kind: 'model', model: 'dragon' },
   hraesvelgr: { kind: 'model', model: 'eagle', scale: BIRD },
+  // 영수
+  gumiho: {
+    kind: 'model',
+    model: 'wolf',
+    extras: [{ kind: 'tail', at: 'tail', count: 9 }],
+  },
+  pixiu: {
+    kind: 'model',
+    model: 'panther',
+    extras: [
+      { kind: 'wings', style: 'feather' },
+      { kind: 'horns', count: 1 },
+    ],
+  },
+  baku: { kind: 'model', model: 'bear' },
+  jingwei: { kind: 'model', model: 'parrot', scale: 1.2 },
+  bifang: { kind: 'model', model: 'stork', extras: [{ kind: 'plumes' }] },
+  'jade-rabbit': {
+    kind: 'model',
+    model: 'chowchow',
+    extras: [{ kind: 'horns', count: 2 }, { kind: 'halo' }],
+  },
+  chanchu: { kind: 'model', model: 'turtle' },
+  cheonma: {
+    kind: 'model',
+    model: 'horse',
+    extras: [{ kind: 'wings', style: 'feather' }, { kind: 'halo' }],
+  },
+  nue: {
+    kind: 'model',
+    model: 'panther',
+    extras: [{ kind: 'tail', at: 'tail' }],
+  },
+  raiju: { kind: 'model', model: 'wolf', extras: [{ kind: 'plumes' }] },
+  unicorn: {
+    kind: 'model',
+    model: 'horse',
+    extras: [{ kind: 'horns', count: 1 }],
+  },
+  griffin: {
+    kind: 'model',
+    model: 'panther',
+    extras: [{ kind: 'wings', style: 'feather' }],
+  },
   // 괴물
   kraken: { kind: 'model', model: 'squid' },
   chimera: {

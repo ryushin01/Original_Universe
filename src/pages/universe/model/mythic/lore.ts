@@ -334,4 +334,52 @@ export const LORE: Record<string, Text> = {
     '행성을 쪼개 자원으로 바꾸려고 만든 거대한 기동 병기. 주인이 사라진 뒤에도 명령을 따릅니다.',
     'A gigantic war machine built to crack planets open for their resources, still obeying long after its makers vanished.',
   ),
+  gumiho: both(
+    '천 년을 살아 아홉 꼬리를 얻은 여우. 여우불로 사람을 홀리고 사람의 모습으로 둔갑합니다.',
+    'A fox that lived a thousand years to grow nine tails; it bewitches with foxfire and takes human shape.',
+  ),
+  pixiu: both(
+    '금은을 먹되 내놓지 않는다는 뿔 달린 날짐승. 재물을 지키고 사악한 기운을 쫓습니다.',
+    'A horned, winged beast said to devour gold and silver and never let them go; it guards wealth and drives off evil.',
+  ),
+  baku: both(
+    '코끼리 코와 곰의 몸을 한 영수. 사람들의 악몽을 먹어 치워 편안한 잠을 지켜 줍니다.',
+    'A spirit beast with an elephant’s trunk and a bear’s body that eats nightmares and keeps sleep peaceful.',
+  ),
+  jingwei: both(
+    '바다에 빠져 죽은 공주가 새가 되어, 나뭇가지와 돌을 물어다 바다를 메우려 쉬지 않고 날아갑니다.',
+    'A princess drowned at sea became this bird, forever carrying twigs and pebbles to fill the ocean.',
+  ),
+  bifang: both(
+    '외다리로 서는 학 모양의 불새. 나타나는 곳마다 까닭 모를 불이 일어납니다.',
+    'A one-legged, crane-like fire bird; wherever it appears, unexplained fires break out.',
+  ),
+  'jade-rabbit': both(
+    '달에서 불사약을 찧는 하얀 토끼. 보름달이 뜨는 밤에 그 모습이 가장 또렷합니다.',
+    'The white rabbit pounding the elixir of life on the Moon, clearest on full-moon nights.',
+  ),
+  chanchu: both(
+    '불사약을 먹고 달로 달아난 이가 변했다는 두꺼비. 월식 때 달을 삼킨다고 전해집니다.',
+    'A toad said to be someone who fled to the Moon after drinking the elixir of life; eclipses were blamed on it swallowing the Moon.',
+  ),
+  cheonma: both(
+    '하늘을 달리는 흰 말. 신라 무덤의 말다래 그림처럼 구름을 박차고 하늘길을 엽니다.',
+    'A white horse that gallops across the sky, kicking through clouds like the one painted on a Silla saddle flap.',
+  ),
+  nue: both(
+    '원숭이 얼굴에 너구리 몸, 범의 다리와 뱀 꼬리를 한 밤의 괴조. 울음소리가 들리면 흉한 일이 생깁니다.',
+    'A night chimera with a monkey’s face, a tanuki’s body, tiger legs and a snake for a tail; its cry heralds misfortune.',
+  ),
+  raiju: both(
+    '번개와 함께 땅으로 떨어진다는 뇌수. 번갯불로 이루어진 몸이 지나간 자리의 기계를 멎게 합니다.',
+    'A thunder beast said to fall to earth with the lightning; its body of lightning stops machines in its path.',
+  ),
+  unicorn: both(
+    '이마에 뿔 하나가 난 흰 말. 그 뿔은 독을 씻어 내고 물을 맑게 한다고 전해집니다.',
+    'A white horse with a single horn on its brow, said to cleanse poison and purify water.',
+  ),
+  griffin: both(
+    '독수리의 머리와 날개에 사자의 몸을 한 영수. 북쪽 산의 금을 지키는 파수꾼입니다.',
+    'A spirit beast with an eagle’s head and wings on a lion’s body, the sentinel of the gold in the northern mountains.',
+  ),
 }
