@@ -13,6 +13,7 @@ import type { IntruderKind } from '../hazards/flyby'
 import type { NBody } from '../hazards/nbody'
 import type { ProjectKind } from '../projects/catalog'
 import type { Calamity, SiteId } from '../mythic/catalog'
+import type { FactionId, FleetSize, SpecialId } from '../war/catalog'
 
 export interface Structure {
   id: number
@@ -119,6 +120,8 @@ export type RemovalReason =
   | 'collided'
   /** 우주적 존재에게 삼켜짐 */
   | 'devoured'
+  /** 우주 대전의 행성 파괴포에 부서짐 */
+  | 'destroyed'
 
 export interface EarthState {
   /** 기후 평형을 따라가는 평균 기온 (°C, 충돌 겨울 제외) */
@@ -161,6 +164,36 @@ export interface Battle {
   seed: number
   /** 미션이 만든 격돌 */
   tag?: string
+}
+
+/** 우주 대전의 교전 차례 (개전할 때 미리 계산, 때가 되면 기록·여파) */
+export interface WarRound {
+  year: number
+  /** 이 차례 뒤 남은 전력 (처음 전력에 대한 비율) */
+  a: number
+  b: number
+  specials: Array<{ side: 'a' | 'b'; id: SpecialId }>
+  broke: 'a' | 'b' | null
+  done: boolean
+}
+
+/** 두 세력 함대의 우주 대전 (스페이스 오페라 모드) */
+export interface War {
+  id: number
+  a: FactionId
+  b: FactionId
+  site: SiteId
+  size: FleetSize
+  /** 행성 파괴포의 표적 (없으면 쏘지 않음) */
+  target: BodyId | null
+  startYear: number
+  endYear: number
+  aPower: number
+  bPower: number
+  rounds: WarRound[]
+  winner: 'a' | 'b'
+  status: 'raging' | 'over'
+  seed: number
 }
 
 export type Tone = 'info' | 'warn' | 'danger' | 'good'
@@ -213,6 +246,8 @@ export interface WorldState {
   colonyHealth: Partial<Record<ProjectKind, number>>
   /** 우주적 존재의 격돌과 강림 */
   battles: Battle[]
+  /** 세력 함대의 우주 대전 */
+  wars: War[]
   /** 태양 잠식: 우주적 존재가 해를 물어 줄어든 햇빛 비율 (0~0.95, 몇 달에 걸쳐 회복) */
   solarDim: number
   /** 유성 폭풍: 극대 앞뒤의 정해진 기간에만 활동도를 키움 */

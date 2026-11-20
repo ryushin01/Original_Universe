@@ -121,6 +121,7 @@ import {
 } from '../common'
 import type { FrameContext, ScaleScene, SceneEnv, Target } from '../types'
 import { createBeingLayer } from './beings/BeingLayer'
+import { createWarLayer } from './war/WarLayer'
 
 /** 지구 텍스처: 화면이 좁거나 메모리가 적은 기기는 1024px 벌 */
 const earthTextures = (env: SceneEnv) =>
@@ -605,6 +606,8 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
   /* 우주적 존재 */
   const beings = createBeingLayer()
   scene.add(beings.group)
+  const wars = createWarLayer()
+  scene.add(wars.group)
 
   /* 유성 */
   const METEORS = 48
@@ -1196,7 +1199,10 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
         : max
     }, 0)
     // 별 폭발과 우주적 존재의 여파가 하늘을 잠깐 밝힘
-    const glare = Math.max(flash, ctx.reducedMotion ? 0 : beings.flash())
+    const glare = Math.max(
+      flash,
+      ctx.reducedMotion ? 0 : Math.max(beings.flash(), wars.flash()),
+    )
     ;(sky.sky.material as ShaderMaterial).uniforms.uTint.value.setRGB(
       0.25 * glare,
       0.27 * glare,
@@ -1450,6 +1456,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
           ? { position: intruder.position.clone(), radius: 1.6 }
           : null
       if (id.startsWith('being:')) return beings.target(id)
+      if (id.startsWith('war:')) return wars.target(id)
       const pos = positions.get(id as BodyId)
       const visual = visuals.get(id as BodyId)
       if (!pos || !visual) return null
@@ -1473,7 +1480,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
     },
     pick(raycaster: Raycaster) {
       const hits = raycaster.intersectObjects(
-        [...pickables, intruderPick, ...beings.pickables],
+        [...pickables, intruderPick, ...beings.pickables, ...wars.pickables],
         false,
       )
       for (const hit of hits) {
@@ -1611,6 +1618,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
         mode,
         sunShining: !sun.blackHole,
       })
+      wars.update(ctx, { positions, sunRadius, mode })
       // 핼리 혜성 꼬리 (태양 가까이에서만)
       const halley = visuals.get('halley')
       const halleyAu = bodyPositionAu(world, 'halley')
@@ -1636,6 +1644,7 @@ export function createSolarScene(env: SceneEnv): ScaleScene {
     },
     dispose() {
       beings.dispose()
+      wars.dispose()
       disposeObject(scene)
       for (const cap of stormCaps.values()) cap.dispose()
     },

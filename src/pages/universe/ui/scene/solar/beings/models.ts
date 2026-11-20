@@ -40,6 +40,20 @@ export const MODEL_IDS = [
   'jellyfish',
   'turtle',
   'colossus',
+  // 우주 대전 함선
+  'fighter-a',
+  'fighter-b',
+  'fighter-c',
+  'frigate-a',
+  'frigate-b',
+  'pod',
+  'gunship',
+  'speeder-a',
+  'speeder-b',
+  'saucer',
+  'scout',
+  'concept',
+  'starship',
 ] as const
 export type ModelId = (typeof MODEL_IDS)[number]
 
@@ -97,6 +111,20 @@ export const MODELS: Record<ModelId, ModelSpec> = {
   },
   turtle: { deform: { flap: [0.35, 1.6, 0.3] } },
   colossus: {},
+  // 우주 대전 함선 (움직임 없음): 앞이 +Z가 되게 돌림
+  'fighter-a': {},
+  'fighter-b': {},
+  'fighter-c': {},
+  'frigate-a': {},
+  'frigate-b': {},
+  pod: {},
+  gunship: {},
+  'speeder-a': {},
+  'speeder-b': {},
+  saucer: {},
+  scout: { turn: 180 },
+  concept: { turn: -90 },
+  starship: {},
 }
 
 export type ModelKind = 'skinned' | 'morph' | 'static'

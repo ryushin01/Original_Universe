@@ -184,6 +184,12 @@ export const MESSAGES = {
     'Planets move along their real orbits.',
   ],
   // 목적지·정보
+  'dossier.warOver': ['이 우주 대전은 끝났습니다.', 'This space war is over.'],
+  'dossier.warProgress': ['전쟁 진행', 'War progress'],
+  'dossier.warSideA': ['공격', 'Attacker'],
+  'dossier.warSideB': ['방어', 'Defender'],
+  'dossier.warGuns': ['주포', 'Main guns'],
+  'dossier.warLeft': ['남은 전력', 'Strength left'],
   'dossier.title': ['목적지 정보', 'Destination dossier'],
   'dossier.none': [
     '3D 장면이나 목적지 목록에서 대상을 고르세요.',
@@ -408,4 +414,5 @@ export const MESSAGES = {
   'tabs.sun': ['태양의 미래', 'Sun’s fate'],
   'tabs.build': ['건설', 'Build'],
   'tabs.mythic': ['우주적 존재', 'Cosmic beings'],
+  'tabs.war': ['우주 대전', 'Space war'],
 } as const

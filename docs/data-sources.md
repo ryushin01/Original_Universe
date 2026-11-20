@@ -66,39 +66,52 @@ Solar System Scope 텍스처는 NASA 고도·영상 자료를 바탕으로 만�
 
 ### 3D 모델 (`public/models/`)
 
-우주적 존재의 3D 몸에 쓰는 모델 32종입니다. [Poly Pizza](https://poly.pizza)에서 받은 원본을 `pnpm models`(`scripts/build-models.mjs`)로 가공했습니다. 색·텍스처·UV·정점 색·법선을 지우고, 쓰지 않는 움직임과 작은 뼈를 덜고, 면을 줄여 meshopt로 압축했습니다. 장면은 이 모양을 빛나는 면과 선(홀로그램)으로만 그립니다. 원본 주소와 가공 설정은 `scripts/models/sources.json`에 있습니다.
+우주적 존재의 3D 몸과 우주 대전의 작은 함선(전투기·호위함·구축함·순양함·무인기·비행접시 등)에 쓰는 모델 45종입니다. [Poly Pizza](https://poly.pizza)에서 받은 원본을 `pnpm models`(`scripts/build-models.mjs`)로 가공했습니다. 색·텍스처·UV·정점 색·법선을 지우고, 쓰지 않는 움직임과 작은 뼈를 덜고, 면을 줄여 meshopt로 압축했습니다. 장면은 이 모양을 빛나는 면과 선(홀로그램)으로만 그립니다. 원본 주소와 가공 설정은 `scripts/models/sources.json`에 있습니다. 우주전함·우주항공모함·드레드노트·궤도 요새 정거장·고대 요새·생체 모함은 모델을 받지 않고 이 프로젝트에서 계산으로 지었습니다(`ui/scene/solar/war/ships.ts`).
 
-| 파일             | 모델                | 저작자                | 사용 허락                                                     | 원본                                           |
-| ---------------- | ------------------- | --------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
-| `eagle.glb`      | Flying Eagle        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/Ug45M2A4Vv)  |
-| `raven.glb`      | Flying Raven        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/p4puYPVor6)  |
-| `parrot.glb`     | Flying Parrot       | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/3wCiMpao0L)  |
-| `stork.glb`      | Flying Stork        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/iO3aMS7KK8)  |
-| `panther.glb`    | Black Panther       | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/JcAlAQynld)  |
-| `chowchow.glb`   | Running Chow Chow   | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/DLocG67Tsn)  |
-| `wolf.glb`       | Running Wolf        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/MyLvUaAaXO)  |
-| `dog.glb`        | Running Dog         | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/kv5eequb67)  |
-| `horse.glb`      | Galloping Horse     | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/idqRg0ucZ7)  |
-| `elk.glb`        | Running Elk         | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/nIkXY821lD)  |
-| `deer.glb`       | Leaping Deer        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/BIq8fPvPeN)  |
-| `bear.glb`       | Running Brown Bear  | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/Coppphok4P)  |
-| `goat.glb`       | Charging Goat       | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/EHW8HuR2d7)  |
-| `buffalo.glb`    | Tar Buffalo         | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/hqvlYnTeQX)  |
-| `spider.glb`     | Black Widow Spider  | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/5YUViJK0lc)  |
-| `centipede.glb`  | Centipede           | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/3Yjp5vVR8L)  |
-| `crawler.glb`    | Crawling Shadow Man | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/NNGmzNAiUX)  |
-| `wizard.glb`     | Evil Wizard         | AliceCassie           | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/bdxawstqtq)  |
-| `dragon.glb`     | Dragon              | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/VBvzjFIYws)  |
-| `anglerfish.glb` | Anglerfish          | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/MRjSlwCjHM)  |
-| `whale.glb`      | Whale               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/JGFwp6xWgk)  |
-| `wasp.glb`       | Wasp                | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/3aQgc75sUR)  |
-| `spaceship.glb`  | Spaceship           | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/uCeLfsdmNP)  |
-| `mech.glb`       | Mech                | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/4UvIHxnoSR)  |
-| `human.glb`      | Animated Human      | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/c3Ibh9I3udk) |
-| `woman.glb`      | Animated Woman      | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/9kF7eTDbhO)  |
-| `king.glb`       | King                | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/I1gTjmuK2m)  |
-| `octopus.glb`    | Octopus             | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/9F8QJKUT77V) |
-| `squid.glb`      | Squid               | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/aOY1Ae28E9k) |
-| `jellyfish.glb`  | Jellyfish           | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/dA5osnS0Rzj) |
-| `turtle.glb`     | Turtle              | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/fklSEvGm1Q8) |
-| `colossus.glb`   | Giant Robot         | Dann Beeson           | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/1kbGZOnhOwf) |
+| 파일             | 쓰는 곳        | 모델                    | 저작자                | 사용 허락                                                     | 원본                                           |
+| ---------------- | -------------- | ----------------------- | --------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| `eagle.glb`      | 우주적 존재    | Flying Eagle            | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/Ug45M2A4Vv)  |
+| `raven.glb`      | 우주적 존재    | Flying Raven            | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/p4puYPVor6)  |
+| `parrot.glb`     | 우주적 존재    | Flying Parrot           | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/3wCiMpao0L)  |
+| `stork.glb`      | 우주적 존재    | Flying Stork            | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/iO3aMS7KK8)  |
+| `panther.glb`    | 우주적 존재    | Black Panther           | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/JcAlAQynld)  |
+| `chowchow.glb`   | 우주적 존재    | Running Chow Chow       | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/DLocG67Tsn)  |
+| `wolf.glb`       | 우주적 존재    | Running Wolf            | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/MyLvUaAaXO)  |
+| `dog.glb`        | 우주적 존재    | Running Dog             | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/kv5eequb67)  |
+| `horse.glb`      | 우주적 존재    | Galloping Horse         | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/idqRg0ucZ7)  |
+| `elk.glb`        | 우주적 존재    | Running Elk             | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/nIkXY821lD)  |
+| `deer.glb`       | 우주적 존재    | Leaping Deer            | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/BIq8fPvPeN)  |
+| `bear.glb`       | 우주적 존재    | Running Brown Bear      | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/Coppphok4P)  |
+| `goat.glb`       | 우주적 존재    | Charging Goat           | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/EHW8HuR2d7)  |
+| `buffalo.glb`    | 우주적 존재    | Tar Buffalo             | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/hqvlYnTeQX)  |
+| `spider.glb`     | 우주적 존재    | Black Widow Spider      | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/5YUViJK0lc)  |
+| `centipede.glb`  | 우주적 존재    | Centipede               | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/3Yjp5vVR8L)  |
+| `crawler.glb`    | 우주적 존재    | Crawling Shadow Man     | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/NNGmzNAiUX)  |
+| `wizard.glb`     | 우주적 존재    | Evil Wizard             | AliceCassie           | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/bdxawstqtq)  |
+| `dragon.glb`     | 우주적 존재    | Dragon                  | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/VBvzjFIYws)  |
+| `anglerfish.glb` | 우주적 존재    | Anglerfish              | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/MRjSlwCjHM)  |
+| `whale.glb`      | 우주적 존재    | Whale                   | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/JGFwp6xWgk)  |
+| `wasp.glb`       | 우주적 존재    | Wasp                    | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/3aQgc75sUR)  |
+| `spaceship.glb`  | 우주적 존재    | Spaceship               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/uCeLfsdmNP)  |
+| `mech.glb`       | 우주적 존재    | Mech                    | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/4UvIHxnoSR)  |
+| `human.glb`      | 우주적 존재    | Animated Human          | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/c3Ibh9I3udk) |
+| `woman.glb`      | 우주적 존재    | Animated Woman          | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/9kF7eTDbhO)  |
+| `king.glb`       | 우주적 존재    | King                    | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/I1gTjmuK2m)  |
+| `octopus.glb`    | 우주적 존재    | Octopus                 | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/9F8QJKUT77V) |
+| `squid.glb`      | 우주적 존재    | Squid                   | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/aOY1Ae28E9k) |
+| `jellyfish.glb`  | 우주적 존재    | Jellyfish               | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/dA5osnS0Rzj) |
+| `turtle.glb`     | 우주적 존재    | Turtle                  | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/fklSEvGm1Q8) |
+| `colossus.glb`   | 우주적 존재    | Giant Robot             | Dann Beeson           | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/1kbGZOnhOwf) |
+| `fighter-a.glb`  | 우주 대전 함선 | Spaceship               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/xNbtFQwirO)  |
+| `fighter-b.glb`  | 우주 대전 함선 | Spaceship               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/DbGajMHrvp)  |
+| `fighter-c.glb`  | 우주 대전 함선 | Spaceship               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/Jqfed124pQ)  |
+| `frigate-a.glb`  | 우주 대전 함선 | Spaceship               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/PQzePrvBCD)  |
+| `frigate-b.glb`  | 우주 대전 함선 | Spaceship               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/htfBk9vPfw)  |
+| `pod.glb`        | 우주 대전 함선 | Spaceship               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/u105mYHLHU)  |
+| `gunship.glb`    | 우주 대전 함선 | Spaceship               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/VSxUAFhzbA)  |
+| `speeder-a.glb`  | 우주 대전 함선 | Space Craft Speeder     | Kenney                | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/mlQBUQRUpM)  |
+| `speeder-b.glb`  | 우주 대전 함선 | Spacecraft Speeder      | Kenney                | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/PbD0M5Y6pS)  |
+| `saucer.glb`     | 우주 대전 함선 | Flying saucer           | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/6hu2h8v78mO) |
+| `scout.glb`      | 우주 대전 함선 | Venom Scout             | Aaron Clifford        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/244-CCESo-F) |
+| `concept.glb`    | 우주 대전 함선 | Spaceship Concept       | Yogoshimo 2.0         | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/9pBgIlbtj3F) |
+| `starship.glb`   | 우주 대전 함선 | Starship McStarshipface | Jason Neufeld         | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/eMrqcfO5i9p) |

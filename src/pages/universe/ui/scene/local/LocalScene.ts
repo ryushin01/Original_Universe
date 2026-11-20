@@ -13,6 +13,9 @@ import {
   Vector3,
 } from 'three'
 import type { PerspectiveCamera } from 'three'
+import { createLaserStorm, laserColor, warPalette } from '../effects/laserStorm'
+import { FACTION_BY_ID } from '../../../model/war/catalog'
+import type { FactionId } from '../../../model/war/catalog'
 import { LOCAL_GALAXIES } from '../../../model/local/catalog'
 import {
   advanceCollision,
@@ -148,6 +151,9 @@ export function createLocalScene(): ScaleScene {
 
   const shell = makeSelectionShell()
   scene.add(shell)
+  // 우주 대전이 벌어지는 동안 은하 사이를 질러가는 레이저
+  const lasers = createLaserStorm(26)
+  scene.add(lasers.mesh)
   let lastInfo = -1
 
   const centerOf = (i: 0 | 1) =>
@@ -248,6 +254,35 @@ export function createLocalScene(): ScaleScene {
       }
       ;(sky.stars.material as ShaderMaterial).uniforms.uPixelRatio.value =
         ctx.pixelRatio
+      const points = [
+        centerOf(0),
+        centerOf(1),
+        ...[...markers.values()].map((m) => m.position),
+      ]
+      // 싸우는 세력의 레이저 색 (악시스는 붉은색, 얼라이언스는 푸른색 등)
+      const palette = warPalette(
+        ctx.world.wars,
+        (id) => FACTION_BY_ID[id as FactionId].lasers,
+      )
+      lasers.update(
+        ctx.elapsed,
+        !ctx.reducedMotion && ctx.world.wars.some((w) => w.status === 'raging'),
+        0.5,
+        () => {
+          const i = Math.floor(Math.random() * points.length)
+          const j =
+            (i + 1 + Math.floor(Math.random() * (points.length - 1))) %
+            points.length
+          return {
+            from: points[i].clone(),
+            to: points[j].clone(),
+            color: palette.length
+              ? palette[Math.floor(Math.random() * palette.length)]
+              : laserColor(),
+            tail: Math.random() < 0.45 ? 0.25 : 1,
+          }
+        },
+      )
     },
     dispose: () => disposeObject(scene),
   }
