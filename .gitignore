@@ -17,3 +17,6 @@ test-results
 .env*
 lhci-report
 .lighthouseci
+
+# pnpm models가 받은 원본 모델
+.cache

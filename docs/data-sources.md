@@ -62,4 +62,43 @@ Solar System Scope 텍스처는 NASA 고도·영상 자료를 바탕으로 만�
 | 몬스터               | 크라켄(유럽 전승), 키메라(그리스 신화). 별고래·성운 해파리·별갉이는 이 프로젝트의 창작                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | 거대 로봇            | 모두 이 프로젝트의 창작. 침묵의 거신은 ‘잠들어 있다 깨어나 기계만 멈추는 고대 거대 기계’라는 SF 개념만 참고했고(특정 게임의 이름·모습·설정은 쓰지 않음), 자기 복제 탐사선·항성 채굴은 SF 일반 개념                                                                                                                                                                                                                                                                                                                                       |
 
-상성은 동아시아 오행의 상극(목→토→수→화→금→목)을 따르고, 빛(엘더 갓)과 혼돈의 관계는 이 프로젝트에서 정했습니다. 3D 모습은 모두 이 프로젝트에서 선과 점으로 직접 그렸습니다.
+상성은 동아시아 오행의 상극(목→토→수→화→금→목)을 따르고, 빛(엘더 갓)과 혼돈의 관계는 이 프로젝트에서 정했습니다. 별자리 모습과, 모델이 없는 존재의 3D 몸(뱀·동양 용·고리 뱀·히드라, 공허, 구체 무리, 촉수 덩어리, 눈, 바퀴, 수확기, 날개 무리, 색채)은 이 프로젝트에서 계산으로 직접 만들었고, 나머지는 아래 3D 모델을 가공해 그립니다.
+
+### 3D 모델 (`public/models/`)
+
+우주적 존재의 3D 몸에 쓰는 모델 32종입니다. [Poly Pizza](https://poly.pizza)에서 받은 원본을 `pnpm models`(`scripts/build-models.mjs`)로 가공했습니다. 색·텍스처·UV·정점 색·법선을 지우고, 쓰지 않는 움직임과 작은 뼈를 덜고, 면을 줄여 meshopt로 압축했습니다. 장면은 이 모양을 빛나는 면과 선(홀로그램)으로만 그립니다. 원본 주소와 가공 설정은 `scripts/models/sources.json`에 있습니다.
+
+| 파일             | 모델                | 저작자                | 사용 허락                                                     | 원본                                           |
+| ---------------- | ------------------- | --------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+| `eagle.glb`      | Flying Eagle        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/Ug45M2A4Vv)  |
+| `raven.glb`      | Flying Raven        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/p4puYPVor6)  |
+| `parrot.glb`     | Flying Parrot       | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/3wCiMpao0L)  |
+| `stork.glb`      | Flying Stork        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/iO3aMS7KK8)  |
+| `panther.glb`    | Black Panther       | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/JcAlAQynld)  |
+| `chowchow.glb`   | Running Chow Chow   | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/DLocG67Tsn)  |
+| `wolf.glb`       | Running Wolf        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/MyLvUaAaXO)  |
+| `dog.glb`        | Running Dog         | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/kv5eequb67)  |
+| `horse.glb`      | Galloping Horse     | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/idqRg0ucZ7)  |
+| `elk.glb`        | Running Elk         | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/nIkXY821lD)  |
+| `deer.glb`       | Leaping Deer        | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/BIq8fPvPeN)  |
+| `bear.glb`       | Running Brown Bear  | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/Coppphok4P)  |
+| `goat.glb`       | Charging Goat       | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/EHW8HuR2d7)  |
+| `buffalo.glb`    | Tar Buffalo         | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/hqvlYnTeQX)  |
+| `spider.glb`     | Black Widow Spider  | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/5YUViJK0lc)  |
+| `centipede.glb`  | Centipede           | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/3Yjp5vVR8L)  |
+| `crawler.glb`    | Crawling Shadow Man | Google Data Arts Team | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/NNGmzNAiUX)  |
+| `wizard.glb`     | Evil Wizard         | AliceCassie           | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/bdxawstqtq)  |
+| `dragon.glb`     | Dragon              | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/VBvzjFIYws)  |
+| `anglerfish.glb` | Anglerfish          | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/MRjSlwCjHM)  |
+| `whale.glb`      | Whale               | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/JGFwp6xWgk)  |
+| `wasp.glb`       | Wasp                | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/3aQgc75sUR)  |
+| `spaceship.glb`  | Spaceship           | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/uCeLfsdmNP)  |
+| `mech.glb`       | Mech                | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/4UvIHxnoSR)  |
+| `human.glb`      | Animated Human      | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/c3Ibh9I3udk) |
+| `woman.glb`      | Animated Woman      | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/9kF7eTDbhO)  |
+| `king.glb`       | King                | Quaternius            | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | [Poly Pizza](https://poly.pizza/m/I1gTjmuK2m)  |
+| `octopus.glb`    | Octopus             | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/9F8QJKUT77V) |
+| `squid.glb`      | Squid               | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/aOY1Ae28E9k) |
+| `jellyfish.glb`  | Jellyfish           | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/dA5osnS0Rzj) |
+| `turtle.glb`     | Turtle              | Poly by Google        | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/fklSEvGm1Q8) |
+| `colossus.glb`   | Giant Robot         | Dann Beeson           | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)     | [Poly Pizza](https://poly.pizza/m/1kbGZOnhOwf) |

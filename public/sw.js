@@ -1,18 +1,20 @@
 // ORIGINAL UNIVERSE 서비스 워커: 다시 방문하면 코드·텍스처를 캐시에서 바로 씁니다.
 // - 페이지(HTML): 네트워크 먼저, 끊기면 캐시
-// - 해시가 붙은 코드(assets/)와 텍스처(textures/): 캐시 먼저
-// - 새 버전이 켜질 때 지금 묶음에 없는 옛 코드 파일과, 바뀐 텍스처 캐시를 지웁니다
+// - 해시가 붙은 코드(assets/)와 텍스처(textures/)·3D 모델(models/): 캐시 먼저
+// - 새 버전이 켜질 때 지금 묶음에 없는 옛 코드 파일과, 바뀐 텍스처·모델 캐시를 지웁니다
 //   (지우지 않으면 배포마다 옛 파일이 쌓여 저장 공간을 계속 차지함)
 // - 이름을 바꾸기 전 주소(/Universe_Simulator/)에서 받아 둔 파일도 지웁니다
 
-// 빌드 때 scripts/finalize-sw.mjs가 지금 묶음의 해시 파일 목록과 텍스처 해시로 바꿉니다.
-const MANIFEST = /* SW_MANIFEST */ { assets: [], textures: 'dev' }
+// 빌드 때 scripts/finalize-sw.mjs가 지금 묶음의 해시 파일 목록과 텍스처·모델 해시로 바꿉니다.
+const MANIFEST = /* SW_MANIFEST */ { assets: [], textures: 'dev', models: 'dev' }
 
 const PAGE_CACHE = 'universe-pages'
 const ASSET_CACHE = 'universe-assets'
 // 텍스처는 파일 이름에 해시가 없으므로 내용 해시로 캐시를 나눔
 const TEXTURE_CACHE = `universe-textures-${MANIFEST.textures}`
-const CURRENT = new Set([PAGE_CACHE, ASSET_CACHE, TEXTURE_CACHE])
+// 3D 모델(존재가 처음 나타날 때 받음)도 내용 해시로 나눔
+const MODEL_CACHE = `universe-models-${MANIFEST.models}`
+const CURRENT = new Set([PAGE_CACHE, ASSET_CACHE, TEXTURE_CACHE, MODEL_CACHE])
 const SCOPE = new URL(self.registration.scope).pathname
 
 self.addEventListener('install', (event) => {
@@ -116,4 +118,5 @@ self.addEventListener('fetch', (event) => {
   const path = url.pathname.slice(SCOPE.length)
   if (path.startsWith('assets/')) event.respondWith(cacheFirst(event, ASSET_CACHE))
   else if (path.startsWith('textures/')) event.respondWith(cacheFirst(event, TEXTURE_CACHE))
+  else if (path.startsWith('models/')) event.respondWith(cacheFirst(event, MODEL_CACHE))
 })
