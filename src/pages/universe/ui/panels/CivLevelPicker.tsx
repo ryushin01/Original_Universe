@@ -10,6 +10,10 @@ import {
 } from '../../model/world/civilization'
 import type { CivLevelId } from '../../model/world/civilization'
 import { world, worldActions } from '../../model/world/store'
+import {
+  earthTemperatureC,
+  naturalWasteHeatC,
+} from '../../model/world/selectors'
 import { createActionMessage, pick, t } from '../i18n'
 import styles from './panels.module.css'
 
@@ -26,7 +30,10 @@ export function CivLevelPicker() {
   const inMission = () => world().mission?.status === 'running'
   const heat = () => {
     const power = level().earthPower
-    return power ? wasteHeatC(power) : 0
+    if (power) return wasteHeatC(power)
+    // 자연 성장: 지금 기온에서 지구에 사는 사람들이 쓰는 에너지의 폐열
+    const temp = earthTemperatureC(world())
+    return temp === null ? 0 : naturalWasteHeatC(world(), temp)
   }
   const apply = () => feedback.report(worldActions.setCivLevel(choice()))
   return (
@@ -48,7 +55,9 @@ export function CivLevelPicker() {
       <p class={styles.small}>{pick(level().summary)}</p>
       <Show when={heat() >= 0.05}>
         <p class={styles.small}>
-          {t('civ.heat', { degrees: formatNumber(heat(), l(), 1) })}
+          {t(level().earthPower ? 'civ.heat' : 'civ.heatNatural', {
+            degrees: formatNumber(heat(), l(), 1),
+          })}
         </p>
       </Show>
       <Button onClick={apply} disabled={inMission() || choice() === current()}>

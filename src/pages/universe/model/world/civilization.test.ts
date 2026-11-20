@@ -8,9 +8,11 @@ import {
   withRequirements,
 } from './civilization'
 import {
+  civHeatNowC,
   civilizationPower,
   earthTemperatureC,
   hasProject,
+  humanity,
   incomeB,
   kardashev,
 } from './selectors'
@@ -80,6 +82,32 @@ describe('문명 단계 (카르다쇼프 척도)', () => {
     const rise = earthTemperatureC(hot)! - earthTemperatureC(base)!
     expect(rise).toBeGreaterThan(4.5)
     expect(rise).toBeLessThan(6.5)
+  })
+
+  it('자연 성장에도 폐열이 더해져 2430년 무렵 Ⅰ단계 폐열을 넘고, 더위로 사람이 줄면 균형에서 멈춘다', () => {
+    // 지금은 0.05°C 아래라 오늘 기온(15°C)은 그대로
+    expect(civHeatNowC(fresh())).toBeLessThan(0.05)
+    const y2450 = advanceTo(fresh(), 2450)
+    expect(civHeatNowC(y2450)).toBeGreaterThan(wasteHeatC(1e16))
+    // 더워질수록 살 수 있는 사람이 줄어 쓰는 에너지와 폐열도 줄므로 40°C대에서 멈춤
+    const y3000 = advanceTo(fresh(), 3000)
+    const hot = earthTemperatureC(y3000)!
+    expect(hot).toBeGreaterThan(40)
+    expect(hot).toBeLessThan(55)
+    expect(humanity(y3000)).toBeLessThan(humanity(y2450) * 0.7)
+    // 한 번에 건너뛰든 5년씩 가든 같은 기온이고, 큰 걸음을 거듭해도 두 값 사이를 오가지 않음
+    let stepped = fresh()
+    for (let y = 2030; y <= 3000; y += 5) stepped = advanceTo(stepped, y)
+    expect(earthTemperatureC(stepped)!).toBeCloseTo(hot, 1)
+    let s = y3000
+    for (let i = 0; i < 4; i++) {
+      s = advanceTo(s, s.year + 500)
+      expect(earthTemperatureC(s)!).toBeCloseTo(hot, 1)
+    }
+    // Ⅰ단계로 정하면 지구에서 쓰는 에너지가 10¹⁶ W로 묶여 약 6°C만 남음
+    const type1 = advanceTo(setCivLevel(y3000, 'type1').state, 3010)
+    expect(civHeatNowC(type1)).toBeCloseTo(wasteHeatC(1e16), 5)
+    expect(earthTemperatureC(type1)!).toBeLessThan(25)
   })
 
   it('저장·공유해도 문명 단계가 남고, 잘못된 단계·미션 중에는 바꾸지 않는다', () => {

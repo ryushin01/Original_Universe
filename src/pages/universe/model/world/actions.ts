@@ -53,6 +53,7 @@ import {
   ragingBattles,
 } from './mythic'
 import {
+  civHeatNowC,
   earthPopulation,
   hasProject,
   isRemoved,
@@ -71,7 +72,6 @@ import {
   CIV_LEVEL_BY_ID,
   civLevel,
   civTitle,
-  civWasteHeatC,
   isCivLevelId,
   withRequirements,
 } from './civilization'
@@ -789,7 +789,7 @@ export function setCivLevel(state: WorldState, id: string): Outcome {
   const rising = level.k >= (before?.k ?? 0.73)
   const names = (kinds: ProjectKind[], l: Locale) =>
     kinds.map((k) => PROJECT_BY_KIND[k].name[l]).join(', ')
-  const heat = civWasteHeatC(s)
+  const heat = civHeatNowC(s)
   s = log(
     s,
     compose((l) => {

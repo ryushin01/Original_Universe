@@ -4,7 +4,8 @@
  * (직접 지은 구조물은 그대로).
  * 지구에서 쓰는 에너지는 결국 열이 되어 지구에 남으므로(지구가 흡수하는 햇빛 약 1.22×10¹⁷ W에 더해짐)
  * 폐열만큼 지구가 더워집니다. 다이슨 구조물처럼 우주에서 쓰는 에너지는 지구를 데우지 않습니다.
- * '지금'은 자연 성장(해마다 1.5%)으로 돌아가며 폐열을 따로 셈하지 않습니다.
+ * '지금'은 자연 성장(해마다 1.5%)으로 돌아가며, 지구에 사는 사람들이 쓰는 에너지의 폐열도 더합니다
+ * (더워져 살 수 있는 사람이 줄면 폐열도 줄어 균형을 이룸: selectors의 naturalWasteHeatC).
  */
 import { both, compose } from '@/shared/i18n'
 import type { Text } from '@/shared/i18n'
@@ -92,8 +93,8 @@ export const CIV_LEVELS: CivLevel[] = [
     structures: [],
     fleet: 'none',
     summary: both(
-      '2025년 인류(약 20 TW)에서 해마다 1.5%씩 늘어납니다(자연 성장). 단계가 지은 구조물은 허뭅니다.',
-      'Humanity in 2025 (about 20 TW), growing 1.5% a year on its own. Anything the higher levels built is taken down.',
+      '2025년 인류(약 20 TW)에서 해마다 1.5%씩 늘어납니다(자연 성장). 쓰는 에너지는 모두 열이 되어 지구에 남아 2430년 무렵 Ⅰ단계의 폐열(약 6°C)을 넘고, 2600년 무렵에는 더위로 사람이 줄어 쓰는 에너지도 줄면서 지구가 약 47°C에서 멈춥니다. 단계가 지은 구조물은 허뭅니다.',
+      'Humanity in 2025 (about 20 TW), growing 1.5% a year on its own. All that energy stays on Earth as heat: around 2430 it passes the Type I waste heat (about 6°C), and by about 2600 the heat thins out the population, and with it the energy use, until Earth settles near 47°C. Anything the higher levels built is taken down.',
     ),
   },
   {
@@ -162,7 +163,7 @@ export function withRequirements(kinds: ProjectKind[]): ProjectKind[] {
 export const wasteHeatC = (power: number) =>
   EARTH_KELVIN * ((1 + power / EARTH_ABSORBED_W) ** 0.25 - 1)
 
-/** 지금 단계의 폐열 (자연 성장이면 0) */
+/** 정한 단계의 폐열 (자연 성장이면 0: 자연 성장의 폐열은 selectors의 naturalWasteHeatC) */
 export function civWasteHeatC(state: WorldState): number {
   const power = civLevel(state)?.earthPower
   return power ? wasteHeatC(power) : 0
