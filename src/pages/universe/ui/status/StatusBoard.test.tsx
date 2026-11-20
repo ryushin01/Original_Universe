@@ -1,6 +1,6 @@
 import { render, screen, within } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
-import { initialWorld } from '../../model/world/engine'
+import { advanceTo, initialWorld } from '../../model/world/engine'
 import { jumpTo } from '../../model/world/actions'
 import { yearAtSunAge } from '../../model/solar/sun'
 import { __setWorldForTest } from '../../model/world/store'
@@ -39,6 +39,18 @@ describe('StatusBoard', () => {
     ).toBeInTheDocument()
     expect(screen.getByText(/원래 기준\(1964\): 4×10¹² W/)).toBeInTheDocument()
     expect(screen.getByText(/네오-카르다쇼프 척도/)).toBeInTheDocument()
+  })
+
+  it('문명의 폐열이 0.05°C를 넘으면 지구 칸에 폐열을 보여 준다 (오늘은 숨김)', () => {
+    __setWorldForTest(initialWorld(2026.87))
+    const today = render(() => <StatusBoard />)
+    expect(screen.queryByText('폐열', { selector: 'dt' })).toBeNull()
+    today.unmount()
+    // 자연 성장으로 2600년이 되면 폐열로 30°C 넘게 더워짐
+    __setWorldForTest(advanceTo(initialWorld(2026.87), 2600))
+    render(() => <StatusBoard />)
+    const dt = screen.getByText('폐열', { selector: 'dt' })
+    expect(dt.nextElementSibling).toHaveTextContent(/^\+3\d\.\d°C$/)
   })
 
   it('적색 거성 태양이 지구를 삼키면 지구가 없다고 알린다', () => {

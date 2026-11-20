@@ -283,6 +283,10 @@ export const PANEL_MESSAGES = {
     '지구에서 쓰는 에너지가 모두 열이 되어 지구 기온이 몇 해에 걸쳐 약 {degrees}°C 오릅니다.',
     'All the energy used on Earth ends up as heat: Earth warms by about {degrees}°C over a few years.',
   ],
+  'civ.heatNatural': [
+    '자연 성장에서는 지금 쓰는 에너지의 폐열로 지구가 약 {degrees}°C 더워집니다.',
+    'With natural growth, waste heat from today’s energy use warms Earth by about {degrees}°C.',
+  ],
   'civ.apply': ['이 단계로 바꾸기', 'Switch to this level'],
   'civ.current': ['지금 단계', 'Current level'],
   // 우주 대전 (스페이스 오페라 모드)
