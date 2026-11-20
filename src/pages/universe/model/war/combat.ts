@@ -44,24 +44,35 @@ export interface RoundPlan {
   a: number
   b: number
   /** 이 차례에 터진 특수 작전 */
-  specials: Array<{ side: Side; id: SpecialId }>
+  specials: RoundEvent[]
   /** 이 차례에 무너진 쪽 */
   broke: Side | null
 }
 
-/** 두 세력에 가세하는 신적 존재(우주적 존재 id)와 대형 병기 (없으면 null) */
+/** 한 편에 가세할 수 있는 신적 존재 수 */
+export const MAX_BEINGS = 3
+
+/** 두 세력에 가세하는 신적 존재들(우주적 존재 id, 내세운 순서)과 대형 병기 (없으면 null) */
 export interface WarExtras {
-  aBeing: string | null
-  bBeing: string | null
+  aBeings: string[]
+  bBeings: string[]
   aWeapon: MegaweaponId | null
   bWeapon: MegaweaponId | null
 }
 
 export const NO_EXTRAS: WarExtras = {
-  aBeing: null,
-  bBeing: null,
+  aBeings: [],
+  bBeings: [],
   aWeapon: null,
   bWeapon: null,
+}
+
+/** 교전 차례에 터진 일 (신적 존재의 일격·결투면 그 존재와 맞선 존재) */
+export interface RoundEvent {
+  side: Side
+  id: SpecialId
+  being?: string
+  rival?: string
 }
 
 /** 가세한 신적 존재가 상대 함대를 내리치는 차례 */
@@ -132,13 +143,13 @@ export function planWar(
 ): WarPlan {
   const random = seededRandom(seed)
   const factions = { a: FACTION_BY_ID[aId], b: FACTION_BY_ID[bId] }
-  const beings = {
-    a: extras.aBeing ? (BEING_BY_ID[extras.aBeing] ?? null) : null,
-    b: extras.bBeing ? (BEING_BY_ID[extras.bBeing] ?? null) : null,
-  }
+  const roster = (ids: string[]) =>
+    ids.map((id) => BEING_BY_ID[id]).filter((b): b is Being => Boolean(b))
+  const beings = { a: roster(extras.aBeings), b: roster(extras.bBeings) }
   const weapons = { a: extras.aWeapon, b: extras.bWeapon }
   /** 결투에 져서 쓰러진 존재 */
-  const fallen = { a: false, b: false }
+  const fallen = new Set<string>()
+  const standing = (side: Side) => beings[side].filter((b) => !fallen.has(b.id))
   const power = {
     a: fleetPower(factions.a, size),
     b: fleetPower(factions.b, size),
@@ -182,28 +193,34 @@ export function planWar(
       const boost = MEGAWEAPONS[id].boost
       if (boost) left[side] = Math.min(MAX_FRACTION, left[side] + boost)
     }
-    // 신적 존재: 일격의 차례에 상대 함대를 내리치고, 둘 다 있으면 결투
-    for (const side of ['a', 'b'] as const) {
-      const me = beings[side]
-      if (!me || fallen[side] || !DIVINE_ROUNDS.includes(r)) continue
-      const foe = beings[other(side)]
-      specials.push({ side, id: 'divine-strike' })
-      left[other(side)] *=
-        1 -
-        divineStrike(
-          me,
-          fallen[other(side)] ? null : foe,
-          power[side] / power[other(side)],
-        )
-    }
-    if (r === DUEL_ROUND && beings.a && beings.b) {
-      const winner: Side = random() < winChance(beings.a, beings.b) ? 'a' : 'b'
-      const loser = other(winner)
-      fallen[loser] = true
-      specials.push({ side: winner, id: 'divine-duel' })
-      left[winner] = Math.min(MAX_FRACTION, left[winner] + DUEL_BOOST)
-      left[loser] *= 1 - DUEL_SHOCK
-    }
+    // 신적 존재: 일격의 차례에 버티는 존재마다 상대 함대를 내리침
+    // (상성은 같은 순번의 상대 존재, 없으면 상대 편의 마지막 존재와 따짐)
+    if (DIVINE_ROUNDS.includes(r))
+      for (const side of ['a', 'b'] as const) {
+        const foes = standing(other(side))
+        standing(side).forEach((me, i) => {
+          const foe = foes.length ? foes[Math.min(i, foes.length - 1)] : null
+          specials.push({ side, id: 'divine-strike', being: me.id })
+          left[other(side)] *=
+            1 - divineStrike(me, foe, power[side] / power[other(side)])
+        })
+      }
+    // 신들의 결투: 내세운 순서대로 짝지어 1대1 (짝이 없는 존재는 결투 없이 계속 싸움)
+    if (r === DUEL_ROUND)
+      for (let i = 0; i < Math.min(beings.a.length, beings.b.length); i++) {
+        const pair = { a: beings.a[i], b: beings.b[i] }
+        const winner: Side = random() < winChance(pair.a, pair.b) ? 'a' : 'b'
+        const loser = other(winner)
+        fallen.add(pair[loser].id)
+        specials.push({
+          side: winner,
+          id: 'divine-duel',
+          being: pair[winner].id,
+          rival: pair[loser].id,
+        })
+        left[winner] = Math.min(MAX_FRACTION, left[winner] + DUEL_BOOST)
+        left[loser] *= 1 - DUEL_SHOCK
+      }
     // 서로 상대 전력에 비례해 깎임 (같은 전력이면 한 차례에 약 14%)
     // 차례마다의 운: ±30%
     const lossA =
@@ -262,9 +279,16 @@ export function warOdds(
   return wins / trials
 }
 
-/** 두 존재가 모두 가세했을 때 a 쪽 존재가 결투에서 이길 확률 (없으면 null) */
-export function duelOdds(extras: WarExtras): number | null {
-  const a = extras.aBeing ? BEING_BY_ID[extras.aBeing] : undefined
-  const b = extras.bBeing ? BEING_BY_ID[extras.bBeing] : undefined
-  return a && b ? winChance(a, b) : null
+/** 신들의 결투 짝(내세운 순서대로)과 a 쪽 존재가 이길 확률 */
+export function duelOdds(
+  extras: WarExtras,
+): Array<{ a: string; b: string; chance: number }> {
+  const out: Array<{ a: string; b: string; chance: number }> = []
+  const n = Math.min(extras.aBeings.length, extras.bBeings.length)
+  for (let i = 0; i < n; i++) {
+    const a = BEING_BY_ID[extras.aBeings[i]]
+    const b = BEING_BY_ID[extras.bBeings[i]]
+    if (a && b) out.push({ a: a.id, b: b.id, chance: winChance(a, b) })
+  }
+  return out
 }

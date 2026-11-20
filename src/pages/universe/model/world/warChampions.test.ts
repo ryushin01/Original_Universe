@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { advanceTo, initialWorld } from './engine'
 import { declareWar } from './actions'
 import type { WarDeclaration } from './actions'
-import { isBeingId } from '../mythic/catalog'
+import { BEING_BY_ID, isBeingId } from '../mythic/catalog'
 import {
   FACTIONS,
   FACTION_BY_ID,
@@ -10,9 +10,11 @@ import {
   MEGAWEAPON_IDS,
   isMegaweaponId,
 } from '../war/catalog'
+import type { FactionId } from '../war/catalog'
 import {
   DIVINE_ROUNDS,
   DUEL_ROUND,
+  MAX_BEINGS,
   NO_EXTRAS,
   ROUNDS,
   divineStrike,
@@ -22,19 +24,18 @@ import {
   warOdds,
 } from '../war/combat'
 import type { WarExtras } from '../war/combat'
-import { BEING_BY_ID } from '../mythic/catalog'
-import { extrasOf, fallenSide, warMotifs } from './war'
+import { extrasOf, fallenBeings, warMotifs } from './war'
 import type { WorldState } from './types'
 
 const START = 2026.87
 const fresh = (): WorldState => ({ ...initialWorld(START), budget: 1e4 })
 const texts = (s: WorldState) => s.events.map((e) => e.text.ko).join('\n')
 const NO_SUPPORT = { megastructures: 0, colonies: false }
-const defaults = (a: string, b: string): WarExtras => ({
-  aBeing: FACTION_BY_ID[a as 'axis'].patron,
-  bBeing: FACTION_BY_ID[b as 'axis'].patron,
-  aWeapon: FACTION_BY_ID[a as 'axis'].megaweapon,
-  bWeapon: FACTION_BY_ID[b as 'axis'].megaweapon,
+const defaults = (a: FactionId, b: FactionId): WarExtras => ({
+  aBeings: [FACTION_BY_ID[a].patron],
+  bBeings: [FACTION_BY_ID[b].patron],
+  aWeapon: FACTION_BY_ID[a].megaweapon,
+  bWeapon: FACTION_BY_ID[b].megaweapon,
 })
 const declaration = (patch: Partial<WarDeclaration> = {}): WarDeclaration => ({
   a: 'axis',
@@ -94,22 +95,71 @@ describe('신적 존재·대형 병기가 낀 전투 계산', () => {
         seed,
         defaults('federation', 'empire'),
       )
+      if (plan.rounds.length <= DUEL_ROUND) continue
       const duels = plan.rounds.flatMap((r, i) =>
         r.specials
           .filter((x) => x.id === 'divine-duel')
           .map((x) => ({ ...x, round: i })),
       )
-      if (plan.rounds.length <= DUEL_ROUND) continue
       expect(duels).toHaveLength(1)
       expect(duels[0].round).toBe(DUEL_ROUND)
-      const loser = duels[0].side === 'a' ? 'b' : 'a'
+      const loser = duels[0].rival
       plan.rounds.forEach((r, i) => {
         const strikes = r.specials.filter((x) => x.id === 'divine-strike')
         if (!DIVINE_ROUNDS.includes(i)) expect(strikes).toHaveLength(0)
         if (i > DUEL_ROUND)
-          expect(strikes.some((x) => x.side === loser)).toBe(false)
+          expect(strikes.some((x) => x.being === loser)).toBe(false)
       })
     }
+  })
+
+  it('여럿을 내세우면 순서대로 짝지어 결투하고, 짝이 없는 존재는 결투 없이 계속 내리친다', () => {
+    const extras: WarExtras = {
+      ...NO_EXTRAS,
+      aBeings: ['surtr', 'odin', 'ra'],
+      bBeings: ['black-tortoise'],
+    }
+    const plan = planWar('axis', 'alliance', 'total', NO_SUPPORT, 7, extras)
+    const round = (i: number) => plan.rounds[i]?.specials ?? []
+    // 첫 일격: 세 존재가 모두 내리침
+    expect(
+      round(DIVINE_ROUNDS[0])
+        .filter((x) => x.id === 'divine-strike' && x.side === 'a')
+        .map((x) => x.being),
+    ).toEqual(['surtr', 'odin', 'ra'])
+    // 결투는 첫 짝(수르트 대 현무)만
+    const duels = round(DUEL_ROUND).filter((x) => x.id === 'divine-duel')
+    expect(duels).toHaveLength(1)
+    expect([duels[0].being, duels[0].rival].sort()).toEqual(
+      ['black-tortoise', 'surtr'].sort(),
+    )
+    // 두 짝이면 결투도 둘, 승산도 짝마다
+    const two: WarExtras = {
+      ...NO_EXTRAS,
+      aBeings: ['surtr', 'odin'],
+      bBeings: ['black-tortoise', 'zeus'],
+    }
+    const plan2 = planWar('axis', 'alliance', 'total', NO_SUPPORT, 7, two)
+    expect(
+      plan2.rounds[DUEL_ROUND].specials.filter((x) => x.id === 'divine-duel'),
+    ).toHaveLength(2)
+    expect(duelOdds(two).map((d) => `${d.a}-${d.b}`)).toEqual([
+      'surtr-black-tortoise',
+      'odin-zeus',
+    ])
+    // 존재를 더 내세우면 승산이 오름
+    expect(
+      warOdds('axis', 'alliance', 'fleet', NO_SUPPORT, extras, 120),
+    ).toBeGreaterThan(
+      warOdds(
+        'axis',
+        'alliance',
+        'fleet',
+        NO_SUPPORT,
+        { ...extras, aBeings: ['surtr'] },
+        120,
+      ),
+    )
   })
 
   it('대형 병기는 제 차례에 쏘고, 강한 존재가 가세하면 승산이 오른다', () => {
@@ -119,7 +169,7 @@ describe('신적 존재·대형 병기가 낀 전투 계산', () => {
       const fired = r.specials.some((x) => x.id === 'megaweapon')
       expect(fired).toBe(MEGAWEAPONS.colossus.rounds.includes(i))
     })
-    const strong: WarExtras = { ...NO_EXTRAS, aBeing: 'azathoth' }
+    const strong: WarExtras = { ...NO_EXTRAS, aBeings: ['azathoth'] }
     expect(
       warOdds('pirates', 'colonies', 'fleet', NO_SUPPORT, strong, 120),
     ).toBeGreaterThan(warOdds('pirates', 'colonies', 'fleet', NO_SUPPORT))
@@ -129,8 +179,8 @@ describe('신적 존재·대형 병기가 낀 전투 계산', () => {
     expect(divineStrike(tortoise, surtr)).toBeGreaterThan(
       divineStrike(tortoise, null),
     )
-    expect(duelOdds(defaults('axis', 'alliance'))).toBeLessThan(0.5)
-    expect(duelOdds(NO_EXTRAS)).toBeNull()
+    expect(duelOdds(defaults('axis', 'alliance'))[0].chance).toBeLessThan(0.5)
+    expect(duelOdds(NO_EXTRAS)).toEqual([])
   })
 
   it('함대 전력이 크게 앞서면 존재·병기가 가세해도 대체로 이긴다', () => {
@@ -148,27 +198,31 @@ describe('신적 존재·대형 병기가 낀 전투 계산', () => {
 })
 
 describe('신적 존재·대형 병기가 낀 우주 대전 진행', () => {
-  it('강림·병기 등장·일격·결투를 기록하고, 결투에 진 쪽을 알려 준다', () => {
-    const { state, result } = declareWar(fresh(), declaration())
+  it('강림·병기 등장·일격·결투를 기록하고, 결투에 져 쓰러진 존재를 알려 준다', () => {
+    const { state, result } = declareWar(
+      fresh(),
+      declaration({ aBeings: ['surtr', 'odin'] }),
+    )
     expect(result.ok).toBe(true)
     const [w] = state.wars
-    expect(extrasOf(w)).toEqual(defaults('axis', 'alliance'))
+    expect(extrasOf(w).aBeings).toEqual(['surtr', 'odin'])
     const first = advanceTo(state, w.rounds[0].year + 1e-6)
-    expect(texts(first)).toContain('수르트가 악시스 편에 강림했습니다.')
+    expect(texts(first)).toContain('수르트·오딘이 악시스 편에 강림했습니다.')
     expect(texts(first)).toContain(
       '더 얼라이언스의 방벽 거신이 전장에 떠올랐습니다.',
     )
     const end = advanceTo(state, w.endYear + 1 / 365.25)
     const all = texts(end)
-    expect(all).toContain('함대를 내리쳤습니다')
+    expect(all).toContain('수르트가 더 얼라이언스 함대를 내리쳤습니다.')
+    expect(all).toContain('오딘이 더 얼라이언스 함대를 내리쳤습니다.')
     expect(all).toContain('불을 뿜어')
     if (w.rounds.length > DUEL_ROUND) {
       expect(all).toContain('신들의 결투:')
       const duel = w.rounds[DUEL_ROUND].specials.find(
         (x) => x.id === 'divine-duel',
       )!
-      expect(fallenSide(w, end.year)).toBe(duel.side === 'a' ? 'b' : 'a')
-      expect(fallenSide(w, w.startYear)).toBeNull()
+      expect([...fallenBeings(w, end.year)]).toEqual([duel.rival])
+      expect(fallenBeings(w, w.startYear).size).toBe(0)
     }
     // 소재에 우주적 존재와 슈퍼 웨폰이 더해짐
     const motifs = warMotifs(w.a, w.b, extrasOf(w))
@@ -177,22 +231,22 @@ describe('신적 존재·대형 병기가 낀 우주 대전 진행', () => {
     expect(motifs).toContain('mech')
   })
 
-  it('한 존재가 두 편에 서거나, 없는 존재·병기는 막는다', () => {
-    const same = declareWar(
-      fresh(),
-      declaration({ aBeing: 'surtr', bBeing: 'surtr' }),
-    )
-    expect(same.result.ok).toBe(false)
+  it('한 존재가 두 번·두 편에 서거나, 너무 많거나, 없는 존재·병기는 막는다', () => {
+    const reject = (patch: Partial<WarDeclaration>) =>
+      declareWar(fresh(), declaration(patch)).result.ok
+    expect(reject({ aBeings: ['surtr'], bBeings: ['surtr'] })).toBe(false)
+    expect(reject({ aBeings: ['surtr', 'surtr'] })).toBe(false)
+    expect(reject({ aBeings: ['nobody'] })).toBe(false)
     expect(
-      declareWar(fresh(), declaration({ aBeing: 'nobody' })).result.ok,
+      reject({
+        aBeings: ['surtr', 'odin', 'ra', 'zeus'].slice(0, MAX_BEINGS + 1),
+      }),
     ).toBe(false)
-    expect(
-      declareWar(fresh(), declaration({ bWeapon: 'death-ray' })).result.ok,
-    ).toBe(false)
+    expect(reject({ bWeapon: 'death-ray' })).toBe(false)
     // 빼면 함대만 싸움
     const plain = declareWar(
       fresh(),
-      declaration({ aBeing: null, bBeing: '', aWeapon: '', bWeapon: null }),
+      declaration({ aBeings: [], bBeings: [], aWeapon: '', bWeapon: null }),
     )
     expect(plain.result.ok).toBe(true)
     expect(extrasOf(plain.state.wars[0])).toEqual(NO_EXTRAS)
