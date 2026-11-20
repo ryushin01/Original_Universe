@@ -11,7 +11,9 @@ import type { RemovalReason, WorldState } from './types'
 
 /** 공유 링크의 매개변수 이름 (?s=...) */
 export const SHARE_PARAM = 's'
-export const SAVE_KEY = 'universe-simulator:saves'
+export const SAVE_KEY = 'original-universe:saves'
+/** 이름을 바꾸기 전(1.0.0까지)의 저장 키. 처음 읽을 때 SAVE_KEY로 옮김 */
+export const LEGACY_SAVE_KEY = 'universe-simulator:saves'
 export const MAX_SAVES = 8
 
 /**

@@ -1,7 +1,7 @@
 /** 화면 문구: [한국어, 영어] */
 export const MESSAGES = {
   // 페이지
-  'page.title': ['UNIVERSE SIMULATOR', 'UNIVERSE SIMULATOR'],
+  'page.title': ['ORIGINAL UNIVERSE', 'ORIGINAL UNIVERSE'],
   'page.tagline': [
     '우주 환경·재해 대응 시뮬레이터',
     'Cosmic hazards & megastructures simulator',
