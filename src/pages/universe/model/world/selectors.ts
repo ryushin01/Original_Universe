@@ -256,7 +256,10 @@ export function bodyDistanceAu(state: WorldState, id: BodyId): number | null {
 /* ── 문명 ─────────────────────────────────────────────── */
 
 const POWER_NOW_W = 1.9e13
-const EARTH_POWER_CAP_W = 1e17
+/** 지구에서 쓰는 에너지의 한도 (W) */
+export const EARTH_POWER_CAP_W = 1e17
+/** 문명 에너지가 해마다 느는 비율 (연속 복리) */
+export const POWER_GROWTH = 0.015
 const SUN_LUMINOSITY_W = 3.828e26
 
 /** 지구 인구 기준선 (2080년대 약 103억 명에서 멈춤) */
@@ -321,7 +324,7 @@ export function civilizationPower(state: WorldState): number {
   if (people < 1) return 0
   const grown = Math.min(
     EARTH_POWER_CAP_W,
-    POWER_NOW_W * Math.exp(0.015 * Math.max(0, state.year - 2026)),
+    POWER_NOW_W * Math.exp(POWER_GROWTH * Math.max(0, state.year - 2026)),
   )
   const share = clamp(people / 8.2e9, 0, 1.5)
   const { swarm, sphere } = dysonCapture(state)

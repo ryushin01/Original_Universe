@@ -294,6 +294,27 @@ export const MESSAGES = {
   'status.offworld': ['우주 인구', 'People in space'],
   'status.energy': ['쓰는 에너지', 'Power use'],
   'status.kardashev': ['카르다쇼프 척도', 'Kardashev scale'],
+  'kardashev.title': ['카르다쇼프 척도 자세히', 'More on the Kardashev scale'],
+  'kardashev.formula': [
+    '문명이 다루는 에너지로 단계를 매깁니다. 칼 세이건의 연속식 K = (log₁₀P − 6) / 10: 0.1마다 에너지가 10배, 한 단계는 100억 배입니다.',
+    'Rates a civilisation by the energy it commands. Carl Sagan’s formula K = (log₁₀P − 6) / 10: every 0.1 means ten times more energy, every level ten billion times.',
+  ],
+  'kardashev.nextEta': [
+    '{type}단계까지 에너지 {factor}배. 이 시뮬레이터의 성장(해마다 1.5%)으로는 {year}년쯤 닿습니다.',
+    'Type {type} needs {factor}× more energy; at this simulator’s growth (1.5% a year) that is around {year}.',
+  ],
+  'kardashev.nextDyson': [
+    '{type}단계까지 에너지 {factor}배. 지구의 에너지만으로는 닿지 않아 다이슨 스웜·다이슨 구 같은 구조물이 있어야 합니다.',
+    'Type {type} needs {factor}× more energy, beyond what Earth alone can supply: it takes structures such as a Dyson swarm or sphere.',
+  ],
+  'kardashev.ladder': ['카르다쇼프 척도 단계', 'Kardashev scale levels'],
+  'kardashev.type': ['{n}단계', 'Type {n}'],
+  'kardashev.here': ['지금 {k}', 'Now {k}'],
+  'kardashev.original': [
+    '카르다쇼프의 원래 기준(1964): {watts} W',
+    'Kardashev’s original value (1964): {watts} W',
+  ],
+  'kardashev.landmarks': ['기준점', 'Landmarks'],
   'status.budget': ['우주 예산', 'Space budget'],
   'status.income': ['해마다 +{amount}', '+{amount} per year'],
   'status.losses': ['누적 피해', 'Total damage'],
