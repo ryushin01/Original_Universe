@@ -31,8 +31,13 @@ import type { FlybyInput, ImpactInput } from './factory'
 import { MISSION_BY_ID } from './missions'
 import { BEING_BY_ID, SITE_BY_ID, isBeingId, isSiteId } from '../mythic/catalog'
 import type { SiteId } from '../mythic/catalog'
-import { FLEET_SIZES, isFactionId, isFleetSize } from '../war/catalog'
-import type { FactionId, FleetSize } from '../war/catalog'
+import {
+  FLEET_SIZES,
+  isFactionId,
+  isFleetSize,
+  isMegaweaponId,
+} from '../war/catalog'
+import type { FactionId, FleetSize, MegaweaponId } from '../war/catalog'
 import {
   MAX_WARS,
   makeWar,
@@ -766,6 +771,11 @@ export interface WarDeclaration {
   size: string
   /** 행성 파괴포 표적 (없으면 쏘지 않음) */
   target: string | null
+  /** 가세할 신적 존재·대형 병기 (빼면 없음) */
+  aBeing?: string | null
+  bBeing?: string | null
+  aWeapon?: string | null
+  bWeapon?: string | null
 }
 
 /** 개전할 수 있는지 (같은 세력끼리·싸움터·표적·동시에 벌어지는 전쟁 수) */
@@ -802,6 +812,17 @@ export function canDeclareWar(
       '행성 파괴포로 쏠 수 없는 천체입니다.',
       'The planet-killer cannot target that body.',
     )
+  for (const id of [input.aBeing, input.bBeing])
+    if (id && !isBeingId(id))
+      return no('신적 존재를 다시 고르세요.', 'Choose the divine beings again.')
+  if (input.aBeing && input.aBeing === input.bBeing)
+    return no(
+      '한 신적 존재가 두 편에 함께 설 수는 없습니다.',
+      'One divine being cannot fight for both sides.',
+    )
+  for (const id of [input.aWeapon, input.bWeapon])
+    if (id && !isMegaweaponId(id))
+      return no('대형 병기를 다시 고르세요.', 'Choose the megaweapons again.')
   return { ok: true, message: both('', '') }
 }
 
@@ -815,6 +836,10 @@ export function declareWar(state: WorldState, input: WarDeclaration): Outcome {
     site: input.site as SiteId,
     size: input.size as FleetSize,
     target: input.target as BodyId | null,
+    aBeing: input.aBeing || null,
+    bBeing: input.bBeing || null,
+    aWeapon: (input.aWeapon || null) as MegaweaponId | null,
+    bWeapon: (input.bWeapon || null) as MegaweaponId | null,
   })
   const title = warTitle(war)
   const site = SITE_BY_ID[war.site]
