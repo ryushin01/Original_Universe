@@ -152,7 +152,7 @@ export function createLocalScene(): ScaleScene {
   const shell = makeSelectionShell()
   scene.add(shell)
   // 우주 대전이 벌어지는 동안 은하 사이를 질러가는 레이저
-  const lasers = createLaserStorm(12)
+  const lasers = createLaserStorm(26)
   scene.add(lasers.mesh)
   let lastInfo = -1
 
@@ -279,7 +279,7 @@ export function createLocalScene(): ScaleScene {
             color: palette.length
               ? palette[Math.floor(Math.random() * palette.length)]
               : laserColor(),
-            tail: Math.random() < 0.6 ? 0.2 : 1,
+            tail: Math.random() < 0.45 ? 0.25 : 1,
           }
         },
       )

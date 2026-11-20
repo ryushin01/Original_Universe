@@ -235,7 +235,7 @@ export function createGalaxyScene(): ScaleScene {
   const shell = makeSelectionShell()
   scene.add(shell)
   // 우주 대전이 벌어지는 동안 은하를 가로지르는 레이저 (표지 사이, 은하 원반 위)
-  const lasers = createLaserStorm(12)
+  const lasers = createLaserStorm(26)
   scene.add(lasers.mesh)
   let heldAngle = 0
 
@@ -324,7 +324,7 @@ export function createGalaxyScene(): ScaleScene {
             color: palette.length
               ? palette[Math.floor(Math.random() * palette.length)]
               : laserColor(),
-            tail: Math.random() < 0.6 ? 0.2 : 1,
+            tail: Math.random() < 0.45 ? 0.25 : 1,
           }
         },
       )
