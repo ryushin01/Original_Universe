@@ -443,9 +443,13 @@ test.describe('시뮬레이션 흐름', () => {
     await expect(
       page.getByRole('heading', { name: 'Space control' }),
     ).toBeVisible()
+    // 다시 열어도 영어: 소개 화면의 첫 구간 시작 버튼
     await page.reload()
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await expect(
-      page.getByRole('button', { name: 'Start exploring' }),
-    ).toBeVisible()
+      page
+        .locator('#intro-earth')
+        .getByRole('button', { name: 'Start exploring', exact: true }),
+    ).toBeAttached()
   })
 })
