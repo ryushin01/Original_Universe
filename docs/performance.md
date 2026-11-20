@@ -53,7 +53,7 @@ Lighthouse 13.6(Lighthouse CI)으로 로컬 프로덕션 빌드(`pnpm build`)를
 - 첫 화면은 Raleway(47KB)와 화면 글자 파일 4개(300·400·600·700, 각 37KB)를 받습니다. 200은 첫 화면에 한글이 없어 받지 않습니다.
 - FCP·LCP는 그대로입니다. 글꼴이 바뀌어 다시 그리는 만큼 모바일 Speed Index가 약 0.3초 늘었습니다.
 - 3D 장면은 글꼴을 받은 뒤 만들므로(`document.fonts.ready`), 글꼴이 커진 만큼 조금 늦게 시작합니다.
-- 프리젠테이션을 Google Fonts처럼 글자 묶음 조각으로만 실으면 첫 화면에서 조각 수십 개를 받습니다([EARTH_PLAN](https://github.com/ryushin01/EARTH_PLAN/blob/main/docs/performance.md)에서는 조각 40개, LCP 5.0초). 그래서 화면에 쓰는 글자만 담은 파일을 먼저 받고, 나머지 글자 조각 CSS(gzip 17KB)는 페이지를 다 받고 1초 뒤 한가할 때 낮은 우선순위로 붙입니다.
+- 프리젠테이션을 Google Fonts처럼 글자 묶음 조각으로만 실으면 첫 화면에서 조각 수십 개를 받습니다([TerraNova](https://github.com/ryushin01/TerraNova/blob/main/docs/performance.md)에서는 조각 40개, LCP 5.0초). 그래서 화면에 쓰는 글자만 담은 파일을 먼저 받고, 나머지 글자 조각 CSS(gzip 17KB)는 페이지를 다 받고 1초 뒤 한가할 때 낮은 우선순위로 붙입니다.
 
 ## 0.2.0: 3D를 Web Worker에서 그림
 
