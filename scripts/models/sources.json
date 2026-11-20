@@ -1,5 +1,5 @@
 {
-  "$comment": "우주적 존재 3D 모델의 원본과 가공 설정. pnpm models가 file을 받아 public/models/<id>.glb로 가공합니다. clips는 남길 애니메이션(역할: 원본 이름), ratio는 삼각형을 줄일 비율입니다. 출처는 README에도 적습니다.",
+  "$comment": "우주적 존재·우주 대전 3D 모델의 원본과 가공 설정. pnpm models가 file을 받아 public/models/<id>.glb로 가공합니다. clips는 남길 애니메이션(역할: 원본 이름), ratio는 삼각형을 줄일 비율입니다. 출처는 README에도 적습니다.",
   "models": [
     {
       "id": "eagle",
@@ -8,7 +8,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/Ug45M2A4Vv",
       "file": "https://static.poly.pizza/3b941b1e-c187-44ee-9c32-7b76bb23ebf3.glb",
-      "clips": { "loop": "eagle_flyA" },
+      "clips": {
+        "loop": "eagle_flyA"
+      },
       "frames": 2
     },
     {
@@ -18,7 +20,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/p4puYPVor6",
       "file": "https://static.poly.pizza/e824fb52-b9a8-4a35-b930-05f8ad107a9c.glb",
-      "clips": { "loop": "raven_flyA" }
+      "clips": {
+        "loop": "raven_flyA"
+      }
     },
     {
       "id": "parrot",
@@ -27,7 +31,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/3wCiMpao0L",
       "file": "https://static.poly.pizza/ecfa3ae3-e6f4-4b0b-b570-fd59a259bb50.glb",
-      "clips": { "loop": "parrot_A" }
+      "clips": {
+        "loop": "parrot_A"
+      }
     },
     {
       "id": "stork",
@@ -36,7 +42,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/iO3aMS7KK8",
       "file": "https://static.poly.pizza/3e3ad2db-17c7-48f9-b4c3-2498cd856972.glb",
-      "clips": { "loop": "storkFly_B" }
+      "clips": {
+        "loop": "storkFly_B"
+      }
     },
     {
       "id": "panther",
@@ -45,7 +53,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/JcAlAQynld",
       "file": "https://static.poly.pizza/4cfcb654-8fa0-4da4-91ab-9b92f5373cd5.glb",
-      "clips": { "loop": "mountainlionRun_A" }
+      "clips": {
+        "loop": "mountainlionRun_A"
+      }
     },
     {
       "id": "chowchow",
@@ -54,7 +64,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/DLocG67Tsn",
       "file": "https://static.poly.pizza/d56e76b0-8889-4d43-b764-fdeaf479f0c9.glb",
-      "clips": { "loop": "chowRun_A" }
+      "clips": {
+        "loop": "chowRun_A"
+      }
     },
     {
       "id": "wolf",
@@ -63,7 +75,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/MyLvUaAaXO",
       "file": "https://static.poly.pizza/285f1120-e9f3-44d9-aafc-8f763a36bace.glb",
-      "clips": { "loop": "wolfDash_A" }
+      "clips": {
+        "loop": "wolfDash_A"
+      }
     },
     {
       "id": "dog",
@@ -72,7 +86,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/kv5eequb67",
       "file": "https://static.poly.pizza/ec6864a4-f6c9-47d9-bc59-fe4a0a43de90.glb",
-      "clips": { "loop": "goldenRetreiver_runA" }
+      "clips": {
+        "loop": "goldenRetreiver_runA"
+      }
     },
     {
       "id": "horse",
@@ -81,7 +97,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/idqRg0ucZ7",
       "file": "https://static.poly.pizza/f04ecfe0-7e8b-4fa3-bf23-a8df6175dfea.glb",
-      "clips": { "loop": "horse_A" }
+      "clips": {
+        "loop": "horse_A"
+      }
     },
     {
       "id": "elk",
@@ -90,7 +108,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/nIkXY821lD",
       "file": "https://static.poly.pizza/18220bd6-73af-4379-bd3f-d5dc6ae89370.glb",
-      "clips": { "loop": "elkRun_B" }
+      "clips": {
+        "loop": "elkRun_B"
+      }
     },
     {
       "id": "deer",
@@ -99,7 +119,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/BIq8fPvPeN",
       "file": "https://static.poly.pizza/a8677c4e-4a3f-4675-bdc7-3a9e310c2c57.glb",
-      "clips": { "loop": "deerLeap_A" }
+      "clips": {
+        "loop": "deerLeap_A"
+      }
     },
     {
       "id": "bear",
@@ -108,7 +130,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/Coppphok4P",
       "file": "https://static.poly.pizza/29ac9b29-8c13-4c50-a85b-cd68c0e6c044.glb",
-      "clips": { "loop": "bearBrown_B" },
+      "clips": {
+        "loop": "bearBrown_B"
+      },
       "frames": 2
     },
     {
@@ -118,7 +142,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/EHW8HuR2d7",
       "file": "https://static.poly.pizza/a96b9107-71c9-40be-a0d1-4009eb6123b8.glb",
-      "clips": { "loop": "goatCharge_A" }
+      "clips": {
+        "loop": "goatCharge_A"
+      }
     },
     {
       "id": "buffalo",
@@ -127,7 +153,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/hqvlYnTeQX",
       "file": "https://static.poly.pizza/11ca75f6-4498-4b9d-9eb5-feea401ffe51.glb",
-      "clips": { "loop": "tarbuffaloA_runA" },
+      "clips": {
+        "loop": "tarbuffaloA_runA"
+      },
       "frames": 2
     },
     {
@@ -137,7 +165,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/5YUViJK0lc",
       "file": "https://static.poly.pizza/4dcd979d-b913-4149-830c-41aafc717f08.glb",
-      "clips": { "loop": "blackWidow_walkA" }
+      "clips": {
+        "loop": "blackWidow_walkA"
+      }
     },
     {
       "id": "centipede",
@@ -146,7 +176,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/3Yjp5vVR8L",
       "file": "https://static.poly.pizza/494e5d27-09f5-4d67-8afb-ec16103bfe8c.glb",
-      "clips": { "loop": "centipede_walkA" }
+      "clips": {
+        "loop": "centipede_walkA"
+      }
     },
     {
       "id": "crawler",
@@ -155,7 +187,9 @@
       "licence": "CC BY 3.0",
       "page": "https://poly.pizza/m/NNGmzNAiUX",
       "file": "https://static.poly.pizza/96cee4d2-3730-4e66-8f64-211b2c58f5b3.glb",
-      "clips": { "loop": "shdw2_crawlE" },
+      "clips": {
+        "loop": "shdw2_crawlE"
+      },
       "frames": 2
     },
     {
@@ -200,7 +234,9 @@
       "licence": "CC0 1.0",
       "page": "https://poly.pizza/m/JGFwp6xWgk",
       "file": "https://static.poly.pizza/7300e697-2543-4a9a-a77d-dedf29251fd7.glb",
-      "clips": { "loop": "Armature|Swim" }
+      "clips": {
+        "loop": "Armature|Swim"
+      }
     },
     {
       "id": "wasp",
@@ -209,7 +245,9 @@
       "licence": "CC0 1.0",
       "page": "https://poly.pizza/m/3aQgc75sUR",
       "file": "https://static.poly.pizza/71cadefd-8e65-423a-9a95-3cdf7e012586.glb",
-      "clips": { "loop": "WaspArmature|Wasp_Flying" },
+      "clips": {
+        "loop": "WaspArmature|Wasp_Flying"
+      },
       "ratio": 0.35
     },
     {
@@ -323,6 +361,136 @@
       "file": "https://static.poly.pizza/2db3d598-a711-48ea-ac66-45165e37ee87.glb",
       "clips": {},
       "ratio": 0.25
+    },
+    {
+      "id": "fighter-a",
+      "title": "Spaceship",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/xNbtFQwirO",
+      "file": "https://static.poly.pizza/47bb1015-bbe6-4261-9857-40c9fe6c8048.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "fighter-b",
+      "title": "Spaceship",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/DbGajMHrvp",
+      "file": "https://static.poly.pizza/444c9c59-f4c0-4f04-b033-c29002d686cb.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "fighter-c",
+      "title": "Spaceship",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/Jqfed124pQ",
+      "file": "https://static.poly.pizza/fb4a47c7-5453-433d-959d-0d3903b578e3.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "frigate-a",
+      "title": "Spaceship",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/PQzePrvBCD",
+      "file": "https://static.poly.pizza/e2fa6756-de8d-43cf-bc7b-297d100ca5c4.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "frigate-b",
+      "title": "Spaceship",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/htfBk9vPfw",
+      "file": "https://static.poly.pizza/a6789133-a4b2-447b-9eda-4c44b84240ca.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "pod",
+      "title": "Spaceship",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/u105mYHLHU",
+      "file": "https://static.poly.pizza/0843ab59-1800-4d96-9cc7-b4d6afbecf21.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "gunship",
+      "title": "Spaceship",
+      "author": "Quaternius",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/VSxUAFhzbA",
+      "file": "https://static.poly.pizza/9dd50f84-345d-418f-bb58-0cb63fd091e6.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "speeder-a",
+      "title": "Space Craft Speeder",
+      "author": "Kenney",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/mlQBUQRUpM",
+      "file": "https://static.poly.pizza/c291b3f0-6248-4734-bddf-a0de4335d1e8.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "speeder-b",
+      "title": "Spacecraft Speeder",
+      "author": "Kenney",
+      "licence": "CC0 1.0",
+      "page": "https://poly.pizza/m/PbD0M5Y6pS",
+      "file": "https://static.poly.pizza/c5f96da5-4aeb-4519-9016-113849f77d80.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "saucer",
+      "title": "Flying saucer",
+      "author": "Poly by Google",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/6hu2h8v78mO",
+      "file": "https://static.poly.pizza/077f565d-a601-4667-883e-1a598a3b4acb.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "scout",
+      "title": "Venom Scout",
+      "author": "Aaron Clifford",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/244-CCESo-F",
+      "file": "https://static.poly.pizza/3a0df14e-3367-40b5-931f-e44c7a3261c7.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "concept",
+      "title": "Spaceship Concept",
+      "author": "Yogoshimo 2.0",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/9pBgIlbtj3F",
+      "file": "https://static.poly.pizza/e6ef32dd-f572-414e-8988-10b5f450271b.glb",
+      "clips": {},
+      "ratio": 0.6
+    },
+    {
+      "id": "starship",
+      "title": "Starship McStarshipface",
+      "author": "Jason Neufeld",
+      "licence": "CC BY 3.0",
+      "page": "https://poly.pizza/m/eMrqcfO5i9p",
+      "file": "https://static.poly.pizza/180cc8c3-2cb2-4649-8d93-0293f9dcb2da.glb",
+      "clips": {},
+      "ratio": 0.6
     }
   ]
 }

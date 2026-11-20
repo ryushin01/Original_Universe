@@ -269,4 +269,43 @@ export const PANEL_MESSAGES = {
   ],
   // 공통
   'common.years': ['{n}년', '{n} yr'],
+  // 우주 대전 (스페이스 오페라 모드)
+  'war.intro': [
+    '스페이스 오페라 모드: 두 세력의 함대가 맞붙는 우주 대전을 일으킵니다. 워프와 빔 병기, 우주항공모함과 강화복, 행성 파괴포, 평행우주와 시간여행까지 세력마다 다른 소재가 나옵니다. (과학 모델 밖의 상상 모드입니다)',
+    'Space-opera mode: send two factions’ fleets into a space war. Warp drives and beam weapons, carriers and powered armour, planet-killers, parallel universes and time travel: every faction brings its own tropes. (An imaginary mode outside the science model.)',
+  ],
+  'war.a': ['공격 세력', 'Attacking faction'],
+  'war.b': ['맞설 세력', 'Defending faction'],
+  'war.size': ['함대 규모', 'Fleet size'],
+  'war.site': ['전장', 'Battlefield'],
+  'war.target': ['행성 파괴포 표적', 'Planet-killer target'],
+  'war.noTarget': ['쏘지 않음 (함대만 노림)', 'Hold fire (fleets only)'],
+  'war.targetHint': [
+    '고르면 기함이 버티는 동안 그 천체를 부숩니다. 지구는 고를 수 없습니다.',
+    'If chosen, the flagship destroys that body while it holds out. Earth cannot be targeted.',
+  ],
+  'war.power': ['전력', 'Strength'],
+  'war.vs': ['{a} 대 {b}', '{a} vs {b}'],
+  'war.fleet': ['함대', 'Fleet'],
+  'war.weapons': ['주포', 'Main guns'],
+  'war.specials': ['특수 작전', 'Special operations'],
+  'war.odds': ['승산', 'Odds'],
+  'war.oddsValue': ['{name} {percent}', '{name} {percent}'],
+  'war.duration': ['예상 기간', 'Expected length'],
+  'war.support': ['지원', 'Support'],
+  'war.supportValue': [
+    '메가스트럭처 {count}개 · 개척 기지 {colonies}',
+    '{count} megastructures · colonies {colonies}',
+  ],
+  'war.yes': ['있음', 'present'],
+  'war.no': ['없음', 'none'],
+  'war.motifs': [
+    '스페이스 오페라 소재 {count}가지',
+    '{count} space-opera tropes',
+  ],
+  'war.declare': ['개전', 'Declare war'],
+  'war.active': ['진행 중인 우주 대전', 'Space wars in progress'],
+  'war.left': ['{site} · 끝나기까지 {time}', '{site} · {time} to go'],
+  'war.strength': ['{name} 전력 {percent}', '{name} strength {percent}'],
+  'war.follow': ['전장 따라가기', 'Follow the battle'],
 } as const

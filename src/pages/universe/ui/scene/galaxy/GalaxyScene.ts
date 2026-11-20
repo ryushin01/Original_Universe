@@ -41,6 +41,9 @@ import {
   raDecToGalacticScene,
 } from '../common'
 import type { FrameContext, ScaleScene, Target } from '../types'
+import { createLaserStorm, laserColor, warPalette } from '../effects/laserStorm'
+import { FACTION_BY_ID } from '../../../model/war/catalog'
+import type { FactionId } from '../../../model/war/catalog'
 
 const FAR_LABELS = new Set([
   'sun',
@@ -231,6 +234,9 @@ export function createGalaxyScene(): ScaleScene {
 
   const shell = makeSelectionShell()
   scene.add(shell)
+  // 우주 대전이 벌어지는 동안 은하를 가로지르는 레이저 (표지 사이, 은하 원반 위)
+  const lasers = createLaserStorm(26)
+  scene.add(lasers.mesh)
   let heldAngle = 0
 
   const target = (id: string): Target | null => {
@@ -293,6 +299,35 @@ export function createGalaxyScene(): ScaleScene {
       }
       ;(sky.stars.material as ShaderMaterial).uniforms.uPixelRatio.value =
         ctx.pixelRatio
+      const points = [...markers.values()].map((m) =>
+        m.getWorldPosition(new Vector3()),
+      )
+      // 싸우는 세력의 레이저 색 (악시스는 붉은색, 얼라이언스는 푸른색 등)
+      const palette = warPalette(
+        ctx.world.wars,
+        (id) => FACTION_BY_ID[id as FactionId].lasers,
+      )
+      lasers.update(
+        ctx.elapsed,
+        !ctx.reducedMotion &&
+          points.length > 1 &&
+          ctx.world.wars.some((w) => w.status === 'raging'),
+        0.26,
+        () => {
+          const i = Math.floor(Math.random() * points.length)
+          const j =
+            (i + 1 + Math.floor(Math.random() * (points.length - 1))) %
+            points.length
+          return {
+            from: points[i].clone(),
+            to: points[j].clone(),
+            color: palette.length
+              ? palette[Math.floor(Math.random() * palette.length)]
+              : laserColor(),
+            tail: Math.random() < 0.45 ? 0.25 : 1,
+          }
+        },
+      )
     },
     dispose: () => disposeObject(scene),
   }

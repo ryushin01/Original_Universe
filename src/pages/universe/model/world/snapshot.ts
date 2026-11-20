@@ -57,6 +57,7 @@ const REASONS: RemovalReason[] = [
   'disrupted',
   'collided',
   'devoured',
+  'destroyed',
 ]
 
 export function toSnapshot(state: WorldState): Snapshot {

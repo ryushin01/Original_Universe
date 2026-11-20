@@ -78,6 +78,7 @@ import {
   nextBattleYear,
   resolveBattles,
 } from './mythic'
+import { nextWarYear, resolveWars, warDone } from './war'
 import type { Flyby, WorldState } from './types'
 
 export const START_BUDGET = 500
@@ -114,6 +115,7 @@ export function initialWorld(year: number): WorldState {
     },
     colonyHealth: {},
     battles: [],
+    wars: [],
     solarDim: 0,
     meteorStorm: null,
     milestones: [],
@@ -246,6 +248,8 @@ export function pruneFinished(state: WorldState): WorldState {
     s = { ...s, auroras: s.auroras.filter((x) => !auroraDone(x)) }
   if (s.battles.some(battleDone))
     s = { ...s, battles: s.battles.filter((x) => !battleDone(x)) }
+  if (s.wars.some((w) => warDone(w, s.year)))
+    s = { ...s, wars: s.wars.filter((w) => !warDone(w, s.year)) }
   return s
 }
 
@@ -292,6 +296,7 @@ function nextEventYear(s: WorldState, limit: number): number {
       if (!s.milestones.includes(id)) consider(yearAtSunAge(age))
   if (s.mission?.status === 'running') consider(s.mission.endYear)
   consider(nextBattleYear(s))
+  consider(nextWarYear(s))
   return t
 }
 
@@ -571,7 +576,8 @@ function processDue(state: WorldState): WorldState {
   s = resolveFlybys(s)
   s = resolveStages(s)
   s = resolveBattles(s)
-  // 격돌의 파편이 지구로 오면 행성 방위 요격망이 대응
+  s = resolveWars(s)
+  // 격돌·우주 대전의 파편이 지구로 오면 행성 방위 요격망이 대응
   if (s.impacts !== state.impacts) s = autoIntercept(s)
   return s
 }

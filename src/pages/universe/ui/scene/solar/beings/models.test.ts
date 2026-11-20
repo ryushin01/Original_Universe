@@ -43,7 +43,7 @@ describe('우주적 존재 3D 모델', () => {
       expect(s.title.trim(), s.id).not.toBe('')
       expect(s.author.trim(), s.id).not.toBe('')
       expect(['CC0 1.0', 'CC BY 3.0'], s.id).toContain(s.licence)
-      expect(s.page, s.id).toMatch(/^https:\/\/poly\.pizza\/m\/\w+$/)
+      expect(s.page, s.id).toMatch(/^https:\/\/poly\.pizza\/m\/[\w-]+$/)
       expect(s.file, s.id).toMatch(/^https:\/\/static\.poly\.pizza\/.+\.glb$/)
     }
   })

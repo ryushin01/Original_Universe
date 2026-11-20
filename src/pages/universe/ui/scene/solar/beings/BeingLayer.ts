@@ -27,21 +27,15 @@ import {
 } from 'three'
 import { clamp, seededRandom } from '@/shared/lib'
 import type { BodyId } from '../../../../model/solar/bodies'
-import { bodyVisualRadius, sceneDistance } from '../../../../model/solar/scale'
 import type { DistanceMode } from '../../../../model/solar/scale'
 import { BEING_BY_ID } from '../../../../model/mythic/catalog'
-import type { Being, SiteId } from '../../../../model/mythic/catalog'
+import type { Being } from '../../../../model/mythic/catalog'
 import { BATTLE_AFTERGLOW_YEARS } from '../../../../model/world/mythic'
 import type { Battle, WorldState } from '../../../../model/world/types'
 import { beingIdOf, beingSceneId } from '../../../../model/objects'
-import {
-  disposeObject,
-  faceCamera,
-  makeGlow,
-  raDecToScene,
-  setLine,
-} from '../../common'
+import { disposeObject, faceCamera, makeGlow, setLine } from '../../common'
 import type { FrameContext, Target } from '../../types'
+import { SITE_SCALE, siteCenter } from '../sites'
 import type { Body3D } from './body'
 import { drawBeing } from './figures'
 import type { Drawing } from './figures'
@@ -86,19 +80,7 @@ void main() {
 }
 `
 
-/** 싸움터의 존재 크기 (태양만 하게, 멀리 있는 싸움터는 크게 보이게) */
-const SITE_SCALE: Record<SiteId, number> = {
-  sun: 1,
-  earth: 1,
-  mars: 1,
-  jupiter: 1,
-  kuiper: 2.6,
-  deep: 120,
-}
 const BASE_RADIUS = 1.3
-
-/** 은하 중심 방향 (궁수자리 A*) */
-const GALACTIC_CENTRE = raDecToScene(266.4, -28.9)
 
 interface Visual {
   being: Being
@@ -424,34 +406,6 @@ export function createBeingLayer(): BeingLayer {
   const deepGlow = makeGlow('#c8a8ff', 1, 0, 0.5)
   deepGlow.visible = false
   group.add(bite, deepGlow)
-
-  function siteCenter(site: SiteId, anchors: BeingAnchors): Vector3 {
-    const near = (id: BodyId) => {
-      const p = anchors.positions.get(id)
-      if (!p) return null
-      const out = p.clone().normalize()
-      return p
-        .clone()
-        .add(out.multiplyScalar(bodyVisualRadius(id) * 3 + 2.6))
-        .add(new Vector3(0, 0.9, 0))
-    }
-    switch (site) {
-      case 'sun':
-        return new Vector3(Math.cos(3.5), 0.25, Math.sin(3.5))
-          .normalize()
-          .multiplyScalar(anchors.sunRadius * 1.6 + 3.6)
-      case 'earth':
-      case 'mars':
-      case 'jupiter':
-        return near(site) ?? new Vector3(0, 6, 0)
-      case 'kuiper':
-        return new Vector3(Math.cos(2.1), 0.12, Math.sin(2.1))
-          .normalize()
-          .multiplyScalar(sceneDistance(45, anchors.mode))
-      case 'deep':
-        return GALACTIC_CENTRE.clone().multiplyScalar(2600)
-    }
-  }
 
   function visualOf(id: string): Visual {
     let v = visuals.get(id)

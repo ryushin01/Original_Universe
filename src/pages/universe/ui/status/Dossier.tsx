@@ -26,7 +26,20 @@ import {
   redshift,
   scaleFactor,
 } from '../../model/cosmic/cosmology'
-import { beingIdOf, beingObject, objectsOf } from '../../model/objects'
+import {
+  beingIdOf,
+  beingObject,
+  objectsOf,
+  warIdOf,
+  warObject,
+} from '../../model/objects'
+import {
+  FACTION_BY_ID,
+  FLEET_SIZES,
+  MOTIFS,
+  WEAPONS,
+} from '../../model/war/catalog'
+import { warMotifs, warStrength } from '../../model/world/war'
 import {
   ALIGNMENT_NAME,
   BEING_BY_ID,
@@ -531,6 +544,71 @@ function IntruderDossier() {
 }
 
 /** 우주적 존재: 3D에서 고르거나 우주적 존재 탭에서 따라가기 */
+/** 우주 대전: 두 세력의 주포·남은 전력, 전장·규모, 진행, 스페이스 오페라 소재 */
+function WarDossier(props: { id: number }) {
+  const l = () => locale()
+  const war = () => world().wars.find((w) => w.id === props.id)
+  return (
+    <Show
+      when={war()}
+      fallback={<p class={styles.small}>{t('dossier.warOver')}</p>}
+    >
+      {(w) => {
+        const a = () => FACTION_BY_ID[w().a]
+        const b = () => FACTION_BY_ID[w().b]
+        const strength = () => warStrength(w(), world().year)
+        const progress = () =>
+          Math.min(
+            1,
+            Math.max(
+              0,
+              (world().year - w().startYear) /
+                Math.max(1e-9, w().endYear - w().startYear),
+            ),
+          )
+        const name = () => warObject(w()).name
+        return (
+          <PassportCard
+            title={pick(name())}
+            altTitle={pickOther(name())}
+            altLang={otherLocale()}
+            subtitle={`${pick(SITE_BY_ID[w().site].name)} · ${pick(FLEET_SIZES[w().size].name)}`}
+            image={`conic-gradient(from 90deg, ${a().color} 0 50%, ${b().color} 50% 100%)`}
+            ring={w().status === 'raging' ? progress() : null}
+            ringLabel={t('dossier.warProgress')}
+            fields={[
+              { label: t('dossier.warSideA'), value: pick(a().name) },
+              {
+                label: t('dossier.warGuns'),
+                value: pick(WEAPONS[a().weapon].name),
+              },
+              {
+                label: t('dossier.warLeft'),
+                value: formatPercent(strength().a, l()),
+              },
+              { label: t('dossier.warSideB'), value: pick(b().name) },
+              {
+                label: t('dossier.warGuns'),
+                value: pick(WEAPONS[b().weapon].name),
+              },
+              {
+                label: t('dossier.warLeft'),
+                value: formatPercent(strength().b, l()),
+              },
+            ]}
+          >
+            <ul class={styles.chips}>
+              <For each={warMotifs(w().a, w().b)}>
+                {(id) => <li>{pick(MOTIFS[id])}</li>}
+              </For>
+            </ul>
+          </PassportCard>
+        )
+      }}
+    </Show>
+  )
+}
+
 function BeingDossier(props: { id: string }) {
   const l = () => locale()
   const lore = createLore()
@@ -695,6 +773,14 @@ export function Dossier() {
       label: bothNames(BEING_BY_ID[beingId].name),
     }))
   }
+  // 우주 대전의 전장도 고를 수 있게
+  const warOptions = () =>
+    scale() === 'solar'
+      ? world().wars.map((w) => ({
+          value: warObject(w).id,
+          label: pick(warObject(w).name),
+        }))
+      : []
   return (
     <section aria-labelledby="dossier-title" class={styles.block}>
       <h3 id="dossier-title" class={styles.heading}>
@@ -712,6 +798,7 @@ export function Dossier() {
           })),
           ...intruderOption(),
           ...beingOptions(),
+          ...warOptions(),
         ]}
       />
       <Show when={scale() === 'cosmic'}>
@@ -735,6 +822,9 @@ export function Dossier() {
               </Match>
               <Match when={scale() === 'solar' && beingIdOf(current())}>
                 {(beingId) => <BeingDossier id={beingId()} />}
+              </Match>
+              <Match when={scale() === 'solar' && warIdOf(current()) !== null}>
+                <WarDossier id={warIdOf(current())!} />
               </Match>
               <Match when={scale() === 'stars'}>
                 <StarDossier id={current()} />
