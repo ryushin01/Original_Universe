@@ -125,6 +125,7 @@ export const BODIES: Record<BodyId, BodyInfo> = {
       'Parker Solar Probe flies through the corona (2021–)',
     ),
     pole: { ra: 286.13, dec: 63.87, w0: 84.176, rate: 14.1844 },
+    texture: 'sun',
     color: '#ffd27a',
     orbit: { type: 'none' },
   },
@@ -321,6 +322,7 @@ export const BODIES: Record<BodyId, BodyInfo> = {
     explored: 2,
     exploredNote: both('던 궤도선 (2015~2018)', 'Dawn orbiter (2015–2018)'),
     pole: { ra: 291.418, dec: 66.764, w0: 170.65, rate: 952.1532 },
+    texture: 'ceres',
     color: '#8e8a84',
     orbit: {
       type: 'osculating',
@@ -389,6 +391,7 @@ export const BODIES: Record<BodyId, BodyInfo> = {
     explored: 1,
     exploredNote: both('갈릴레오·주노 근접 비행', 'Galileo and Juno flybys'),
     tidallyLocked: true,
+    texture: 'io',
     color: '#e6cf63',
     orbit: {
       type: 'satellite',
@@ -420,6 +423,7 @@ export const BODIES: Record<BodyId, BodyInfo> = {
       'Europa Clipper arrives in 2030',
     ),
     tidallyLocked: true,
+    texture: 'europa',
     color: '#d9ccb4',
     orbit: {
       type: 'satellite',
@@ -449,6 +453,7 @@ export const BODIES: Record<BodyId, BodyInfo> = {
     exploredNote: both('주스(JUICE) 2031년 도착 예정', 'JUICE arrives in 2031'),
     tidallyLocked: true,
     magnetosphere: true,
+    texture: 'ganymede',
     color: '#9c917f',
     orbit: {
       type: 'satellite',
@@ -477,6 +482,7 @@ export const BODIES: Record<BodyId, BodyInfo> = {
     explored: 1,
     exploredNote: both('갈릴레오 근접 비행', 'Galileo flybys'),
     tidallyLocked: true,
+    texture: 'callisto',
     color: '#6e665b',
     orbit: {
       type: 'satellite',
@@ -547,6 +553,7 @@ export const BODIES: Record<BodyId, BodyInfo> = {
       'Huygens landing (2005), Dragonfly arrives in 2034',
     ),
     tidallyLocked: true,
+    texture: 'titan',
     color: '#d6a04b',
     glow: { color: '#e5a64b', strength: 0.85 },
     orbit: {
@@ -649,6 +656,7 @@ export const BODIES: Record<BodyId, BodyInfo> = {
       'New Horizons flyby (2015)',
     ),
     pole: { ra: 132.993, dec: -6.163, w0: 302.695, rate: -56.3625225 },
+    texture: 'pluto',
     color: '#d3b48f',
     glow: { color: '#a8c4ff', strength: 0.18 },
     orbit: {
