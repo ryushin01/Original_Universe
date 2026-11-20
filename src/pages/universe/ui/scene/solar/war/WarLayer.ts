@@ -114,6 +114,8 @@ const ARRIVAL_SECONDS = 1.4
 /** 대형 병기·신적 존재의 크기 (싸움터 배율을 곱함) */
 const MEGA_SIZE = 0.95
 const CHAMPION_SIZE = 0.85
+/** 신적 존재가 한 줄에 서는 수 (넘으면 위로 줄을 더함) */
+const CHAMPION_ROW = 5
 /** 대형 병기가 깨어나며 펼쳐지는 시간 (초) */
 const AWAKEN_SECONDS = 3
 
@@ -812,15 +814,18 @@ export function createWarLayer(): WarLayer {
       c.root.visible = c.opacity > 0.01
       if (!c.root.visible) continue
       const radius = CHAMPION_SIZE * scale * clamp(c.being.size ?? 1, 0.7, 1.4)
-      // 화면에서 함대 뒤 위쪽 (카메라의 위 방향으로 벌림), 여럿이면 옆으로 나란히
-      const spread = (c.index - (counts[c.side] - 1) / 2) * 1.25 * scale
+      // 화면에서 함대 뒤 위쪽 (카메라의 위 방향으로 벌림), 여럿이면 한 줄에 5명씩 나란히
+      const cols = Math.min(counts[c.side], CHAMPION_ROW)
+      const row = Math.floor(c.index / CHAMPION_ROW)
+      const spread = ((c.index % CHAMPION_ROW) - (cols - 1) / 2) * 1.25 * scale
       c.root.position
         .copy(fleet.origin)
         .addScaledVector(fleet.forward, -1.2 * scale)
         .addScaledVector(camRight, spread)
         .addScaledVector(
           camUp,
-          (1.3 + 0.05 * Math.sin(t * 0.6 + c.side * 2 + c.index)) * scale,
+          (1.3 + 1.1 * row + 0.05 * Math.sin(t * 0.6 + c.side * 2 + c.index)) *
+            scale,
         )
       // 적을 보되 3/4쯤 이쪽으로 돌아 모습이 잘 보이게
       toCamera.subVectors(ctx.camera.position, c.root.position).normalize()

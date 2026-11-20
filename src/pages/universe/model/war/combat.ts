@@ -50,7 +50,9 @@ export interface RoundPlan {
 }
 
 /** 한 편에 가세할 수 있는 신적 존재 수 */
-export const MAX_BEINGS = 3
+export const MAX_BEINGS = 20
+/** 한 차례에 한 편의 신의 일격들이 상대 함대를 깎는 몫의 상한 (여럿이 내리쳐도 한 번에 쓸어버리지 않게) */
+const MAX_DIVINE_ROUND = 0.4
 
 /** 두 세력에 가세하는 신적 존재들(우주적 존재 id, 내세운 순서)과 대형 병기 (없으면 null) */
 export interface WarExtras {
@@ -198,16 +200,20 @@ export function planWar(
     if (DIVINE_ROUNDS.includes(r))
       for (const side of ['a', 'b'] as const) {
         const foes = standing(other(side))
+        let kept = 1
         standing(side).forEach((me, i) => {
           const foe = foes.length ? foes[Math.min(i, foes.length - 1)] : null
           specials.push({ side, id: 'divine-strike', being: me.id })
-          left[other(side)] *=
-            1 - divineStrike(me, foe, power[side] / power[other(side)])
+          kept *= 1 - divineStrike(me, foe, power[side] / power[other(side)])
         })
+        left[other(side)] *= Math.max(kept, 1 - MAX_DIVINE_ROUND)
       }
     // 신들의 결투: 내세운 순서대로 짝지어 1대1 (짝이 없는 존재는 결투 없이 계속 싸움)
+    // (함대 기세는 짝 가운데 이긴 비율만큼: 1대1이면 이긴 쪽이 온전히 오름)
+    const pairs = Math.min(beings.a.length, beings.b.length)
+    const wins = { a: 0, b: 0 }
     if (r === DUEL_ROUND)
-      for (let i = 0; i < Math.min(beings.a.length, beings.b.length); i++) {
+      for (let i = 0; i < pairs; i++) {
         const pair = { a: beings.a[i], b: beings.b[i] }
         const winner: Side = random() < winChance(pair.a, pair.b) ? 'a' : 'b'
         const loser = other(winner)
@@ -218,8 +224,15 @@ export function planWar(
           being: pair[winner].id,
           rival: pair[loser].id,
         })
-        left[winner] = Math.min(MAX_FRACTION, left[winner] + DUEL_BOOST)
-        left[loser] *= 1 - DUEL_SHOCK
+        wins[winner]++
+      }
+    if (pairs && (wins.a || wins.b))
+      for (const side of ['a', 'b'] as const) {
+        left[side] = Math.min(
+          MAX_FRACTION,
+          left[side] + (DUEL_BOOST * wins[side]) / pairs,
+        )
+        left[side] *= 1 - (DUEL_SHOCK * wins[other(side)]) / pairs
       }
     // 서로 상대 전력에 비례해 깎임 (같은 전력이면 한 차례에 약 14%)
     // 차례마다의 운: ±30%

@@ -67,10 +67,10 @@ describe('WarPanel', () => {
   it('세력마다 수호 존재와 대형 병기가 기본으로 들어가고, 여러 존재를 더하거나 뺄 수 있다', async () => {
     render(() => <WarPanel />)
     const rosterA = screen.getByRole('group', {
-      name: '공격 세력에 가세할 신적 존재 (최대 3)',
+      name: '공격 세력에 가세할 신적 존재 (최대 20)',
     })
     const rosterB = screen.getByRole('group', {
-      name: '맞설 세력에 가세할 신적 존재 (최대 3)',
+      name: '맞설 세력에 가세할 신적 존재 (최대 20)',
     })
     const weaponA = screen.getByRole('combobox', {
       name: '공격 세력의 대형 병기',
@@ -98,11 +98,14 @@ describe('WarPanel', () => {
     )
     expect(within(rosterA).getAllByRole('listitem')).toHaveLength(3)
     expect(screen.getByText('수르트 · 오딘 · 라 대 현무')).toBeInTheDocument()
-    // 세 명이면 더 고르지 않음
-    expect(within(rosterA).queryByRole('combobox')).toBeNull()
+    // 20명까지라 세 명이어도 더 고를 수 있음 (고른 존재는 목록에서 빠짐)
     expect(
-      within(rosterA).getByText(/3명까지 내세울 수 있습니다/),
-    ).toBeInTheDocument()
+      within(
+        within(rosterA).getByRole('combobox', {
+          name: '공격 세력에 더할 신적 존재',
+        }),
+      ).queryByRole('option', { name: '라 · Ra' }),
+    ).toBeNull()
     // 빼기
     await userEvent.click(
       within(rosterA).getByRole('button', { name: '라 빼기' }),
