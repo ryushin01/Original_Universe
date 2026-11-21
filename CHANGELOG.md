@@ -4,7 +4,7 @@
 
 인터넷이 끊겨도 모든 화면이 뜨는지 E2E로 확인합니다.
 
-- **오프라인 E2E:** `e2e/offline.spec.ts`가 localhost 밖 요청을 모두 막고 3D 불러오기·태양 폭풍 흐름·axe(WCAG 2.2 AA)를 확인하며, 외부 요청이 하나도 없는지 봅니다(CI의 `pnpm test:e2e`에 포함)
+- **오프라인 E2E:** `e2e/offline.spec.ts`가 localhost 밖 요청을 모두 막고 3D 불러오기·태양 폭풍 흐름·axe(WCAG 2.2 AA)를 확인하며, 외부 요청이 하나도 없는지 봅니다(CI의 `pnpm test:e2e`에 포함). 3D를 처음부터 불러와 무거우므로 Playwright 프로젝트 `offline`으로 나눠 다른 흐름 테스트가 끝난 뒤에 돌립니다
 - **E2E 도우미:** 소개 넘기기(`start`)와 axe 검사를 `e2e/helpers.ts`로 나눠 두 테스트 파일이 함께 씀
 - **문서:** README·`docs/development.md`에 `.env` 없이 로컬·오프라인으로 도는 방법, README 버전 배지를 1.13.1로 맞춤
 
