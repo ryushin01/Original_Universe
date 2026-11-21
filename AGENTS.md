@@ -67,7 +67,9 @@ pnpm lighthouse          # LHCI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS
 - **흐름: GitHub Flow.** `main`에 직접 커밋·푸시하지 않고, 최신 `main`에서 브랜치를 만들어 PR로만 병합합니다.
 - **브랜치 이름:** `feat/…`, `fix/…`, `refactor/…`, `docs/…`, `test/…`, `chore/…`, `release/…`(실제 예: `feat/twenty-beings`, `feat/ceres-dawn-map`).
 - **커밋 메시지: Conventional Commits.** `<타입>: <한국어 요약>`, 타입은 `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `style`, `chore`, `ci`, `build`. 버전을 올린 커밋·PR 제목은 끝에 `(x.y.z)`를 붙입니다. 예: `feat: 세력전에 신적 존재를 한 편 20명까지 (1.13.0)`, `perf: 런칭 기본기 — 끝난 사건 정리, 서비스 워커 캐시, 공유 미리보기 (0.5.0)`. 문서만 바꾸면 버전 없이 `docs: …`. 호환이 깨지면 본문에 `BREAKING CHANGE:`.
-- 본문은 바꾼 내용을 한국어 목록으로 적고, 끝에 `Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>`을 붙입니다.
+- 본문은 바꾼 내용을 한국어 목록으로 적습니다.
+- **작성자:** 커밋 작성자는 항상 ryushin01(`ryushin0 <141554987+ryushin01@users.noreply.github.com>`)입니다(기여자는 ryushin01만 남김). 백엔드 코드가 없는 저장소라 `Co-Authored-By` 줄은 넣지 않습니다(예전 커밋에 있던 줄은 따르지 않음).
+- GitHub Actions가 커밋하는 워크플로는 작성자를 ryushin01로 설정합니다(`github-actions[bot]` 금지). Dependabot PR은 그대로 병합하지 말고 같은 변경을 ryushin01 커밋으로 다시 만들어 병합합니다.
 - **버전: Semantic Versioning.** `package.json`의 `version`과 README 버전 배지를 함께 맞춥니다(지금 README 배지는 1.9.0으로 `package.json` 1.13.0보다 뒤처져 있으니 다음 버전 PR에서 맞춥니다).
 - **변경 기록: Keep a Changelog 기반.** `CHANGELOG.md`(제목 `# 변경 기록`)에 최신 버전을 위에 두고 `## x.y.z - YYYY-MM-DD` 아래 요약 한 줄과 `- **주제:** 내용` 목록으로 적습니다. `[Unreleased]` 절과 추가·변경·수정·제거 소제목은 쓰지 않습니다(표준과 다른 점, 병합과 릴리스를 같은 날 해서 미출시 절이 남지 않음).
 - **병합:** squash(제목 끝에 `(#번호)`). CI가 통과하면 바로 병합하고 CodeRabbit 리뷰는 기다리지 않습니다.
