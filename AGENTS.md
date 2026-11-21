@@ -32,7 +32,7 @@ pnpm storybook           # http://localhost:6106
 
 ## 4. 검사·테스트 명령
 
-CI(`.github/workflows/ci.yml`)는 이 순서로 돕니다.
+CI(`.github/workflows/ci.yml`, `main` 푸시·PR)는 이 순서로 돕니다. 작업을 끝냈다고 하기 전에 최소한 lint·typecheck·test를 돌립니다.
 
 ```bash
 pnpm install --frozen-lockfile
@@ -43,24 +43,23 @@ pnpm typecheck           # tsc --noEmit
 pnpm test                # Vitest(모델·엔진·UI, 글꼴 빠진 글자 검사 포함)
 pnpm build:all           # 사이트 + Storybook(dist/client/storybook)
 pnpm exec playwright install --with-deps chromium
-pnpm test:e2e            # Playwright: 화면 폭 넘침, axe(WCAG 2.2 AA), 키보드, 주요 흐름
+pnpm test:e2e            # Playwright(빌드 결과 사용): 화면 폭 넘침, axe(WCAG 2.2 AA), 키보드, 주요 흐름, 오프라인
 pnpm lighthouse          # LHCI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS ≤ 0.1
 ```
 
-- E2E는 GPU 없이 SwiftShader(소프트웨어 WebGL)로 돕니다.
+- E2E는 GPU 없이 SwiftShader(소프트웨어 WebGL)로 돕니다. 먼저 `pnpm build`가 필요합니다.
+- 오프라인: 실행 중 외부 요청이 없어야 합니다(글꼴·모델·텍스처는 저장소에 둠, 서비스 워커가 캐시). `e2e/offline.spec.ts`가 localhost 밖 요청을 모두 막고 3D 불러오기 → 시뮬레이터 → 태양 폭풍 → axe를 확인하며, Playwright 프로젝트 `offline`으로 다른 흐름 테스트 뒤에 돕니다(`playwright.config.ts`). 공용 도우미는 `e2e/helpers.ts`.
 - Storybook에는 `@storybook/addon-a11y`가 있습니다.
-- **Testing Library 원칙:** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 도구는 단위·컴포넌트 Vitest + `@solidjs/testing-library`(+ `user-event`, `jest-dom`), 화면 흐름 Playwright E2E, 접근성 `@axe-core/playwright`(E2E 안)와 Storybook `addon-a11y`입니다.
+- **Testing Library 원칙:** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 버그를 고치면 고치기 전에 실패하는 테스트를 함께 넣습니다. 도구는 단위·컴포넌트 Vitest + `@solidjs/testing-library`(+ `user-event`, `jest-dom`), 화면 흐름 Playwright E2E, 접근성 `@axe-core/playwright`(E2E 안)와 Storybook `addon-a11y`입니다.
 
 ## 5. 코드 스타일
 
-- **TypeScript strict**(`tsconfig.json`의 `"strict": true`)를 유지하고 `any`·`as` 단언·`@ts-ignore`는 피합니다.
-- **Prettier**(`prettier.config.js`: `semi: false`, `singleQuote`, `trailingComma: all`)와 ESLint(`typescript-eslint`, `eslint-plugin-solid`)를 따릅니다. Biome는 쓰지 않습니다.
+- TypeScript strict, `any`·`as` 단언·`@ts-ignore` 금지. 서식은 Prettier(`prettier.config.js`: `semi: false`, `singleQuote`, `trailingComma: all`), 린트는 ESLint(`typescript-eslint`, `eslint-plugin-solid`)를 따릅니다.
 - 기존 FSD 배치를 따릅니다. 생성한 글꼴 CSS(`src/app/styles/fonts/`)와 `public/sw.js`는 Prettier 대상이 아닙니다.
 - 화면 문구는 `[한국어, 영어]` 쌍(`ui/messages.ts`, `ui/panels/messages.ts`)으로 적고 `t(키, 값)`으로 씁니다. 자료 이름·설명은 `both(한국어, 영어)`로 둡니다.
 - 매 프레임 바뀌는 선은 `common.ts`의 `setLine`으로 버퍼를 다시 쓰고, 끝난 사건은 `pruneFinished`로 지웁니다(상태가 워커로 매 프레임 복사됨).
 - 숫자 서식: `html`의 `font-variant-numeric: lining-nums`를 덮어쓸 때는 `lining-nums tabular-nums`처럼 함께 적습니다.
-- 접근성(**WCAG 2.2·KWCAG 2.2**): 네이티브 요소(`<button type="button">`, `<dialog>`)를 먼저 쓰고, 글자 대비 4.5:1 이상, 3D 장면도 키보드(화살표·`+`/`-`)와 버튼으로 조작, `:focus-visible` 초점 표시 유지, 조작 크기 24px 이상, 입력칸 레이블과 오류 연결(`aria-invalid`·`aria-describedby`), 조작 결과는 처음부터 DOM에 있는 `role="status"`(오류 경계 안내는 `role="alert"`), 탭은 APG 패턴, 보이는 글자를 접근 이름에 그대로 넣기, '동작 줄이기' 존중. 자동 검사는 axe(Playwright E2E의 WCAG 2.2 AA 규칙, Storybook `addon-a11y`)와 Lighthouse 접근성 95점 하한입니다. Solid 프로젝트라 eslint-plugin-jsx-a11y는 쓰지 않습니다(표준과 다른 점).
-- 버그를 고치면 고치기 전에 실패하는 테스트를 함께 넣습니다.
+- 접근성(WCAG 2.2·KWCAG 2.2, 기본은 공통 규칙): 3D 장면도 키보드(화살표·`+`/`-`)와 버튼으로 조작, 조작 결과는 처음부터 DOM에 있는 `role="status"`(오류 경계 안내는 `role="alert"`), 탭은 APG 패턴, 보이는 글자를 접근 이름에 그대로 넣기, '동작 줄이기' 존중. 자동 검사는 axe(Playwright E2E의 WCAG 2.2 AA 규칙, Storybook `addon-a11y`)와 Lighthouse 접근성 95점 하한입니다. Solid 프로젝트라 eslint-plugin-jsx-a11y는 쓰지 않습니다(표준과 다른 점).
 
 ## 6. Git·PR
 
@@ -70,7 +69,7 @@ pnpm lighthouse          # LHCI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS
 - 본문은 바꾼 내용을 한국어 목록으로 적습니다.
 - **작성자:** 커밋 작성자는 항상 ryushin01(`ryushin0 <141554987+ryushin01@users.noreply.github.com>`)입니다(기여자는 ryushin01만 남김). 백엔드 코드가 없는 저장소라 `Co-Authored-By` 줄은 넣지 않습니다(예전 커밋에 있던 줄은 따르지 않음).
 - GitHub Actions가 커밋하는 워크플로는 작성자를 ryushin01로 설정합니다(`github-actions[bot]` 금지). Dependabot PR은 그대로 병합하지 말고 같은 변경을 ryushin01 커밋으로 다시 만들어 병합합니다.
-- **버전: Semantic Versioning.** `package.json`의 `version`과 README 버전 배지를 함께 맞춥니다(지금 README 배지는 1.9.0으로 `package.json` 1.13.0보다 뒤처져 있으니 다음 버전 PR에서 맞춥니다).
+- **버전: Semantic Versioning.** `package.json`의 `version`과 README 버전 배지를 함께 맞춥니다.
 - **변경 기록: Keep a Changelog 기반.** `CHANGELOG.md`(제목 `# 변경 기록`)에 최신 버전을 위에 두고 `## x.y.z - YYYY-MM-DD` 아래 요약 한 줄과 `- **주제:** 내용` 목록으로 적습니다. `[Unreleased]` 절과 추가·변경·수정·제거 소제목은 쓰지 않습니다(표준과 다른 점, 병합과 릴리스를 같은 날 해서 미출시 절이 남지 않음).
 - **병합:** squash(제목 끝에 `(#번호)`). CI가 통과하면 바로 병합하고 CodeRabbit 리뷰는 기다리지 않습니다.
 
@@ -88,6 +87,10 @@ pnpm lighthouse          # LHCI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS
 - 텍스처를 바꾸면 서비스 워커 캐시 이름이 내용 해시로 바뀌므로 따로 손댈 것이 없습니다. `assets/` 목록은 `scripts/finalize-sw.mjs`가 넣습니다.
 - 작은 woff2 조각이 CSS에 base64로 들어가지 않도록 `vite.config.ts`의 `assetsInlineLimit` 설정을 유지합니다.
 - 외부 자료(JPL·NASA PDS 등)의 출처와 라이선스는 `docs/data-sources.md`에 적습니다.
+
+- CI·배포·릴리스 상태는 명령 결과(`gh run`, `gh release`, `curl`)로 확인한 것만 말합니다.
+- 먼저 묻기: 새 런타임 의존성, 빌드 설정(`vite.config.ts`, `tsconfig.json`, `playwright.config.ts`, `lighthouserc.cjs`) 변경.
+- 절대 금지: 비밀값을 `VITE_*`에 넣기, `.env` 커밋, `eslint-disable`·`--no-verify`로 검사 우회, `main` 직접 푸시.
 
 ## 9. 공통 규칙
 
