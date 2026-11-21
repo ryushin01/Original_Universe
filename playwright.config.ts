@@ -19,7 +19,20 @@ export default defineConfig({
       args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
     },
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /offline\.spec/,
+    },
+    // 오프라인 검사도 3D를 처음부터 불러와 무거우므로, 시간이 빠듯한 다른 흐름 테스트와 겹치지 않게 그 뒤에 돌림
+    {
+      name: 'offline',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /offline\.spec/,
+      dependencies: ['chromium'],
+    },
+  ],
   // 프로덕션 빌드 결과를 띄워 검사 (먼저 pnpm build 필요)
   webServer: {
     // preview 스크립트의 --port 4183과 겹치지 않게 Vite를 바로 부름
