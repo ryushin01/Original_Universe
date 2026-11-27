@@ -12,10 +12,14 @@ export interface LocalGalaxy {
   distanceLy: number
   /** 지름 (광년) */
   diameterLy: number
-  note: Text
+  /** 국부 은하군 밖의 이웃 은하 (실제 거리에 두고, 멀리서는 크게 빛나는 표지로 보임) */
+  outside?: boolean
 }
 
-/** 국부 은하군의 주요 은하 (거리·크기는 대략값) */
+/**
+ * 국부 은하군의 주요 은하와 이웃 은하 (거리·크기는 대략값).
+ * 설명은 따로 받는 `details.ts`에 있습니다(3D 워커에 싣지 않음).
+ */
 export const LOCAL_GALAXIES: LocalGalaxy[] = [
   {
     id: 'milky-way',
@@ -25,10 +29,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -29.00781,
     distanceLy: 26_670,
     diameterLy: 100_000,
-    note: both(
-      '별 1천억~4천억 개의 막대 나선 은하. 암흑 물질을 합친 질량은 태양의 약 1조 배입니다.',
-      'A barred spiral of 100–400 billion stars; with dark matter it weighs about a trillion Suns.',
-    ),
   },
   {
     id: 'andromeda',
@@ -38,10 +38,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 41.269,
     distanceLy: 2_537_000,
     diameterLy: 152_000,
-    note: both(
-      '초속 약 110km로 다가오는 가장 가까운 큰 은하. 약 45억 년 뒤 가까이 스칠 수 있고, 100억 년 안에 합쳐질 확률은 약 50%로 봅니다(2025년 연구).',
-      'The nearest large galaxy, approaching at ~110 km/s. A close pass may come in ~4.5 billion years; a merger within 10 billion years has roughly even odds (2025 study).',
-    ),
   },
   {
     id: 'triangulum',
@@ -51,10 +47,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 30.66,
     distanceLy: 2_730_000,
     diameterLy: 61_000,
-    note: both(
-      '국부 은하군에서 세 번째로 큰 나선 은하입니다.',
-      'The third-largest spiral in the Local Group.',
-    ),
   },
   {
     id: 'lmc',
@@ -64,10 +56,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -69.756,
     distanceLy: 160_000,
     diameterLy: 32_000,
-    note: both(
-      '우리 은하의 가장 큰 위성 은하로, 약 20억 년 뒤 우리 은하와 충돌할 수 있습니다.',
-      'Our largest satellite; it may collide with the Milky Way in ~2 billion years.',
-    ),
   },
   {
     id: 'smc',
@@ -77,10 +65,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -72.829,
     distanceLy: 200_000,
     diameterLy: 19_000,
-    note: both(
-      '대마젤란 은하와 함께 우리 은하를 돕니다.',
-      'Orbits the Galaxy together with the Large Cloud.',
-    ),
   },
   {
     id: 'm32',
@@ -90,10 +74,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 40.865,
     distanceLy: 2_490_000,
     diameterLy: 6500,
-    note: both(
-      '안드로메다의 작고 빽빽한 타원 위성 은하입니다.',
-      'A compact elliptical satellite of Andromeda.',
-    ),
   },
   {
     id: 'm110',
@@ -103,10 +83,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 41.685,
     distanceLy: 2_690_000,
     diameterLy: 17_000,
-    note: both(
-      '안드로메다의 왜소 타원 은하입니다.',
-      'A dwarf elliptical companion of Andromeda.',
-    ),
   },
   {
     id: 'ngc185',
@@ -116,10 +92,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 48.337,
     distanceLy: 2_050_000,
     diameterLy: 8000,
-    note: both(
-      '안드로메다의 왜소 구형 은하입니다.',
-      'A dwarf spheroidal satellite of Andromeda.',
-    ),
   },
   {
     id: 'ngc147',
@@ -129,10 +101,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 48.509,
     distanceLy: 2_530_000,
     diameterLy: 10_000,
-    note: both(
-      '안드로메다 둘레의 왜소 은하입니다.',
-      'A dwarf galaxy around Andromeda.',
-    ),
   },
   {
     id: 'ngc6822',
@@ -142,10 +110,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -14.803,
     distanceLy: 1_630_000,
     diameterLy: 7000,
-    note: both(
-      '별 탄생이 활발한 불규칙 은하입니다.',
-      'A star-forming irregular galaxy.',
-    ),
   },
   {
     id: 'ic1613',
@@ -155,10 +119,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 2.118,
     distanceLy: 2_380_000,
     diameterLy: 10_000,
-    note: both(
-      '먼지가 거의 없어 별을 또렷이 볼 수 있는 왜소 불규칙 은하입니다.',
-      'A nearly dust-free dwarf irregular galaxy.',
-    ),
   },
   {
     id: 'ic10',
@@ -168,10 +128,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 59.304,
     distanceLy: 2_200_000,
     diameterLy: 5000,
-    note: both(
-      '국부 은하군에서 별이 가장 활발히 태어나는 폭발적 항성 생성 은하입니다.',
-      'The Local Group’s only starburst galaxy.',
-    ),
   },
   {
     id: 'wlm',
@@ -181,10 +137,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -15.461,
     distanceLy: 3_040_000,
     diameterLy: 8000,
-    note: both(
-      '국부 은하군 가장자리의 외딴 왜소 은하입니다.',
-      'An isolated dwarf at the Local Group’s edge.',
-    ),
   },
   {
     id: 'leo-a',
@@ -194,10 +146,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 30.746,
     distanceLy: 2_600_000,
     diameterLy: 4000,
-    note: both(
-      '늦게 별을 만들기 시작한 젊은 왜소 은하입니다.',
-      'A dwarf that began forming stars late.',
-    ),
   },
   {
     id: 'sagittarius-dsph',
@@ -207,10 +155,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -30.48,
     distanceLy: 70_000,
     diameterLy: 10_000,
-    note: both(
-      '우리 은하의 조석력에 길게 찢겨 흡수되는 중입니다.',
-      'Being shredded and absorbed by the Milky Way’s tides.',
-    ),
   },
   {
     id: 'fornax',
@@ -220,10 +164,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -34.449,
     distanceLy: 460_000,
     diameterLy: 6000,
-    note: both(
-      '구상 성단 여섯 개를 거느린 왜소 구형 은하입니다.',
-      'A dwarf spheroidal with six globular clusters.',
-    ),
   },
   {
     id: 'sculptor',
@@ -233,10 +173,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -33.709,
     distanceLy: 290_000,
     diameterLy: 3000,
-    note: both(
-      '처음 발견된 왜소 구형 은하입니다 (1937).',
-      'The first dwarf spheroidal discovered (1937).',
-    ),
   },
   {
     id: 'leo-i',
@@ -246,10 +182,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 12.307,
     distanceLy: 820_000,
     diameterLy: 2000,
-    note: both(
-      '밝은 별 레굴루스 바로 옆에 있어 찾기 어렵습니다.',
-      'Hidden in the glare of nearby Regulus.',
-    ),
   },
   {
     id: 'draco',
@@ -259,10 +191,6 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: 57.915,
     distanceLy: 260_000,
     diameterLy: 2700,
-    note: both(
-      '암흑 물질이 아주 많은 은하로 꼽힙니다.',
-      'One of the most dark-matter-dominated galaxies known.',
-    ),
   },
   {
     id: 'phoenix',
@@ -272,10 +200,56 @@ export const LOCAL_GALAXIES: LocalGalaxy[] = [
     dec: -44.445,
     distanceLy: 1_440_000,
     diameterLy: 2000,
-    note: both(
-      '구형 은하와 불규칙 은하의 중간 모습입니다.',
-      'A transition between spheroidal and irregular dwarfs.',
-    ),
+  },
+  {
+    id: 'centaurus-a',
+    name: both('센타우루스 A (NGC 5128)', 'Centaurus A (NGC 5128)'),
+    type: 'elliptical',
+    ra: 201.365,
+    dec: -43.019,
+    distanceLy: 12_400_000,
+    diameterLy: 60_000,
+    outside: true,
+  },
+  {
+    id: 'pinwheel',
+    name: both('바람개비 은하 (M101)', 'Pinwheel Galaxy (M101)'),
+    type: 'spiral',
+    ra: 210.802,
+    dec: 54.349,
+    distanceLy: 20_900_000,
+    diameterLy: 170_000,
+    outside: true,
+  },
+  {
+    id: 'whirlpool',
+    name: both('소용돌이 은하 (M51)', 'Whirlpool Galaxy (M51)'),
+    type: 'spiral',
+    ra: 202.47,
+    dec: 47.195,
+    distanceLy: 28_000_000,
+    diameterLy: 76_000,
+    outside: true,
+  },
+  {
+    id: 'sombrero',
+    name: both('솜브레로 은하 (M104)', 'Sombrero Galaxy (M104)'),
+    type: 'spiral',
+    ra: 189.998,
+    dec: -11.623,
+    distanceLy: 31_100_000,
+    diameterLy: 49_000,
+    outside: true,
+  },
+  {
+    id: 'm87',
+    name: both('M87 (처녀자리 A)', 'M87 (Virgo A)'),
+    type: 'elliptical',
+    ra: 187.706,
+    dec: 12.391,
+    distanceLy: 53_500_000,
+    diameterLy: 132_000,
+    outside: true,
   },
 ]
 

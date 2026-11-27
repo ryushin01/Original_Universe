@@ -40,6 +40,11 @@ import type { FrameContext, ScaleScene, Target } from '../types'
 /** 장면 1 = 1만 광년 */
 const UNIT_LY = 10_000
 const PER_GALAXY = 7000
+/** 국부 은하군 밖 이웃 은하(1천만~5천만 광년): 멀리서도 보이도록 표지 빛을 크게 */
+const OUTSIDE_GLOW = 70
+const OUTSIDE_PICK = 40
+/** 멀리서도 이름을 보이는 이웃 은하 (나머지는 가까이 가야 보여 이름표가 겹치지 않게) */
+const FAR_LABELS = new Set(['centaurus-a', 'm87'])
 
 export function createLocalScene(): ScaleScene {
   const scene = new Scene()
@@ -130,7 +135,7 @@ export function createLocalScene(): ScaleScene {
       const points = cloudPoints(cloud, 420)
       const halo = makeGlow(
         g.type === 'elliptical' ? '#ffd8a8' : '#c8d6ff',
-        Math.max(r * 3, 2.4),
+        g.outside ? OUTSIDE_GLOW : Math.max(r * 3, 2.4),
         0.55,
       )
       group.add(halo)
@@ -139,7 +144,11 @@ export function createLocalScene(): ScaleScene {
       group.add(points)
     }
     const pick = new Mesh(
-      new SphereGeometry(Math.max(g.diameterLy / UNIT_LY / 2, 1.5), 8, 6),
+      new SphereGeometry(
+        g.outside ? OUTSIDE_PICK : Math.max(g.diameterLy / UNIT_LY / 2, 1.5),
+        8,
+        6,
+      ),
       new MeshBasicMaterial({ visible: false }),
     )
     pick.userData.id = g.id
@@ -188,7 +197,9 @@ export function createLocalScene(): ScaleScene {
     target,
     labelAnchor: (id: string, camera: PerspectiveCamera) => {
       const t = target(id)
-      return t && camera.position.distanceTo(t.position) < 1600 ? t : null
+      if (!t) return null
+      const d = camera.position.distanceTo(t.position)
+      return d < 1600 || (FAR_LABELS.has(id) && d < 7000) ? t : null
     },
     pick(raycaster: Raycaster) {
       const hit = raycaster.intersectObjects(pickables, false)[0]

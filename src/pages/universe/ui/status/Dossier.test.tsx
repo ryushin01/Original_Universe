@@ -66,6 +66,54 @@ describe('Dossier', () => {
     ).toBeInTheDocument()
   })
 
+  it('시리우스를 고르면 별자리·동양 이름·동반성·전승을 함께 읽는다', async () => {
+    viewActions.setScale('stars')
+    render(() => <Dossier />)
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: '목적지 바로 가기' }),
+      'sirius',
+    )
+    expect(screen.getByText('A1V + DA2')).toBeInTheDocument()
+    expect(await screen.findByText('큰개자리')).toBeInTheDocument()
+    expect(screen.getByText(/천랑성 · 큰개자리 α/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/시리우스 B: 지구만 한 백색 왜성/),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/오리온의 사냥개/)).toBeInTheDocument()
+  })
+
+  it('반복 신성은 폭발 유형·폭발한 해·가장 밝을 때와 밝기 변화를 보여 준다', async () => {
+    viewActions.setScale('galaxy')
+    render(() => <Dossier />)
+    await userEvent.selectOptions(
+      screen.getByRole('combobox', { name: '목적지 바로 가기' }),
+      't-crb',
+    )
+    expect(screen.getByText('반복 신성')).toBeInTheDocument()
+    expect(screen.getByText('1866년, 1946년')).toBeInTheDocument()
+    expect(await screen.findByText(/몇 시간 만에 2~3등급/)).toBeInTheDocument()
+  })
+
+  it('조선 기록이 남은 케플러 초신성은 기록을 함께 보여 준다', async () => {
+    viewActions.setScale('galaxy')
+    viewActions.select('kepler', false)
+    render(() => <Dossier />)
+    expect(screen.getByText('Ia형 초신성 (백색 왜성 폭발)')).toBeInTheDocument()
+    expect(await screen.findByText(/조선 관상감/)).toBeInTheDocument()
+  })
+
+  it('M87은 국부 은하군 밖 이웃 은하로 표시하고 중심 블랙홀 M87*을 알린다', async () => {
+    viewActions.setScale('local')
+    viewActions.select('m87', false)
+    render(() => <Dossier />)
+    expect(
+      screen.getByText(/국부 은하군 밖의 이웃 은하/, { selector: 'p' }),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByText(/M87\*: 태양의 약 65억 배/),
+    ).toBeInTheDocument()
+  })
+
   it('싸움터의 우주적 존재를 고르고 진영·권능·상대를 본다', async () => {
     worldActions.summon({ being: 'ra', rival: 'apep', site: 'sun' })
     render(() => <Dossier />)

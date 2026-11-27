@@ -40,4 +40,10 @@ module.exports = [
     ],
     limit: '187 kB',
   },
+  {
+    // 1.14.0에서 별·은하 설명을 첫 화면·워커 묶음에서 떼어 이 조각으로 옮김(처음 잰 값 13.13 kB)
+    name: '나중에 받는 조각(천체 설명·전승)',
+    path: 'dist/client/assets/details-*.js',
+    limit: '14 kB',
+  },
 ]
