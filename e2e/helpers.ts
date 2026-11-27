@@ -57,6 +57,21 @@ export async function start(page: Page, path = '/') {
   await expect(page.getByRole('heading', { name: '우주 관리' })).toBeVisible()
 }
 
+/** 컴포넌트 하나(Storybook 스토리)를 WCAG 2.2 AA 규칙으로 검사 */
+export async function axeComponent(
+  page: Page,
+  selector: string,
+  label: string,
+) {
+  const results = await new AxeBuilder({ page })
+    .include(selector)
+    .withTags(RULES.filter((tag) => tag !== 'best-practice'))
+    .analyze()
+  expect(
+    results.violations.map((v) => `${label} ${v.id}: ${v.nodes.length}`),
+  ).toEqual([])
+}
+
 export async function axe(page: Page, label: string) {
   const results = await new AxeBuilder({ page }).withTags(RULES).analyze()
   expect(

@@ -32,24 +32,25 @@ pnpm storybook           # http://localhost:6106
 
 ## 4. 검사·테스트 명령
 
-CI(`.github/workflows/ci.yml`, `main` 푸시·PR)는 이 순서로 돕니다. 작업을 끝냈다고 하기 전에 최소한 lint·typecheck·test를 돌립니다.
+`pnpm check` 하나로 CI(`.github/workflows/ci.yml`, `main` 푸시·PR)와 같은 검사를 돌립니다. CI는 같은 단계 스크립트를 작업별로 부릅니다. 작업을 끝냈다고 하기 전에 최소한 lint·typecheck·test를 돌립니다.
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm lint                # ESLint
-pnpm lint:fsd            # Steiger(FSD)
-pnpm format:check        # Prettier
-pnpm typecheck           # tsc --noEmit
-pnpm test                # Vitest(모델·엔진·UI, 글꼴 빠진 글자 검사 포함)
-pnpm build:all           # 사이트 + Storybook(dist/client/storybook)
+pnpm check               # 아래 네 단계를 차례로
+pnpm check:static        # lint·lint:fsd·format:check·typecheck·test:coverage·build:all·size
 pnpm exec playwright install --with-deps chromium
-pnpm test:e2e            # Playwright(빌드 결과 사용): 화면 폭 넘침, axe(WCAG 2.2 AA), 키보드, 주요 흐름, 오프라인
-pnpm lighthouse          # LHCI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS ≤ 0.1
+pnpm check:e2e           # Playwright(빌드 결과): 화면 폭, axe(WCAG 2.2 AA), 키보드, 흐름, 오프라인, Web Vitals·반응 시간
+pnpm check:visual        # 시각 회귀(Playwright 공식 Docker 이미지 안, 로컬은 Docker·colima 필요)
+pnpm check:lighthouse    # LHCI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS ≤ 0.1
 ```
+
+- 커버리지(`vitest.config.ts`): 로직 계층(궤도 계산, N체, 재해·구조물 규칙, 직렬화·공유 링크)은 80%, 전체는 기준선 아래로 못 내려갑니다. 묶음 크기 예산은 `.size-limit.cjs`. 예산·Lighthouse·커버리지 기준 숫자는 이유 없이 바꾸지 않습니다.
+- 시각 회귀 기준 그림(`e2e/__screenshots__/`)은 화면을 일부러 바꿨을 때만 `pnpm check:visual --update-snapshots`로 다시 만듭니다(Linux Docker에서만 만들고 비교, 3D 캔버스는 가림).
+- CI: 문서만 바뀌면 무거운 검사를 건너뛰고, 빌드 결과를 E2E(4개로 나눔)·시각 회귀·Lighthouse가 다시 씁니다. 필수 검사 이름은 `Lint · Typecheck · Test · Build · E2E`(모든 작업 결과를 모으는 gate)라 바꾸지 않습니다.
 
 - E2E는 GPU 없이 SwiftShader(소프트웨어 WebGL)로 돕니다. 먼저 `pnpm build`가 필요합니다.
 - 오프라인: 실행 중 외부 요청이 없어야 합니다(글꼴·모델·텍스처는 저장소에 둠, 서비스 워커가 설치 때 모두 미리 받음). 모든 E2E는 `e2e/helpers.ts`의 `test`(localhost 밖 요청을 막고, 있으면 실패)를 씁니다. `e2e/offline.spec.ts`는 처음 방문과 설치 뒤 서버까지 끊긴 다시 방문(`context.setOffline`)의 모든 규모·신화 모드·미션 결과·저장·공유 링크·영어·Storybook을 axe와 함께 확인하며, Playwright 프로젝트 `offline`으로 다른 흐름 테스트 뒤에 돕니다. 로컬에서 포트가 겹치면 `E2E_PORT`로 바꿉니다.
-- Storybook에는 `@storybook/addon-a11y`가 있습니다.
+- Storybook에는 `@storybook/addon-a11y`(`a11y.test: 'error'`)가 있고, `e2e/visual.spec.ts`가 모든 스토리를 axe로 검사해 오류가 하나라도 있으면 실패합니다.
 - **Testing Library 원칙:** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 버그를 고치면 고치기 전에 실패하는 테스트를 함께 넣습니다. 도구는 단위·컴포넌트 Vitest + `@solidjs/testing-library`(+ `user-event`, `jest-dom`), 화면 흐름 Playwright E2E, 접근성 `@axe-core/playwright`(E2E 안)와 Storybook `addon-a11y`입니다.
 
 ## 5. 코드 스타일

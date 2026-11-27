@@ -1,5 +1,6 @@
 name: CI
 
+# 로컬의 `pnpm check`와 같은 검사를 단계별 스크립트(check:static·check:e2e·check:visual·check:lighthouse)로 나눠 돌립니다.
 on:
   push:
     branches: [main]
@@ -10,40 +11,202 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  check:
-    name: Lint · Typecheck · Test · Build · E2E
+  # 문서만 바뀌면 무거운 검사를 건너뜀. 필수 검사(맨 아래 gate)는 늘 결과를 남겨 병합을 막지 않음
+  changes:
+    name: 바뀐 파일
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: filter
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if ! files=$(git diff --name-only "$BASE" "$GITHUB_SHA" 2>/dev/null); then
+            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "$files"
+          if echo "$files" | grep -qvE '^(docs/.*|[^/]*\.md|LICENSE)$'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  static:
+    name: 정적 검사 · 커버리지 · 빌드 · 크기
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
       # pnpm 버전은 package.json의 packageManager를 따름
       - uses: pnpm/action-setup@v6.1.0
-
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
-
+      # Vite·Storybook 빌드 캐시
+      - uses: actions/cache@v6
+        with:
+          path: |
+            node_modules/.vite
+            node_modules/.cache
+          key: build-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'vite.config.ts', '.storybook/**') }}
+          restore-keys: build-cache-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm lint:fsd
-      - run: pnpm format:check
-      - run: pnpm typecheck
-      - run: pnpm test
-      # 사이트와 Storybook(dist/client/storybook)을 함께 빌드
-      - run: pnpm build:all
-      # 프로덕션 빌드를 띄워 화면 폭별 넘침, 접근성(axe), 키보드, 시뮬레이션 흐름을 검사
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
-      # 접근성·권장사항·SEO 점수와 레이아웃 이동을 지키고, 성능·용량은 경고로 알림
-      - run: pnpm lighthouse
+      # lint·FSD·서식·타입·단위 테스트(커버리지 기준)·사이트와 Storybook 빌드·묶음 크기
+      - run: pnpm check:static
+      - name: 커버리지 표를 실행 요약에
+        if: always() && hashFiles('coverage/coverage-summary.json') != ''
+        run: node scripts/coverage-summary.mjs
+      # E2E·Lighthouse가 다시 쓰도록 빌드 결과를 넘김
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/client
+          retention-days: 1
+          include-hidden-files: true
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-report
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  e2e:
+    name: E2E (${{ matrix.name }})
+    needs: [changes, static]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 흐름 1/2
+            args: --project=chromium --shard=1/2
+          - name: 흐름 2/2
+            args: --project=chromium --shard=2/2
+          - name: 오프라인
+            args: --project=offline --no-deps
+          - name: 성능
+            args: --project=performance --no-deps
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/client
+      # Playwright 브라우저 캐시(버전이 같으면 내려받지 않고 시스템 의존성만 설치)
+      - id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      # 화면 폭 넘침·axe(WCAG 2.2 AA)·키보드·흐름·오프라인(서비스 워커)·Web Vitals와 반응 시간
+      - run: pnpm check:e2e ${{ matrix.args }}
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report-${{ strategy.job-index }}
           path: |
             playwright-report/
             test-results/
-            lhci-report/
           retention-days: 7
+
+  visual:
+    name: 시각 회귀
+    needs: [changes, static]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    # 기준 그림을 만든 이미지와 같은 곳에서 비교(글꼴·렌더링이 같음). scripts/visual.sh
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/client
+      - run: pnpm check:visual
+        env:
+          HOME: /root
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: visual-diff
+          # 기준 그림이 없던 화면은 새로 찍은 그림이 e2e/__screenshots__에 생김(확인 뒤 커밋)
+          path: |
+            playwright-report/
+            test-results/
+            e2e/__screenshots__/
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse
+    needs: [changes, static]
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/client
+      # 접근성·권장사항·SEO 점수와 레이아웃 이동을 지키고, 성능·용량은 경고로 알림
+      - run: pnpm check:lighthouse
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: lhci-report
+          path: lhci-report/
+          retention-days: 7
+
+  # 브랜치 보호의 필수 검사 이름. 앞 작업이 하나라도 실패·취소되면 실패
+  gate:
+    name: Lint · Typecheck · Test · Build · E2E
+    needs: [changes, static, e2e, visual, lighthouse]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "결과: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) exit 1 ;;
+            esac
+          done

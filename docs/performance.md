@@ -1,5 +1,19 @@
 # 성능
 
+## 묶음 크기 예산 (1.13.3)
+
+`size-limit`(`.size-limit.cjs`, brotli)으로 처음 넣을 때 잰 값을 1KB 단위로 올려 예산으로 둡니다. `pnpm size`(CI의 `check:static`)가 넘으면 실패합니다.
+
+| 묶음                                        | 잰 값     | 예산   |
+| ------------------------------------------- | --------- | ------ |
+| 첫 화면 메인 스레드 JS (index·i18n·preload) | 129.17 kB | 130 kB |
+| 첫 화면 CSS                                 | 8.43 kB   | 9 kB   |
+| 3D 렌더링 워커                              | 204.57 kB | 205 kB |
+| 3D 엔진(워커를 못 쓸 때 메인 스레드용)      | 168.46 kB | 169 kB |
+| 나중에 받는 조각(전승·존재 모델·실제 모양)  | 186.98 kB | 187 kB |
+
+Lighthouse CI 기준(`lighthouserc.cjs`)은 그대로이고, 3D 화면의 Web Vitals와 반응 시간은 `e2e/performance.spec.ts`가 봅니다(`docs/development.md`).
+
 Lighthouse 13.6(Lighthouse CI)으로 로컬 프로덕션 빌드(`pnpm build`)를 측정했습니다. GPU가 없는 CI와 같도록 Chrome을 소프트웨어 WebGL(SwiftShader)로 띄웠기 때문에, GPU가 셰이더 컴파일과 텍스처 업로드를 맡는 실제 기기보다 느리게 나옵니다. 실행마다 성능 점수가 ±5점 정도 흔들립니다.
 
 | 항목                    | 처음 모바일    | 0.1.0 모바일    | 0.2.0 모바일    | 0.1.0 데스크톱  | 0.2.0 데스크톱  |

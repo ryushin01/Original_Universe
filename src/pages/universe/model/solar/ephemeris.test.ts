@@ -1,6 +1,8 @@
 import {
+  DEG,
   dateToYear,
   distance,
+  dot,
   length,
   sub,
   wrap180,
@@ -8,7 +10,9 @@ import {
 } from '@/shared/lib'
 import type { Vec3 } from '@/shared/lib'
 import {
+  bodyAxes,
   eclipticLongitude,
+  equatorAxes,
   heliocentricPosition,
   satelliteOffsetKm,
   secularElements,
@@ -117,5 +121,91 @@ describe('궤도 요소 ↔ 위치·속도', () => {
     const v: Vec3 = [0, 0.03, 0] // 탈출 속도(0.0243 AU/일)보다 빠름
     expect(elementsFromState(r, v).e).toBeGreaterThanOrEqual(1)
     expect(length(sub(r, r))).toBe(0)
+  })
+})
+
+describe('궤도를 바꾼 천체와 태양 질량', () => {
+  const T0 = jdOf('2030-01-01T00:00:00Z')
+
+  it('태양은 원점, 위성은 태양 기준 궤도가 없다', () => {
+    expect(heliocentricPosition('sun', T0)).toEqual([0, 0, 0])
+    expect(heliocentricPosition('moon', T0)).toBeNull()
+    expect(heliocentricPosition('io', T0)).toBeNull()
+  })
+
+  it('N체 계산 뒤의 궤도 요소가 있으면 그 궤도를 따라 돈다', () => {
+    const override = {
+      elements: { a: 2, e: 0, i: 0, node: 0, argPeri: 0, meanAnomaly: 0 },
+      epochJd: T0,
+      sunMass: 1,
+    }
+    const start = heliocentricPosition('earth', T0, 1, override) as Vec3
+    expect(start[0]).toBeCloseTo(2, 9)
+    // 2AU 원 궤도는 한 바퀴 약 1033일: 4분의 1 바퀴 뒤 y축 위
+    const quarter = heliocentricPosition(
+      'earth',
+      T0 + 365.25 * 2 ** 1.5 * 0.25,
+      1,
+      override,
+    ) as Vec3
+    expect(quarter[0]).toBeCloseTo(0, 1)
+    expect(quarter[1]).toBeCloseTo(2, 1)
+  })
+
+  it('태양이 질량을 잃으면 궤도가 그 비율만큼 넓어진다', () => {
+    const normal = length(heliocentricPosition('mars', T0) as Vec3)
+    const lighter = length(heliocentricPosition('mars', T0, 0.5) as Vec3)
+    expect(lighter / normal).toBeCloseTo(2, 9)
+  })
+})
+
+describe('위성 위치와 자전축', () => {
+  const T0 = jdOf('2030-01-01T00:00:00Z')
+
+  it('달은 지구에서 약 36만~41만km에 있다', () => {
+    const km = length(satelliteOffsetKm('moon', T0))
+    expect(km).toBeGreaterThan(356_000)
+    expect(km).toBeLessThan(407_000)
+  })
+
+  it('이오는 목성 적도면 위 421,700km 원 궤도를 돈다', () => {
+    const offset = satelliteOffsetKm('io', T0)
+    expect(length(offset)).toBeCloseTo(421_700, 0)
+    const pole = equatorAxes(BODIES.jupiter.pole).z
+    expect(Math.abs(dot(offset, pole)) / length(offset)).toBeLessThan(1e-9)
+  })
+
+  it('행성은 모행성 기준 위치가 없다(원점)', () => {
+    expect(satelliteOffsetKm('mars', T0)).toEqual([0, 0, 0])
+  })
+
+  it('자전축이 없으면 황도 좌표축 그대로, 있으면 서로 수직인 단위 축', () => {
+    expect(equatorAxes()).toEqual({ x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] })
+    const { x, y, z } = equatorAxes(BODIES.earth.pole)
+    for (const axis of [x, y, z]) expect(length(axis)).toBeCloseTo(1, 12)
+    expect(dot(x, y)).toBeCloseTo(0, 12)
+    expect(dot(y, z)).toBeCloseTo(0, 12)
+    // 지구 북극은 황도 북극에서 자전축 기울기(23.44°)만큼 기움
+    expect(Math.acos(z[2]) / DEG).toBeCloseTo(23.44, 1)
+  })
+
+  it('지구는 하루에 한 바퀴 돌고, 조석 고정 위성은 모행성을 바라본다', () => {
+    const a = bodyAxes('earth', T0)
+    const b = bodyAxes('earth', T0 + 23.9345 / 24)
+    expect(dot(a.x, b.x)).toBeCloseTo(1, 3)
+    const half = bodyAxes('earth', T0 + 23.9345 / 48)
+    expect(dot(a.x, half.x)).toBeCloseTo(-1, 3)
+
+    const toward: Vec3 = [0.3, -0.8, 0.1]
+    const io = bodyAxes('io', T0, toward)
+    expect(dot(io.x, toward)).toBeGreaterThan(0)
+    expect(length(io.x)).toBeCloseTo(1, 12)
+    expect(dot(io.x, io.z)).toBeCloseTo(0, 12)
+  })
+
+  it('자전축 자료가 없는 위성은 황도 북극을 축으로 돈다', () => {
+    const { z, x } = bodyAxes('io', T0)
+    expect(z).toEqual([0, 0, 1])
+    expect(x[2]).toBe(0)
   })
 })

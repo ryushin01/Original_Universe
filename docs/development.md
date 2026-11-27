@@ -135,12 +135,36 @@
 
 ## 테스트
 
-| 명령                   | 범위                                                                                                                                                                                       |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm test`            | 화성·목성·토성 충, 아포피스 2029년 근접, 핼리 혜성, 보름달, 태양 진화, 기후, 충돌·편향, 폭풍, 별 폭발, 유성우 극대일, N체 에너지 보존, 엔진 흐름, 은하 충돌, ΛCDM, 스냅숏, 공통 UI·패널    |
-| `pnpm test:e2e`        | 프로덕션 빌드에서 첫 화면 오류, 390·768·1440px 가로 넘침, axe(WCAG 2.2 AA와 권장 규칙: 소개·탭 7개·규모 4개), 키보드, 충돌·요격·폭풍·태양의 미래·별 폭발·블랙홀·유성우·미션·공유·언어 흐름 |
-| `pnpm build-storybook` | 모든 스토리 빌드                                                                                                                                                                           |
-| `pnpm lighthouse`      | Lighthouse CI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS ≤ 0.1은 실패, 성능·LCP·용량은 경고                                                                                                      |
+| 명령                 | 범위                                                                                                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test`          | 화성·목성·토성 충, 아포피스 2029년 근접, 핼리 혜성, 보름달, 태양 진화, 기후, 충돌·편향, 폭풍, 별 폭발, 유성우 극대일, N체 에너지 보존, 엔진 흐름, 은하 충돌, ΛCDM, 스냅숏, 공통 UI·패널 |
+| `pnpm test:coverage` | 위 테스트 + V8 커버리지. 로직 계층 80%, 전체 기준선(`vitest.config.ts`)                                                                                                                 |
+| `pnpm test:e2e`      | 프로덕션 빌드에서 첫 화면 오류, 390·768·1440px 가로 넘침, axe(WCAG 2.2 AA와 권장 규칙: 소개·탭·규모·미션 결과·영어), 키보드, 흐름, 오프라인(처음·다시 방문), Web Vitals와 반응 시간     |
+| `pnpm check:visual`  | 시각 회귀: 주요 화면(데스크톱·모바일)과 모든 스토리를 기준 그림과 비교, 스토리마다 axe                                                                                                  |
+| `pnpm size`          | 묶음 크기 예산(`.size-limit.cjs`)                                                                                                                                                       |
+| `pnpm lighthouse`    | Lighthouse CI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS ≤ 0.1은 실패, 성능·LCP·용량은 경고                                                                                                   |
+| `pnpm check`         | CI와 같은 검사 전부: `check:static`(lint·FSD·서식·타입·커버리지·빌드·크기) → `check:e2e` → `check:visual` → `check:lighthouse`                                                          |
+
+### 커버리지
+
+`@vitest/coverage-v8`로 잽니다. `vitest.config.ts`의 `coverage.thresholds`에서 로직 계층 묶음(궤도 계산 `solar/{kepler,ephemeris}`, N체 `hazards/nbody`, 재해·구조물 규칙 `hazards/*`·`projects/*`·`world/actions`, 직렬화·공유 링크 `world/snapshot`)은 줄·문장·분기·함수 모두 80% 이상, 전체는 넣을 때의 값(줄 62.1%, 문장 63.2%, 분기 56.9%, 함수 72%) 이상이어야 통과합니다. 테스트를 늘려 전체가 오르면 기준선도 올립니다. CI는 `scripts/coverage-summary.mjs`로 묶음별 표를 실행 요약(`$GITHUB_STEP_SUMMARY`)에 씁니다.
+
+### 시각 회귀
+
+`e2e/visual.spec.ts`가 소개·태양계·우주적 존재·우리 은하·영어 화면(1280×800, 390×844)과 Storybook의 모든 스토리를 `toHaveScreenshot`으로 비교합니다. 3D 캔버스는 가리고, 애니메이션은 멈추고(`animations: 'disabled'`), '동작 줄이기'를 켜고, 날짜는 `page.clock`으로 고정하고, 글꼴을 다 받은 뒤 찍습니다. 기준 그림(`e2e/__screenshots__/`)은 운영체제마다 글꼴 렌더링이 달라 Linux CI와 같은 Playwright 공식 Docker 이미지(`mcr.microsoft.com/playwright:v<버전>-noble`)에서만 만들고 비교합니다.
+
+```bash
+colima start                         # Docker가 없으면
+pnpm check:visual                    # 비교 (scripts/visual.sh: 이미지 안에서 설치·빌드·비교)
+pnpm check:visual --update-snapshots # 화면을 일부러 바꿨을 때 기준 그림 다시 만들기
+colima stop
+```
+
+다르면 `test-results/`에 기대·실제·차이 그림이 남고, CI는 실패할 때만 올립니다(7일 보관). Playwright 프로젝트 `visual`은 `VISUAL=1`일 때만 생깁니다.
+
+### 성능 E2E
+
+`e2e/performance.spec.ts`(프로젝트 `performance`, 다른 테스트가 끝난 뒤 혼자 돎)가 첫 화면 LCP ≤ 2.5초·CLS ≤ 0.1과, 3D 워커가 시간을 흘리며 그리는 동안 탭·규모 버튼을 눌렀을 때 가장 느린 상호작용(Event Timing)과 가장 긴 메인 스레드 작업이 200ms 이하이고 메인 스레드가 초당 20프레임 넘게 도는지 봅니다.
 
 E2E는 GPU 없는 환경에서도 돌도록 Chromium을 SwiftShader(소프트웨어 WebGL)로 띄웁니다.
 

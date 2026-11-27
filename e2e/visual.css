@@ -1,0 +1,6 @@
+/* 시각 회귀(e2e/visual.spec.ts)에서 찍을 때만 넣는 스타일:
+   3D 위에 겹친 천체 이름표와 3D 불러오기 안내는 시점·불러오기 상태에 따라 달라 숨김 */
+[aria-roledescription] + [aria-hidden='true'],
+[aria-roledescription] ~ p[role='status'] {
+  visibility: hidden !important;
+}
