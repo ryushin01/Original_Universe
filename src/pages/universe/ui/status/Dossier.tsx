@@ -1,4 +1,4 @@
-import { For, Match, Show, Switch } from 'solid-js'
+import { For, Match, Show, Switch, onMount } from 'solid-js'
 import { locale } from '@/shared/i18n'
 import type { Locale } from '@/shared/i18n'
 import { Button, RangeField, SelectField } from '@/shared/ui'
@@ -55,6 +55,8 @@ import type { BodyId } from '../../model/solar/bodies'
 import { blackbodyColor } from '../../model/solar/sun'
 import { STAR_BY_ID, starClassName } from '../../model/stars/catalog'
 import { GALAXY_OBJECT_BY_ID } from '../../model/galaxy/catalog'
+import { OUTBURST_TYPE_NAME } from '../../model/galaxy/outburst'
+import type { GalaxyObjectKind, Outburst } from '../../model/galaxy/catalog'
 import { GALAXY_TYPE_NAME, LOCAL_GALAXY_BY_ID } from '../../model/local/catalog'
 import { COSMIC_BY_ID, STRUCTURE_KIND_NAME } from '../../model/cosmic/catalog'
 import { PROJECT_BY_KIND } from '../../model/projects/catalog'
@@ -77,6 +79,7 @@ import { bothNames, otherLocale, pick, pickOther, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import { PassportCard } from './PassportCard'
 import { createLore } from '../mythicLore'
+import { createSkyDetails, preloadSkyDetails } from '../skyDetails'
 import styles from './status.module.css'
 
 const KIND_NAME = {
@@ -271,6 +274,8 @@ function BodyDossier(props: { id: BodyId }) {
 function StarDossier(props: { id: string }) {
   const l = () => locale()
   const star = () => STAR_BY_ID[props.id]
+  const details = createSkyDetails()
+  const detail = () => details()?.STAR_DETAILS[props.id]
   return (
     <Show
       when={star()}
@@ -328,13 +333,51 @@ function StarDossier(props: { id: string }) {
             },
           ]}
         >
-          <p class={styles.small}>{pick(s().note)}</p>
+          <Show when={detail()}>
+            {(d) => <p class={styles.small}>{pick(d().note)}</p>}
+          </Show>
           <dl class={styles.list}>
             <dt>{t('dossier.luminosity')}</dt>
             <dd>{formatBig(s().luminosity, l())} L☉</dd>
-            <Show when={s().planets}>
-              <dt>{t('dossier.planets')}</dt>
-              <dd>{pick(s().planets!)}</dd>
+            <Show when={detail()}>
+              {(d) => (
+                <>
+                  <dt>{t('dossier.constellation')}</dt>
+                  <dd>{pick(d().constellation)}</dd>
+                  <Show when={d().eastName}>
+                    {(name) => (
+                      <>
+                        <dt>{t('dossier.eastName')}</dt>
+                        <dd>{pick(name())}</dd>
+                      </>
+                    )}
+                  </Show>
+                  <Show when={d().companion}>
+                    {(companion) => (
+                      <>
+                        <dt>{t('dossier.companion')}</dt>
+                        <dd>{pick(companion())}</dd>
+                      </>
+                    )}
+                  </Show>
+                  <Show when={d().planets}>
+                    {(planets) => (
+                      <>
+                        <dt>{t('dossier.planets')}</dt>
+                        <dd>{pick(planets())}</dd>
+                      </>
+                    )}
+                  </Show>
+                  <Show when={d().lore}>
+                    {(lore) => (
+                      <>
+                        <dt>{t('dossier.lore')}</dt>
+                        <dd>{pick(lore())}</dd>
+                      </>
+                    )}
+                  </Show>
+                </>
+              )}
             </Show>
           </dl>
           <Show when={s().blastId}>
@@ -357,9 +400,35 @@ function StarDossier(props: { id: string }) {
 const lightYears = (ly: number, l: Locale) =>
   l === 'ko' ? `${formatBig(ly, l)}광년` : `${formatBig(ly, l)} ly`
 
+/** 폭발한 해: '1866년, 1946년' 또는 '약 1680년 (추정)' */
+const outburstYears = (o: Outburst) =>
+  o.years
+    .map((year) =>
+      t(o.yearApprox ? 'dossier.outburstYearApprox' : 'dossier.outburstYear', {
+        year: String(year),
+      }),
+    )
+    .join(', ')
+
+/** 정보 카드의 그림: 블랙홀·신성·초신성 잔해는 따로, 나머지는 성운빛 */
+function galaxyImage(kind: GalaxyObjectKind): string {
+  switch (kind) {
+    case 'blackHole':
+      return 'radial-gradient(circle, #000 0 38%, #ffcf8a 41%, #3a1d08 55%, #04060d 72%)'
+    case 'nova':
+      return 'radial-gradient(circle at 45% 45%, #ffffff 0 12%, #fff0b8 22%, #ff9e5e 40%, #04060d 72%)'
+    case 'remnant':
+      return 'radial-gradient(circle, #04060d 0 30%, #9fd0ff 44%, #ff8ac8 56%, #1a1430 70%, #04060d 80%)'
+    default:
+      return 'radial-gradient(circle at 45% 40%, #ffe9c8, #c58ad8 40%, #26305f 75%)'
+  }
+}
+
 function GalaxyObjectDossier(props: { id: string }) {
   const l = () => locale()
   const o = () => GALAXY_OBJECT_BY_ID[props.id]
+  const details = createSkyDetails()
+  const detail = () => details()?.GALAXY_DETAILS[props.id]
   return (
     <Show when={o()}>
       {(obj) => (
@@ -367,12 +436,8 @@ function GalaxyObjectDossier(props: { id: string }) {
           title={pick(obj().name)}
           altTitle={pickOther(obj().name)}
           altLang={otherLocale()}
-          subtitle={pick(obj().facts)}
-          image={
-            obj().kind === 'blackHole'
-              ? 'radial-gradient(circle, #000 0 38%, #ffcf8a 41%, #3a1d08 55%, #04060d 72%)'
-              : 'radial-gradient(circle at 45% 40%, #ffe9c8, #c58ad8 40%, #26305f 75%)'
-          }
+          subtitle={detail() ? pick(detail()!.facts) : ''}
+          image={galaxyImage(obj().kind)}
           ring={null}
           fields={[
             {
@@ -380,9 +445,52 @@ function GalaxyObjectDossier(props: { id: string }) {
               value:
                 obj().id === 'sun' ? '0' : lightYears(obj().distanceLy, l()),
             },
+            ...(obj().outburst
+              ? [
+                  {
+                    label: t('dossier.outburstType'),
+                    value: pick(OUTBURST_TYPE_NAME[obj().outburst!.type]),
+                  },
+                  {
+                    label: t('dossier.outburstYears'),
+                    value: outburstYears(obj().outburst!),
+                  },
+                  {
+                    label: t('dossier.peak'),
+                    value:
+                      obj().outburst!.peakMag === undefined
+                        ? '—'
+                        : formatSig(obj().outburst!.peakMag!, l(), 2),
+                  },
+                ]
+              : []),
           ]}
         >
-          <p class={styles.small}>{pick(obj().note)}</p>
+          <Show when={detail()}>
+            {(d) => (
+              <>
+                <p class={styles.small}>{pick(d().note)}</p>
+                <dl class={styles.list}>
+                  <Show when={d().lightCurve}>
+                    {(curve) => (
+                      <>
+                        <dt>{t('dossier.lightCurve')}</dt>
+                        <dd>{pick(curve())}</dd>
+                      </>
+                    )}
+                  </Show>
+                  <Show when={d().lore}>
+                    {(lore) => (
+                      <>
+                        <dt>{t('dossier.lore')}</dt>
+                        <dd>{pick(lore())}</dd>
+                      </>
+                    )}
+                  </Show>
+                </dl>
+              </>
+            )}
+          </Show>
         </PassportCard>
       )}
     </Show>
@@ -392,6 +500,8 @@ function GalaxyObjectDossier(props: { id: string }) {
 function LocalDossier(props: { id: string }) {
   const l = () => locale()
   const g = () => LOCAL_GALAXY_BY_ID[props.id]
+  const details = createSkyDetails()
+  const detail = () => details()?.LOCAL_DETAILS[props.id]
   return (
     <Show when={g()}>
       {(galaxy) => (
@@ -399,7 +509,11 @@ function LocalDossier(props: { id: string }) {
           title={pick(galaxy().name)}
           altTitle={pickOther(galaxy().name)}
           altLang={otherLocale()}
-          subtitle={pick(GALAXY_TYPE_NAME[galaxy().type])}
+          subtitle={
+            galaxy().outside
+              ? `${pick(GALAXY_TYPE_NAME[galaxy().type])} · ${t('local.outside')}`
+              : pick(GALAXY_TYPE_NAME[galaxy().type])
+          }
           image="conic-gradient(from 30deg, #2b3f80, #c8d4ff, #7c9cff, #fff1d6, #2b3f80)"
           ring={null}
           fields={[
@@ -420,7 +534,39 @@ function LocalDossier(props: { id: string }) {
             },
           ]}
         >
-          <p class={styles.small}>{pick(galaxy().note)}</p>
+          <Show when={detail()}>
+            {(d) => (
+              <>
+                <p class={styles.small}>{pick(d().note)}</p>
+                <dl class={styles.list}>
+                  <Show when={d().blackHole}>
+                    {(hole) => (
+                      <>
+                        <dt>{t('dossier.blackHole')}</dt>
+                        <dd>{pick(hole())}</dd>
+                      </>
+                    )}
+                  </Show>
+                  <Show when={d().supernova}>
+                    {(sn) => (
+                      <>
+                        <dt>{t('dossier.supernova')}</dt>
+                        <dd>{pick(sn())}</dd>
+                      </>
+                    )}
+                  </Show>
+                  <Show when={d().lore}>
+                    {(lore) => (
+                      <>
+                        <dt>{t('dossier.lore')}</dt>
+                        <dd>{pick(lore())}</dd>
+                      </>
+                    )}
+                  </Show>
+                </dl>
+              </>
+            )}
+          </Show>
           <Show
             when={
               (galaxy().id === 'andromeda' || galaxy().id === 'milky-way') &&
@@ -761,6 +907,7 @@ function CosmicAgeControl() {
 /** 고른 대상의 정보 (규모마다 다름) */
 export function Dossier() {
   const id = () => selected()
+  onMount(preloadSkyDetails)
   // 지나가는 천체도 목적지처럼 고를 수 있게 (고른 상태가 빈칸으로 보이지 않도록)
   const intruderOption = () => {
     const f = scale() === 'solar' ? activeFlyby(world()) : undefined

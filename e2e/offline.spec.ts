@@ -40,6 +40,25 @@ async function visitScales(page: Page, label: string) {
   await page.getByRole('radio', { name: /태양계/ }).check({ force: true })
 }
 
+/** 이름난 별·폭발한 별·이웃 은하를 목적지 바로 가기(키보드로 고르는 목록)로 고르면 지연 조각의 설명까지 뜸 */
+async function famousObjects(page: Page, label: string) {
+  const goTo = page.getByRole('combobox', { name: '목적지 바로 가기' })
+  const picks = [
+    { scale: '이웃 별', id: 'sirius', text: '천랑성 · 큰개자리 α' },
+    { scale: '우리 은하', id: 'kepler', text: /조선 관상감/ },
+    { scale: '국부 은하군', id: 'm87', text: /M87\*: 태양의 약 65억 배/ },
+  ]
+  for (const { scale, id, text } of picks) {
+    await page
+      .getByRole('radio', { name: new RegExp(scale) })
+      .check({ force: true })
+    await goTo.selectOption(id)
+    await expect(page.getByText(text)).toBeVisible()
+    await axe(page, `${label} ${id}`)
+  }
+  await page.getByRole('radio', { name: /태양계/ }).check({ force: true })
+}
+
 /** 신화 모드: 존재 둘을 격돌시키면 3D 모델(models/)과 격돌 코드 조각을 받아 그림 */
 async function clash(page: Page) {
   await page.getByRole('tab', { name: '우주적 존재' }).click()
@@ -121,6 +140,7 @@ test('처음 방문: 다섯 규모·신화 모드·미션 결과·저장 불러�
   const { failed, errors } = watchFailures(page)
   await start(page)
   await visitScales(page, '첫 방문')
+  await famousObjects(page, '첫 방문')
   await clash(page)
   await axe(page, '신화 모드')
   await page.reload()
@@ -150,6 +170,8 @@ test('설치 뒤 인터넷과 서버가 모두 끊겨도 다시 방문하면 모
   await start(page)
   await axe(page, '다시 방문')
   await visitScales(page, '다시 방문')
+  // 별·은하 설명(지연 조각)도 캐시에서
+  await famousObjects(page, '다시 방문')
   // 첫 방문에 열지 않은 신화 모드(지연 불러오기 코드·모델)도 캐시에서
   await clash(page)
   await page.reload()

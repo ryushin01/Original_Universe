@@ -26,8 +26,8 @@ const ALL: Record<ScaleId, SceneObject[]> = {
   cosmic: COSMIC_STRUCTURES.map((s) => ({ id: s.id, name: s.name })),
 }
 
-/** 목적지 목록에는 넣지 않는 성운 (목록이 너무 길어지지 않게) */
-const EXTRA_NEBULAE = new Set([
+/** 목적지 목록에는 넣지 않는 성운·신성·초신성 잔해 (목록이 너무 길어지지 않게, '목적지 바로 가기'에서 고름) */
+const EXTRA_GALAXY_OBJECTS = new Set([
   'trifid',
   'rosette',
   'north-america',
@@ -35,6 +35,16 @@ const EXTRA_NEBULAE = new Set([
   'dumbbell',
   'veil',
   'helix',
+  'sn1006',
+  'tycho',
+  'kepler',
+  'cas-a',
+  'sn1987a',
+  't-crb',
+  'rs-oph',
+  'v1500-cyg',
+  'gk-per',
+  'v603-aql',
 ])
 
 const STRIP: Record<ScaleId, string[]> = {
@@ -69,7 +79,7 @@ const STRIP: Record<ScaleId, string[]> = {
     'rigel',
   ],
   // 새로 더한 성운은 목적지 바로 가기에서 고름 (아래 목록은 대표 천체만)
-  galaxy: GALAXY_OBJECTS.filter((o) => !EXTRA_NEBULAE.has(o.id)).map(
+  galaxy: GALAXY_OBJECTS.filter((o) => !EXTRA_GALAXY_OBJECTS.has(o.id)).map(
     (o) => o.id,
   ),
   local: [
@@ -85,6 +95,11 @@ const STRIP: Record<ScaleId, string[]> = {
     'ic10',
     'sagittarius-dsph',
     'fornax',
+    'centaurus-a',
+    'pinwheel',
+    'whirlpool',
+    'sombrero',
+    'm87',
   ],
   cosmic: [
     'local-group',

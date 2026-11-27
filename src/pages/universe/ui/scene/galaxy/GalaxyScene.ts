@@ -215,7 +215,9 @@ export function createGalaxyScene(): ScaleScene {
             ? '#ff8ac8'
             : obj.kind === 'satellite'
               ? '#c8d4ff'
-              : '#9fd6ff'
+              : obj.kind === 'nova'
+                ? '#ffe7a3'
+                : '#9fd6ff'
     const glow = makeGlow(color, obj.kind === 'sun' ? 2.2 : 1.6, 1.1)
     group.add(glow)
     group.userData.glow = glow
