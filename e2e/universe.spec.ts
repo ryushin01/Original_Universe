@@ -1,6 +1,5 @@
-import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { axe, start } from './helpers'
+import { axe, expect, start, test } from './helpers'
 
 const logText = (page: Page) => page.getByRole('region', { name: '사건 기록' })
 
@@ -163,10 +162,14 @@ test.describe('첫 화면', () => {
       .getAttribute('src')
     const sw = await (await request.get('/sw.js')).text()
     // 빌드 때 채운 목록 (자리 표시 그대로면 옛 파일을 지우지 못함)
-    expect(sw).not.toContain("{ assets: [], textures: 'dev', models: 'dev' }")
+    expect(sw).not.toContain('{ assets: [], textures:')
     expect(sw).toContain(`"${script!.replace(/^\//, '')}"`)
     expect(sw).toMatch(/"textures":"[0-9a-f]{12}"/)
     expect(sw).toMatch(/"models":"[0-9a-f]{12}"/)
+    expect(sw).toMatch(/"statics":"[0-9a-f]{12}"/)
+    // 설치 때 미리 받는 목록에 지연 불러오기 코드·3D 모델·아이콘이 들어 있음
+    expect(sw).toContain('"models/eagle.glb"')
+    expect(sw).toContain('"manifest.webmanifest"')
     // 우주적 존재의 3D 모델(존재가 처음 나타날 때 받음)도 함께 배포됨
     const model = await request.get('/models/eagle.glb')
     expect(model.ok()).toBe(true)

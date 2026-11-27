@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
@@ -11,6 +11,36 @@ const RULES = [
   'wcag22aa',
   'best-practice',
 ]
+
+/** 이 주소들만 열어 둠: 나머지는 모두 끊긴 것처럼 막음 */
+export const LOCAL = ['localhost', '127.0.0.1']
+
+/**
+ * 포트폴리오라 외부 서비스가 끊겨도 화면이 그대로 보여야 함.
+ * 모든 E2E는 localhost 밖 주소를 찾지 못하게 막은 브라우저(playwright.config.ts의
+ * --host-resolver-rules)에서 돌고, 페이지·워커·서비스 워커가 밖으로 요청을 하나라도 보내면 실패합니다.
+ */
+export const test = base.extend<{ external: string[] }>({
+  external: [
+    async ({ context }, use) => {
+      const external: string[] = []
+      context.on('request', (request) => {
+        // data:·blob: 주소는 네트워크 요청이 아님
+        const url = new URL(request.url())
+        if (
+          /^(https?|wss?):$/.test(url.protocol) &&
+          !LOCAL.includes(url.hostname)
+        )
+          external.push(request.url())
+      })
+      await use(external)
+      expect(external, '외부로 나간 요청').toEqual([])
+    },
+    { auto: true },
+  ],
+})
+
+export { expect }
 
 /**
  * 소개 화면을 지나 시뮬레이터로: 3D를 아직 불러오는 중이면 불러오기 화면의 건너뛰기,

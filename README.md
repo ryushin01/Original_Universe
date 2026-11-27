@@ -1,7 +1,7 @@
 # ORIGINAL UNIVERSE - 우주 환경·재해 대응 시뮬레이터
 
 [![CI](https://github.com/ryushin01/Original_Universe/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/Original_Universe/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.13.1-7c9cff)
+![version](https://img.shields.io/badge/version-1.13.2-7c9cff)
 
 태양계에서 우주 거대 구조까지 오가며 소행성 충돌, 태양 폭풍, 초신성·감마선 폭발, 블랙홀 근접 통과, 유성우, 태양의 노화, 신화 속 우주적 존재의 격돌을 일으키고 다이슨 스웜·링월드·궤도 이동 같은 우주 구조물로 대응해 보는 3D 우주 시뮬레이터입니다. [TerraNova](https://github.com/ryushin01/TerraNova)의 우주판입니다.
 
@@ -89,7 +89,7 @@ pnpm install
 pnpm dev    # http://localhost:3100
 ```
 
-`.env`나 비밀값 없이 바로 돌고, 글꼴·3D 모델·텍스처를 모두 저장소에서 내려주어 인터넷이 끊겨도 모든 화면이 뜹니다(`e2e/offline.spec.ts`가 외부 요청을 막고 확인).
+`.env`나 비밀값 없이 바로 돌고, 글꼴·3D 모델·텍스처를 모두 저장소에서 내려주어 인터넷이 끊겨도 모든 화면이 뜹니다(모든 E2E가 외부 요청을 막고 돌며, `e2e/offline.spec.ts`가 처음 방문과 설치 뒤 서버까지 끊긴 다시 방문을 확인).
 
 | 명령                                   | 설명                                                                         |
 | -------------------------------------- | ---------------------------------------------------------------------------- |

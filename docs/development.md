@@ -146,7 +146,11 @@ E2E는 GPU 없는 환경에서도 돌도록 Chromium을 SwiftShader(소프트웨
 
 ### 오프라인·로컬 실행
 
-서버·API·비밀값이 없고 글꼴·3D 모델·텍스처·아이콘을 모두 저장소에서 내려주므로, `.env` 없이 `pnpm install` → `pnpm dev`(또는 `pnpm build` → `pnpm preview`)만으로 인터넷 없이도 모든 화면이 뜹니다. 외부 주소는 자료를 받는 스크립트(`pnpm models`·`pnpm textures` 등, 개발할 때만)에만 있습니다. `e2e/offline.spec.ts`가 localhost 밖 요청을 모두 막은 상태에서 3D 불러오기·시뮬레이션·axe를 확인하고, 외부 요청이 하나도 없는지 봅니다.
+서버·API·비밀값이 없고 글꼴·3D 모델·텍스처·아이콘을 모두 저장소에서 내려주므로, `.env` 없이 `pnpm install` → `pnpm dev`(또는 `pnpm build` → `pnpm preview`)만으로 인터넷 없이도 모든 화면이 뜹니다. 외부 주소는 자료를 받는 스크립트(`pnpm models`·`pnpm textures` 등, 개발할 때만)에만 있습니다. 모든 E2E는 localhost 밖 주소를 찾지 못하게 막은 브라우저(`playwright.config.ts`의 `--host-resolver-rules`)에서 돌고, `e2e/helpers.ts`의 `test`가 페이지·워커·서비스 워커의 외부 요청을 모아 하나라도 있으면 실패합니다. 흐름 테스트(`chromium` 프로젝트)는 서비스 워커를 켜지 않고, 서비스 워커는 `offline` 프로젝트가 확인합니다. `e2e/offline.spec.ts`는 여기에 더해 다음을 봅니다.
+
+- 처음 방문: 3D 불러오기 → 태양 폭풍, 다섯 규모, 신화 모드 격돌(존재 3D 모델), 미션 결과 대화상자, 저장·불러오기와 각 화면의 axe, 받지 못한 파일(`requestfailed`)과 페이지 오류가 없는지
+- 설치 뒤 다시 방문: 서비스 워커가 켜진 뒤 `context.setOffline(true)`로 localhost까지 끊고 다시 열어 같은 흐름과 공유 링크 열기·영어 전환·axe를 확인(서비스 워커가 설치 때 미리 받은 파일만으로 뜸)
+- Storybook: 외부 없이 관리 화면과 스토리를 그리고 글꼴까지 받는지
 
 ## 접근성
 

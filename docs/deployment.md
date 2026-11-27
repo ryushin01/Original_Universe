@@ -14,7 +14,7 @@
 1. `vite build`: 브라우저용 묶음 (`dist/client`)
 2. `vite build --ssr src/app/entry-server.tsx --outDir dist/server`: 첫 화면을 그릴 서버 묶음
 3. `node scripts/prerender.mjs`: 서버 묶음으로 그린 HTML과 hydration 스크립트를 `dist/client/index.html`에 넣고 `dist/server`를 지움
-4. `node scripts/finalize-sw.mjs`: `dist/client/sw.js`에 지금 묶음의 해시 파일 목록과 텍스처 내용 해시를 넣음(아래 서비스 워커 캐시)
+4. `node scripts/finalize-sw.mjs`: `dist/client/sw.js`에 지금 묶음의 해시 파일 목록, 텍스처·3D 모델·아이콘 내용 해시, 설치 때 미리 받을 파일 목록을 넣음(아래 서비스 워커 캐시)
 
 ## 하위 경로
 
@@ -33,9 +33,11 @@ BASE_PATH=/Original_Universe/ pnpm build:all
 ## 서비스 워커 캐시
 
 - 페이지는 네트워크 먼저(성공한 응답만 저장), 끊기면 저장해 둔 페이지를 씁니다.
-- `assets/`(파일 이름에 해시가 붙은 코드)와 `textures/`는 캐시 먼저입니다.
+- `assets/`(파일 이름에 해시가 붙은 코드·글꼴 조각), `textures/`, `models/`, 맨 위 아이콘·매니페스트는 캐시 먼저입니다.
+- **설치 때 미리 받기:** 서비스 워커가 설치될 때 `assets/` 전체(첫 화면 코드, 신화 모드·실제 모양 모델 같은 지연 불러오기 조각, 글꼴 조각), 텍스처, 3D 모델, 아이콘을 한 번에 6개씩 받아 둡니다(약 8MB). 첫 방문은 서비스 워커가 켜지기 전에 파일을 받으므로, 미리 받지 않으면 인터넷과 서버가 모두 끊긴 다시 방문에서 첫 화면 코드가 없어 3D가 뜨지 않고, 처음에 열지 않은 화면(신화 모드의 존재 모델 등)도 비었습니다. 하나가 실패해도 설치는 끝나고 그 파일은 쓸 때 다시 받습니다.
+- 미리 받은 파일은 `Origin` 헤더 없이 받으므로 캐시를 찾을 때 `Vary`를 보지 않습니다(`ignoreVary`).
 - 새 서비스 워커가 켜질 때 빌드에서 넣은 목록에 없는 옛 `assets/` 파일을 지웁니다. 지우지 않으면 배포마다 바뀐 해시 파일이 쌓여 재방문 사용자의 저장 공간을 계속 차지합니다.
-- 텍스처는 파일 이름에 해시가 없으므로 캐시 이름에 텍스처 내용 해시를 붙입니다(`universe-textures-<해시>`). 텍스처를 바꿔 올리면 해시가 바뀌어 옛 캐시가 지워지므로 손댈 것이 없습니다.
+- 텍스처·3D 모델·아이콘은 파일 이름에 해시가 없으므로 캐시 이름에 내용 해시를 붙입니다(`universe-textures-<해시>`, `universe-models-<해시>`, `universe-static-<해시>`). 바꿔 올리면 해시가 바뀌어 옛 캐시가 지워지므로 손댈 것이 없습니다.
 - 옛 버전 캐시(`universe-pages-v1`, `universe-assets-v1`)는 이름이 달라 처음 켜질 때 지워집니다.
 
 ## 검색·공유 미리보기

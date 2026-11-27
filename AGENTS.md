@@ -48,7 +48,7 @@ pnpm lighthouse          # LHCI: 접근성 ≥ 95, 권장사항·SEO ≥ 90, CLS
 ```
 
 - E2E는 GPU 없이 SwiftShader(소프트웨어 WebGL)로 돕니다. 먼저 `pnpm build`가 필요합니다.
-- 오프라인: 실행 중 외부 요청이 없어야 합니다(글꼴·모델·텍스처는 저장소에 둠, 서비스 워커가 캐시). `e2e/offline.spec.ts`가 localhost 밖 요청을 모두 막고 3D 불러오기 → 시뮬레이터 → 태양 폭풍 → axe를 확인하며, Playwright 프로젝트 `offline`으로 다른 흐름 테스트 뒤에 돕니다(`playwright.config.ts`). 공용 도우미는 `e2e/helpers.ts`.
+- 오프라인: 실행 중 외부 요청이 없어야 합니다(글꼴·모델·텍스처는 저장소에 둠, 서비스 워커가 설치 때 모두 미리 받음). 모든 E2E는 `e2e/helpers.ts`의 `test`(localhost 밖 요청을 막고, 있으면 실패)를 씁니다. `e2e/offline.spec.ts`는 처음 방문과 설치 뒤 서버까지 끊긴 다시 방문(`context.setOffline`)의 모든 규모·신화 모드·미션 결과·저장·공유 링크·영어·Storybook을 axe와 함께 확인하며, Playwright 프로젝트 `offline`으로 다른 흐름 테스트 뒤에 돕니다. 로컬에서 포트가 겹치면 `E2E_PORT`로 바꿉니다.
 - Storybook에는 `@storybook/addon-a11y`가 있습니다.
 - **Testing Library 원칙:** 구현 세부가 아니라 사용자가 보는 동작을 검사하고, 요소는 역할·이름(`getByRole`)으로 찾습니다. 버그를 고치면 고치기 전에 실패하는 테스트를 함께 넣습니다. 도구는 단위·컴포넌트 Vitest + `@solidjs/testing-library`(+ `user-event`, `jest-dom`), 화면 흐름 Playwright E2E, 접근성 `@axe-core/playwright`(E2E 안)와 Storybook `addon-a11y`입니다.
 
