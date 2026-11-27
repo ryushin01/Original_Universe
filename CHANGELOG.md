@@ -7,7 +7,7 @@
 - **커버리지:** `@vitest/coverage-v8`. 로직 계층(궤도 계산·N체·재해·구조물 규칙·직렬화·공유 링크)은 줄·문장·분기·함수 80% 이상, 전체는 기준선(줄 62.1%·문장 63.2%·분기 56.9%·함수 72%) 이상이어야 통과합니다. 궤도 계산(케플러 궤도·위성·자전축), 공유 링크 검사(고쳐 쓴 주소 36가지), 별 폭발·유성우·항성 엔진 규칙 테스트를 더해 궤도 계산 69.4 → 100%, 직렬화 77.3 → 100%(문장 기준)로 올렸습니다. CI 실행 요약에 묶음별 표를 씁니다
 - **시각 회귀:** `e2e/visual.spec.ts`가 소개·태양계·우주적 존재·우리 은하·영어 화면(데스크톱·모바일)과 모든 Storybook 스토리를 `toHaveScreenshot`으로 비교합니다. 3D 캔버스는 가리고 애니메이션·동작 줄이기·날짜를 고정하며, 기준 그림은 Playwright 공식 Docker 이미지에서 만들고 CI도 같은 이미지에서 비교합니다(`pnpm check:visual`, `scripts/visual.sh`)
 - **접근성:** 모든 스토리를 axe(WCAG 2.2 AA)로 검사해 오류가 하나라도 있으면 실패합니다(Storybook `a11y.test: 'error'`와 같게)
-- **성능:** `size-limit`으로 묶음 크기 예산(첫 화면 JS 130kB·CSS 9kB·워커 205kB·엔진 169kB·지연 조각 187kB, brotli)을 걸고, `e2e/performance.spec.ts`가 LCP ≤ 2.5초·CLS ≤ 0.1과, 3D 워커가 그리는 동안의 상호작용 지연·긴 작업·메인 스레드 프레임을 봅니다(GPU 없는 CI에서 탭 전환이 0.9~1.2초 걸려 web.dev '좋음' 200ms 대신 1.5초 예산). Lighthouse 기준은 그대로입니다
+- **성능:** `size-limit`으로 묶음 크기 예산(첫 화면 JS 130kB·CSS 9kB·워커 205kB·엔진 169kB·지연 조각 187kB, brotli)을 걸고, `e2e/performance.spec.ts`가 LCP ≤ 2.5초·CLS ≤ 0.1과, 3D 워커가 그리는 동안 탭·규모 버튼의 입력 처리 시간과 긴 작업이 200ms 이하인지 봅니다(GPU 없는 CI는 합성이 늦어 INP 전체 시간이 0.7~1.9초로 흔들려 기록만 남김) Lighthouse 기준은 그대로입니다
 - **`pnpm check`:** `check:static`(lint·FSD·서식·타입·커버리지·빌드·크기) → `check:e2e` → `check:visual` → `check:lighthouse`. CI가 같은 스크립트를 부릅니다
 - **CI 나누기:** 정적 검사·빌드 한 번 → 빌드 결과를 E2E 5개(흐름 3개로 샤딩해 작업마다 한 개씩·오프라인·성능)·시각 회귀·Lighthouse가 동시에 다시 씀. pnpm·Vite·Storybook·Playwright 브라우저 캐시, 문서만 바뀌면 무거운 검사를 건너뜀, 실패할 때만 리포트·차이 그림을 올림(7일). 필수 검사 이름은 그대로 두고 모든 작업 결과를 모으는 작업이 씁니다
 - **문서:** README·AGENTS.md·`docs/development.md`·`docs/performance.md`, 버전 배지 1.13.3
