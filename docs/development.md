@@ -164,7 +164,7 @@ colima stop
 
 ### 성능 E2E
 
-`e2e/performance.spec.ts`(프로젝트 `performance`, 다른 테스트가 끝난 뒤 혼자 돎)가 첫 화면 LCP ≤ 2.5초·CLS ≤ 0.1과, 3D 워커가 시간을 흘리며 그리는 동안 탭·규모 버튼을 눌렀을 때 가장 느린 상호작용(Event Timing)과 가장 긴 메인 스레드 작업이 200ms 이하이고 메인 스레드가 초당 20프레임 넘게 도는지 봅니다.
+`e2e/performance.spec.ts`(프로젝트 `performance`, 다른 테스트가 끝난 뒤 혼자 돎)가 첫 화면 LCP ≤ 2.5초·CLS ≤ 0.1과, 3D 워커가 시간을 흘리며 그리는 동안 탭·규모 버튼을 눌렀을 때 가장 느린 상호작용(Event Timing)과 가장 긴 메인 스레드 작업이 1.5초 이하이고 메인 스레드가 초당 10프레임 넘게 도는지 봅니다. GPU 없는 CI(SwiftShader)는 워커의 3D를 CPU로 그려 메인 스레드도 느려지므로(1.13.3에서 탭 전환 0.9~1.2초), web.dev '좋음' 기준(INP 200ms) 대신 그때 잰 값을 넘지 않게 하는 예산입니다. CI 기록에 잰 값이 찍힙니다.
 
 E2E는 GPU 없는 환경에서도 돌도록 Chromium을 SwiftShader(소프트웨어 WebGL)로 띄웁니다.
 
