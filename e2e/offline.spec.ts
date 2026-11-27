@@ -11,7 +11,11 @@ const logText = (page: Page) => page.getByRole('region', { name: '사건 기록'
 function watchFailures(page: Page) {
   const failed: string[] = []
   const errors: string[] = []
-  page.on('requestfailed', (request) => failed.push(request.url()))
+  page.on('requestfailed', (request) => {
+    // 다시 열거나 다른 주소로 옮길 때 받던 중 끊은 요청(ERR_ABORTED)은 빠진 파일이 아님
+    if (request.failure()?.errorText !== 'net::ERR_ABORTED')
+      failed.push(request.url())
+  })
   page.on('pageerror', (e) => errors.push(e.message))
   return { failed, errors }
 }
