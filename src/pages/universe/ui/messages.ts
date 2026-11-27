@@ -260,6 +260,7 @@ export const MESSAGES = {
   'dossier.eastName': ['동양 이름', 'East Asian name'],
   'dossier.companion': ['동반성', 'Companion'],
   'dossier.lore': ['신화·기록', 'Myth & records'],
+  'dossier.source': ['기록 출처', 'Record source'],
   'dossier.outburstType': ['폭발 유형', 'Outburst type'],
   'dossier.outburstYears': ['폭발한 해', 'Outburst years'],
   'dossier.outburstYear': ['{year}년', '{year}'],

@@ -99,7 +99,9 @@ describe('Dossier', () => {
     viewActions.select('kepler', false)
     render(() => <Dossier />)
     expect(screen.getByText('Ia형 초신성 (백색 왜성 폭발)')).toBeInTheDocument()
-    expect(await screen.findByText(/조선 관상감/)).toBeInTheDocument()
+    expect(await screen.findByText(/케플러보다 나흘 먼저/)).toBeInTheDocument()
+    expect(screen.getByText('기록 출처')).toBeInTheDocument()
+    expect(screen.getByText(/선조 37년 9월 21일/)).toBeInTheDocument()
   })
 
   it('M87은 국부 은하군 밖 이웃 은하로 표시하고 중심 블랙홀 M87*을 알린다', async () => {

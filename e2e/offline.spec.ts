@@ -45,7 +45,7 @@ async function famousObjects(page: Page, label: string) {
   const goTo = page.getByRole('combobox', { name: '목적지 바로 가기' })
   const picks = [
     { scale: '이웃 별', id: 'sirius', text: '천랑성 · 큰개자리 α' },
-    { scale: '우리 은하', id: 'kepler', text: /조선 관상감/ },
+    { scale: '우리 은하', id: 'kepler', text: /케플러보다 나흘 먼저/ },
     { scale: '국부 은하군', id: 'm87', text: /M87\*: 태양의 약 65억 배/ },
   ]
   for (const { scale, id, text } of picks) {

@@ -64,3 +64,23 @@ describe('신성·초신성', () => {
       expect(ids.has(id), id).toBe(true)
   })
 })
+
+describe('역사 기록의 출처', () => {
+  it('역사 기록을 적은 초신성은 모두 출처가 있다', () => {
+    for (const id of ['crab', 'sn1006', 'tycho', 'kepler', 'cas-a'])
+      expect(GALAXY_DETAILS[id].source?.ko, id).toBeTruthy()
+  })
+
+  it('티코 초신성의 조선 기록은 실록이 아니라 이이의 『석담일기』에서 온다', () => {
+    const tycho = GALAXY_DETAILS.tycho
+    expect(tycho.source?.ko).toMatch(/석담일기/)
+    expect(tycho.lore?.ko).toMatch(/석담일기/)
+    expect(`${tycho.lore?.ko} ${tycho.source?.ko}`).not.toMatch(/실록/)
+  })
+
+  it('케플러 초신성의 조선 기록은 날짜까지 적는다', () => {
+    expect(GALAXY_DETAILS.kepler.source?.ko).toMatch(
+      /선조실록.*선조 37년 9월 21일/,
+    )
+  })
+})

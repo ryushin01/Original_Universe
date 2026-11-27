@@ -316,8 +316,8 @@ export const STAR_DETAILS: Record<string, StarDetail> = {
     constellation: both('용골자리', 'Carina'),
     eastName: both('노인성 · 용골자리 α', 'Old Man Star (Laoren) · α Carinae'),
     lore: both(
-      '이 별을 보면 오래 산다고 해 남극노인성이라 불렀고, 옛 왕조는 이 별이 보이면 나라에 경사가 있다고 기록했습니다.',
-      'Seeing it was said to grant long life, so it was named the Old Man of the South Pole; old dynasties recorded its appearance as a good omen.',
+      '이 별을 보면 오래 산다고 해 남극노인성이라 불렀습니다. 우리나라에서는 남쪽 지평선 가까이 낮게 떠서 보기 드물었습니다.',
+      'Seeing it was said to grant long life, so it was named the Old Man of the South Pole; from Korea it skims the southern horizon and is rarely seen.',
     ),
   },
   polaris: {
