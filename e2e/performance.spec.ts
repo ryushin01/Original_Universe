@@ -59,10 +59,18 @@ test('3D가 시간을 흘리며 그리는 동안 탭·규모 버튼이 200ms 안
 
   // 상호작용 지연(Event Timing, 104ms 넘는 것만 기록됨)과 메인 스레드 긴 작업, 메인 스레드 프레임 수를 모음
   await page.evaluate(() => {
-    const store = { events: [0], longTasks: [0], frames: 0 }
+    const store = { events: [0], longTasks: [0], frames: 0, slow: [''] }
     Reflect.set(window, '__responsiveness', store)
     new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) store.events.push(entry.duration)
+      for (const entry of list.getEntries()) {
+        store.events.push(entry.duration)
+        // 실패하면 어느 조작이 느렸는지 알 수 있게 이름과 대상 글자를 남김
+        const target: unknown = Reflect.get(entry, 'target')
+        const text = target instanceof Element ? target.textContent : ''
+        store.slow.push(
+          `${Math.round(entry.duration)}ms ${entry.name} ${text?.trim().slice(0, 20)}`,
+        )
+      }
     }).observe({ type: 'event' })
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries())
@@ -101,9 +109,13 @@ test('3D가 시간을 흘리며 그리는 동안 탭·규모 버튼이 200ms 안
       inp: Math.max(...list('events')),
       longestTask: Math.max(...list('longTasks')),
       frames: Number(Reflect.get(store, 'frames')),
+      details: String(Reflect.get(store, 'slow')),
     }
   })
-  expect(result.inp, '가장 느린 상호작용(ms)').toBeLessThanOrEqual(GOOD.inp)
+  expect(
+    result.inp,
+    `가장 느린 상호작용(ms): ${result.details}`,
+  ).toBeLessThanOrEqual(GOOD.inp)
   expect(
     result.longestTask,
     '가장 긴 메인 스레드 작업(ms)',

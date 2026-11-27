@@ -9,7 +9,7 @@
 - **접근성:** 모든 스토리를 axe(WCAG 2.2 AA)로 검사해 오류가 하나라도 있으면 실패합니다(Storybook `a11y.test: 'error'`와 같게)
 - **성능:** `size-limit`으로 묶음 크기 예산(첫 화면 JS 130kB·CSS 9kB·워커 205kB·엔진 169kB·지연 조각 187kB, brotli)을 걸고, `e2e/performance.spec.ts`가 LCP·CLS와 3D 워커가 그리는 동안의 상호작용 지연·긴 작업(200ms 이하)을 봅니다. Lighthouse 기준은 그대로입니다
 - **`pnpm check`:** `check:static`(lint·FSD·서식·타입·커버리지·빌드·크기) → `check:e2e` → `check:visual` → `check:lighthouse`. CI가 같은 스크립트를 부릅니다
-- **CI 나누기:** 정적 검사·빌드 한 번 → 빌드 결과를 E2E 4개(흐름 2개로 샤딩·오프라인·성능)·시각 회귀·Lighthouse가 동시에 다시 씀. pnpm·Vite·Storybook·Playwright 브라우저 캐시, 문서만 바뀌면 무거운 검사를 건너뜀, 실패할 때만 리포트·차이 그림을 올림(7일). 필수 검사 이름은 그대로 두고 모든 작업 결과를 모으는 작업이 씁니다
+- **CI 나누기:** 정적 검사·빌드 한 번 → 빌드 결과를 E2E 5개(흐름 3개로 샤딩해 작업마다 한 개씩·오프라인·성능)·시각 회귀·Lighthouse가 동시에 다시 씀. pnpm·Vite·Storybook·Playwright 브라우저 캐시, 문서만 바뀌면 무거운 검사를 건너뜀, 실패할 때만 리포트·차이 그림을 올림(7일). 필수 검사 이름은 그대로 두고 모든 작업 결과를 모으는 작업이 씁니다
 - **문서:** README·AGENTS.md·`docs/development.md`·`docs/performance.md`, 버전 배지 1.13.3
 
 ## 1.13.2 - 2026-11-27
