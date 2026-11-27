@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = 4184
+// 다른 서버와 겹치면 E2E_PORT로 빈 포트를 고름
+const PORT = Number(process.env.E2E_PORT ?? 4184)
 
 export default defineConfig({
   testDir: './e2e',
