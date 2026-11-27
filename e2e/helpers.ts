@@ -57,6 +57,36 @@ export async function start(page: Page, path = '/') {
   await expect(page.getByRole('heading', { name: '우주 관리' })).toBeVisible()
 }
 
+/** Storybook의 addon-a11y가 스토리를 그린 직후 같은 axe를 돌리므로, 겹치면 끝나기를 기다렸다 다시 돌림 */
+async function analyzeWhenFree(page: Page, builder: AxeBuilder) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await builder.analyze()
+    } catch (error) {
+      const busy =
+        error instanceof Error &&
+        error.message.includes('Axe is already running')
+      if (!busy || attempt >= 10) throw error
+      await page.waitForTimeout(500)
+    }
+  }
+}
+
+/** 컴포넌트 하나(Storybook 스토리)를 WCAG 2.2 AA 규칙으로 검사 */
+export async function axeComponent(
+  page: Page,
+  selector: string,
+  label: string,
+) {
+  const builder = new AxeBuilder({ page })
+    .include(selector)
+    .withTags(RULES.filter((tag) => tag !== 'best-practice'))
+  const results = await analyzeWhenFree(page, builder)
+  expect(
+    results.violations.map((v) => `${label} ${v.id}: ${v.nodes.length}`),
+  ).toEqual([])
+}
+
 export async function axe(page: Page, label: string) {
   const results = await new AxeBuilder({ page }).withTags(RULES).analyze()
   expect(
