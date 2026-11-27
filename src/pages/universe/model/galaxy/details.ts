@@ -10,6 +10,8 @@ export interface GalaxyDetail {
   lightCurve?: Text
   /** 신화·역사 기록 (직접 쓴 짧은 설명) */
   lore?: Text
+  /** 역사 기록의 원문·2차 출처 (역사 기록을 적은 천체는 반드시) */
+  source?: Text
 }
 
 const IA_CURVE = both(
@@ -77,10 +79,15 @@ export const GALAXY_DETAILS: Record<string, GalaxyDetail> = {
       'Song-dynasty records say it was visible in daylight for 23 days and stayed in the night sky for nearly two years.',
     ),
     lore: both(
-      '1054년 송나라 천문관은 황소자리 천관성 곁에 나타난 손님별(객성)을 적었고, 일본 기록에도 남았습니다. 오늘날 게 성운이 바로 그 별의 잔해입니다.',
-      'In 1054 Song astronomers logged a “guest star” beside Tianguan in Taurus, also noted in Japan; the Crab Nebula is what it left behind.',
+      '1054년 송나라 천문관은 황소자리 천관성(황소자리 제타) 곁에 나타난 손님별(객성)을 적었습니다. 금성처럼 낮에도 보였다고 하며, 일본에서는 13세기 후지와라노 데이카의 일기 『명월기』에 옮겨 적혔습니다. 오늘날 게 성운이 바로 그 별의 잔해입니다.',
+      'In 1054 Song astronomers logged a “guest star” beside Tianguan (Zeta Tauri), visible by day like Venus; in Japan it was copied into Fujiwara no Teika’s 13th-century diary Meigetsuki. The Crab Nebula is what it left behind.',
+    ),
+    source: both(
+      '『송회요』·『송사』(송나라), 『명월기』(일본). Stephenson & Green (2002)',
+      'Song Huiyao and Song Shi (Song China), Meigetsuki (Japan); Stephenson & Green (2002)',
     ),
   },
+
   'eta-carinae': {
     facts: both(
       '태양의 약 100배가 넘는 질량의 쌍성',
@@ -275,15 +282,20 @@ export const GALAXY_DETAILS: Record<string, GalaxyDetail> = {
       'The brightest supernova on record (type Ia)',
     ),
     note: both(
-      '1006년 이리자리에 나타나 몇 달 동안 밤에도 그림자를 드리울 만큼 밝았습니다.',
-      'Appeared in Lupus in 1006 and for months was bright enough to cast shadows at night.',
+      '1006년 이리자리에 나타나 한동안 낮에도 보였고, 밤에는 땅 위의 물체가 보일 만큼 밝았다고 전합니다.',
+      'Appeared in Lupus in 1006; it was seen by day for a while, and records say it lit up the ground at night.',
     ),
     lightCurve: IA_CURVE,
     lore: both(
-      '중국·일본·아랍·유럽에 기록이 남았습니다. 이집트의 천문학자 알리 이븐 리드완은 금성보다 밝고 크기는 금성의 두세 배라고 적었습니다.',
-      'Recorded in China, Japan, the Arab world and Europe; the Egyptian astronomer Ali ibn Ridwan wrote that it outshone Venus.',
+      '중국·일본·이라크·이집트·유럽에 기록이 남았습니다. 이집트의 천문학자 알리 이븐 리드완은 크기가 금성의 2.5~3배였다고 적었습니다.',
+      'Recorded in China, Japan, Iraq, Egypt and Europe; the Egyptian astronomer Ali ibn Ridwan wrote that it looked 2½ to 3 times as large as Venus.',
+    ),
+    source: both(
+      '『송사』(송나라), 알리 이븐 리드완의 『테트라비블로스』 주해. Stephenson & Green (2002)',
+      'Song Shi (Song China); Ali ibn Ridwan’s commentary on the Tetrabiblos; Stephenson & Green (2002)',
     ),
   },
+
   tycho: {
     facts: both(
       '1572년 카시오페이아자리의 Ia형 초신성',
@@ -295,10 +307,15 @@ export const GALAXY_DETAILS: Record<string, GalaxyDetail> = {
     ),
     lightCurve: IA_CURVE,
     lore: both(
-      '조선의 『선조실록』에도 1572년 겨울 카시오페이아자리 쪽에 나타난 객성이 적혀 있습니다.',
-      'Korea’s Joseon annals (Seonjo Sillok) also record a guest star appearing near Cassiopeia in the winter of 1572.',
+      '율곡 이이의 『석담일기』에 1572년(선조 5) 음력 10월 객성이 책성(카시오페이아자리의 일부) 옆에 나타났고 크기가 금성보다 컸다는 기록이 있습니다. 티코 브라헤가 이 별을 본 무렵입니다.',
+      'Yi I (Yulgok)’s diary Seokdam Ilgi records that in the 10th lunar month of 1572 a guest star appeared beside Cheokseong (part of Cassiopeia), larger than Venus — around when Tycho Brahe saw it.',
+    ),
+    source: both(
+      '이이 『석담일기』. 2차 출처: 주간경향 「초신성 폭발, 조선이 케플러보다 먼저 관측했다」(2022)',
+      'Yi I, Seokdam Ilgi; secondary source: Weekly Kyunghyang, “Joseon observed the supernova before Kepler” (2022)',
     ),
   },
+
   kepler: {
     facts: both(
       '1604년 뱀주인자리의 Ia형 초신성',
@@ -310,10 +327,15 @@ export const GALAXY_DETAILS: Record<string, GalaxyDetail> = {
     ),
     lightCurve: IA_CURVE,
     lore: both(
-      '조선 관상감은 1604년 가을부터 이듬해 봄까지 이 객성의 위치와 밝기를 꾸준히 적었습니다. 이 기록은 오늘날 이 초신성의 밝기 곡선을 되살리는 데 쓰입니다.',
-      'Joseon court astronomers logged this guest star steadily from autumn 1604 into the next spring; their notes are still used to rebuild its light curve.',
+      '『선조실록』 1604년(선조 37) 음력 9월 21일(양력 10월 13일) 기사에 객성이 미수(전갈자리)에 나타났고 목성보다 작으며 황적색이라 적혀 있어, 케플러보다 나흘 먼저 관측했습니다. 객성은 그 뒤 여러 달 이어서 보였습니다.',
+      'The Joseon annals (Seonjo Sillok) for the 21st day of the 9th lunar month of 1604 (13 October) note a yellowish-red guest star in the Tail lodge (Scorpius), smaller than Jupiter — four days before Kepler’s first look. It stayed in view for months.',
+    ),
+    source: both(
+      '『선조실록』 선조 37년 9월 21일. 2차 출처: 주간경향 「초신성 폭발, 조선이 케플러보다 먼저 관측했다」(2022)',
+      'Seonjo Sillok, 1604 (9th lunar month, 21st day); secondary source: Weekly Kyunghyang (2022)',
     ),
   },
+
   'cas-a': {
     facts: both(
       '약 340년 전 빛이 닿은 IIb형 초신성의 잔해',
@@ -327,7 +349,12 @@ export const GALAXY_DETAILS: Record<string, GalaxyDetail> = {
       '1680년 존 플램스티드가 이 자리에서 본 6등성(카시오페이아자리 3)이 이 초신성이었을 수 있다는 의견이 있습니다.',
       'A 6th-magnitude star John Flamsteed charted here in 1680 (3 Cassiopeiae) may have been this supernova.',
     ),
+    source: both(
+      '플램스티드 성표(1680년 관측)에 대한 해석, 확정되지 않음',
+      'An interpretation of Flamsteed’s 1680 catalogue entry, not confirmed',
+    ),
   },
+
   sn1987a: {
     facts: both(
       '대마젤란 은하의 II형 초신성 (1987년)',

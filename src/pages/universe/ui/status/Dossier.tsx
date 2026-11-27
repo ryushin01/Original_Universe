@@ -487,6 +487,14 @@ function GalaxyObjectDossier(props: { id: string }) {
                       </>
                     )}
                   </Show>
+                  <Show when={d().source}>
+                    {(source) => (
+                      <>
+                        <dt>{t('dossier.source')}</dt>
+                        <dd>{pick(source())}</dd>
+                      </>
+                    )}
+                  </Show>
                 </dl>
               </>
             )}
